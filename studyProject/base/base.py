@@ -44,11 +44,11 @@ class Base:
     def __init__(self,ID:str=None):
         self.ID=ifelse(ID is None,lambda:randomString(),lambda:ID)() 
 
-    def clone_(self,name=None,deep=True):
-        return self.__class__.clone(name,deep)
+    def clone(self,name=None,deep=True):
+        return self.__class__.Clone(self,name,deep)
         
     @staticmethod
-    def clone(self,ID=None,deep=True):
+    def Clone(self,ID=None,deep=True):
         ID = ifelse(ID is not None,ID,self.ID)
         #print( name)
         if deep:
@@ -257,7 +257,7 @@ class Base:
         if isinstance(obj,list) or isinstance(obj,tuple):
             return [ cls.__export(i) for i in obj ]
         elif isinstance(obj,dict):
-            return {k:cls.__export(v) for k,v in obj}
+            return {k:cls.__export(v) for k,v in obj.items()}
         if isinstance(obj,Base):
             return obj.export(save=False)
         return obj
@@ -353,7 +353,7 @@ class DatasSupervise(Base):
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"dataTrain : {},"+nt+"dataTest : {}]"
-        return stri.format(self.dataTrain.__repr__(ind+2),self.dataTest.__repr__(ind+2))
+        return stri.format(securerRepr(self.dataTrain,ind+2),securerRepr(self.dataTest,ind+2))
 class Models(Base):
     EXPORTABLE=["models","namesModels","mappingNamesModelsInd"]
     def __init__(self,models=None,ID=None):

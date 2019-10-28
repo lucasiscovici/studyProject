@@ -78,7 +78,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"project : {},"+nt+"idDataProject : {},"+nt+"proprocessDataFromProjectFn : {},"+nt+"isProcessedDataFromProject : {}]"
-        return stri.format(securerRepr(self.project)(ind+2,onlyID=True),self.idDataProject,self.proprocessDataFromProjectFn,self.isProcessedDataFromProject)
+        return stri.format(securerRepr(self.project,ind+2,onlyID=True),self.idDataProject,self.proprocessDataFromProjectFn,self.isProcessedDataFromProject)
 
 
 
