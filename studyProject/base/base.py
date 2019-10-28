@@ -122,14 +122,14 @@ class Base:
              chut=True,
             **xargs):
         if repertoire is None:
-            if cls.__name__ != Base.__name__:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 repertoire =cls.DEFAULT_REP+suffix
             else:
                 repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
                 if not chut:
                     warnings.warn("\n[Base load] repertoire est non spécifié, repertoire = {} ".format(repertoire)) 
         if ext is None:
-            if cls.__name__ != Base.__name__:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 ext =cls.DEFAULT_EXT+suffix
             else:
                 ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
