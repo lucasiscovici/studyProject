@@ -12,18 +12,27 @@ from interface import implements, Interface
 from abc import ABCMeta, abstractmethod, ABC
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
-from typing import TypeVar, _GenericAlias
+try:
+    from typing import TypeVar, _GenericAlias
+except:
+    from typing import GenericMeta as _GenericAlias
+    TypeVar=type("RIEN",(),{})
 def get_origin(l):
     try:
         rep=l.__origin__
     except:
-        rep=l
+        try:
+            rep=l.__orig_bases__[0]
+        except:
+            rep=l
     return rep
 def get_args(l):
     try:
         rep=l.__args__
     except:
         rep=l
+    if rep is None:
+        rep=[TypeVar()]
     return rep
 class Base:
     DEFAULT_PATH="__studyFiles"
