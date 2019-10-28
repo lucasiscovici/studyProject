@@ -33,6 +33,6 @@ setup(
     install_requires=[
         'scikit-learn==0.20.3',
         'numpy==1.16.2',
-        'python-interface==0.3.0'
+        'python-interface==1.5.1'
     ]
 )
