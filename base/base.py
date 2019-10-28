@@ -1,0 +1,762 @@
+from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify, \
+                    getClassName, rangel, SaveLoad, merge_two_dicts, \
+                    newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
+                    isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj, takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr
+from sklearn.metrics import make_scorer, get_scorer
+from sklearn.model_selection import cross_validate
+import numpy as np
+import copy
+import os
+import warnings
+from interface import implements, Interface
+from abc import ABCMeta, abstractmethod, ABC
+# from typing import get_origin
+# class ImportExportLoadSaveClone(Interface):
+from typing import TypeVar, _GenericAlias
+def get_origin(l):
+    try:
+        rep=l.__origin__
+    except:
+        rep=l
+    return rep
+def get_args(l):
+    try:
+        rep=l.__args__
+    except:
+        rep=l
+    return rep
+class Base:
+    DEFAULT_PATH="__studyFiles"
+    DEFAULT_REP="study_"
+    DEFAULT_EXT=".study"
+    EXPORTABLE=["ID"]
+    EXPORTABLE_SUFFIX="EXP"
+    EXPORTABLE_ARGS={}
+    def __init__(self,ID:str=None):
+        self.ID=ifelse(ID is None,lambda:randomString(),lambda:ID)() 
+
+    def clone_(self,name=None,deep=True):
+        return self.__class__.clone(name,deep)
+        
+    @staticmethod
+    def clone(self,ID=None,deep=True):
+        ID = ifelse(ID is not None,ID,self.ID)
+        #print( name)
+        if deep:
+            exported=self.export(save=False)
+            l=self.__class__.__import(self.__class__(),exported)
+            l.ID=ID
+
+            # l=self.__class__(ID)
+            # l.__dict__ = merge_two_dicts(l.__dict__,self.__dict__.copy())
+            # #print(l.__dict__)
+            # l.ID=ID
+            #print(l.__dict__)
+            return l
+        else:
+            me=copy.deepcopy(self)
+            me.ID=ID
+            return me
+
+    @classmethod
+    def Save(cls,self,
+             ID,
+             repertoire=None,
+             ext=None,
+             path=os.getcwd(),
+             delim="/",
+             recreate=False,
+             suffix="",
+             chut=True,
+             **xargs):
+        ID=self.ID if ID is None else ID
+        if repertoire is None:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
+                repertoire=cls.DEFAULT_REP+suffix
+            else:
+                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base save] repertoire est non spécifié, repertoire = {} ".format(repertoire))
+        if ext is None:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
+                ext =cls.DEFAULT_EXT+suffix
+            else:
+                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base save] ext est non spécifié, ext = {} ".format(ext))
+        repo=path+delim+cls.DEFAULT_PATH+delim+repertoire
+        if not os.path.exists(repo):
+            os.makedirs(repo)
+        filo=repo+delim+ID+ext
+        if os.path.isfile(filo) and not recreate:
+            if not chut:
+                warnings.warn("\n[Base save] {} exite deja est recreate est à faux".format(filo))
+        SaveLoad.save(self,filo,**xargs)
+    
+    def save(self,
+             repertoire=None,
+             ext=None,
+             ID=None,
+             path=os.getcwd(),
+             delim="/",
+             recreate=False,
+             **xargs):
+        self.__class__.Save(self,ID,repertoire,ext,path,delim,recreate,**xargs)
+    
+    @classmethod
+    def Load(cls,ID,
+             repertoire=None,
+             ext=None,
+             path=os.getcwd(),
+             delim="/",
+             suffix="",
+             chut=True,
+            **xargs):
+        if repertoire is None:
+            if cls.__name__ != Base.__name__:
+                repertoire =cls.DEFAULT_REP+suffix
+            else:
+                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base load] repertoire est non spécifié, repertoire = {} ".format(repertoire)) 
+        if ext is None:
+            if cls.__name__ != Base.__name__:
+                ext =cls.DEFAULT_EXT+suffix
+            else:
+                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base load] ext est non spécifié, ext = {} ".format(ext))
+        repo=path+delim+cls.DEFAULT_PATH+delim+repertoire
+        filo=repo+delim+ID+ext
+        if not os.path.isfile(filo):
+            if not chut:
+                warnings.warn("\n[Base load] {} n'exite pas ".format(filo))
+        try:
+            resu=SaveLoad.load(filo,**xargs)
+        except Exception as e:
+            raise e
+            resu=None
+        return resu
+
+ 
+
+    @classmethod 
+    def __import(cls,ol,loaded):
+        # if not isinstance(cls(),Base):
+        #     return loaded
+
+        try:
+            rrr=cls.__base__.__import
+            # rep=getAnnotationInit(rep)
+        except:
+            rrr=None
+            pass
+        if rrr is not None:
+            _=rrr(ol,loaded)
+        # print(cls)
+        f=cls.EXPORTABLE
+        ff=cls.EXPORTABLE_ARGS
+        annot=getAnnotationInit(cls())
+        annot={k:v for k,v in annot.items() if k in f}
+        annot2=[i for i in f if i not in annot]
+        for k,v in annot.items():
+            if get_origin(v) is list:
+                cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
+                if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
+                    repo=loaded[k]
+                else:
+                    repo=[ cl.__import(cl(),i) for i in loaded[k]]
+                if "underscore" in ff:
+                    k="_"+k
+                setattr(ol,k,repo)
+            elif get_origin(v) is dict:
+                cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
+                if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
+                    repo=loaded[k]
+                else:
+                    repo={k2:cl.__import(cl(),v2) for k2,v2 in loaded[k].items()}
+                if "underscore" in ff:
+                    k="_"+k
+                setattr(ol,k,repo)
+            else:
+                if isinstance(get_origin(v)(),Base):
+                    cl=get_origin(v)
+                    repo=cl.__import(cl(),loaded[k])
+                else:
+                    repo=loaded[k]
+                if "underscore" in ff:
+                    k="_"+k
+                setattr(ol,k,repo)
+
+        for i in annot2:
+            repo=loaded[i]
+            if "underscore" in ff:
+                i="_"+i
+            setattr(ol,i,repo)
+        return ol
+            # return obj.export(save=False)
+        # return loaded
+
+    @classmethod 
+    def _import(cls,loaded):
+        return loaded
+
+    @classmethod
+    def Import(cls,ID,
+             repertoire=None,
+             ext=None,
+             path=os.getcwd(),
+             delim="/",
+             loadArgs={},
+            **xargs):
+        loaded=cls.Load(ID,repertoire,
+                                    ext,
+                                    path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
+
+        ol=cls()
+        cls.__import(ol,loaded)
+        # if cls.__name__ == Base.__name__: 
+        #     pass
+        # else:
+        #     # print(cls.__base__)
+        #     try:
+        #         papa = cls.__base__.Export(obj,save=False)
+        #     except:
+        #         papa = {}
+        # # print(loaded)
+        # ll=cls._import(loaded)
+        # for k,v in ll.items():
+        #     setattr(ol,k,v)
+        return ol
+
+    @classmethod
+    def __export(cls,obj):
+        # print(type(obj))
+        # print(isinstance(type(obj),Base))
+        if isinstance(obj,list) or isinstance(obj,tuple):
+            return [ cls.__export(i) for i in obj ]
+        elif isinstance(obj,dict):
+            return {k:cls.__export(v) for k,v in obj}
+        if isinstance(obj,Base):
+            return obj.export(save=False)
+        return obj
+
+    @classmethod
+    def _export(cls,obj,*args,**xargs):
+        rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
+        rep={ k:cls.__export(v) 
+                for k,v in rep.items() 
+            }
+        return rep
+
+    @classmethod
+    def Export(cls,obj,save=True,saveArgs={}):
+        if cls.__name__ == Base.__name__: 
+            papa={}
+        else:
+            # print(cls.__base__)
+            try:
+                papa = cls.__base__.Export(obj,save=False)
+            except:
+                papa = {}
+        # print(cls.__name__)
+        # print(papa)
+        rep  = cls._export(obj)
+        # print(rep)
+        rep  = merge_two_dicts(papa,rep)
+        # print(rep.keys())
+        # print(rep)
+
+        if save:
+            # print(rep)
+            return cls.Save(rep,
+                obj.ID,
+                suffix=cls.EXPORTABLE_SUFFIX,**saveArgs)
+        return rep
+
+    def export(self,save=True,*args,**xargs):
+        # print(self.__class__.__name__)
+        # print(self)
+        return self.__class__.Export(self,save,*args,**xargs)
+
+    def __repr__(self,ind=1):
+        nt="\n"+"\t"*ind
+        stri="[[{}]"+nt+"ID : {}]"
+        return stri.format(getClassName(self),self.ID)
+
+    def __getattr__(self,a):
+        if has_method(self,"_"+a): return getattr(self,"_"+a,None)
+        else: raise AttributeError(a)
+
+class Datas(Base):
+    EXPORTABLE=["X","y","namesY"]
+    def __init__(self,X=None,y=None,namesY=None,ID=None):
+        super().__init__(ID)
+        self.X=X
+        self.y=y
+        self.namesY=namesY
+    
+    @property
+    def isMultiLabel(self):
+        return np.ndim(self.y) > 1
+
+    def get(self,withNamesY=True):
+        return [self.X,self.y,self.namesY] if withNamesY else [self.X,self.y]
+
+    def __repr__(self,ind=1):
+        txt=super().__repr__(ind)
+        t="\t"*ind
+        nt="\n"+t
+        stri=txt[:-1]+nt+"X : {},"+nt+"y : {},"+nt+"namesY : {}]"
+        return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None,self.namesY)
+
+
+
+class DatasSupervise(Base):
+    EXPORTABLE=["dataTrain","dataTest"]
+    def __init__(self,dataTrain:Datas=None,dataTest:Datas=None,ID=None):
+        super().__init__(ID)
+        self.dataTrain=dataTrain
+        self.dataTest=dataTest
+
+    @staticmethod
+    def from_XY_Train_Test(X_train,y_train,X_test,y_test,namesY,ID=None):
+        return DatasSupervise(Datas(X_train,y_train,namesY),
+                              Datas(X_test,y_test,namesY),ID)
+    def get(self,deep=False,optsTrain={},optsTest={}):
+        if deep:
+            return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
+        return [self.dataTrain,self.dataTest]
+
+    def __repr__(self,ind=2):
+        txt=super().__repr__(ind=ind)
+        nt="\n"+"\t"*ind
+        stri=txt[:-1]+nt+"dataTrain : {},"+nt+"dataTest : {}]"
+        return stri.format(self.dataTrain.__repr__(ind+2),self.dataTest.__repr__(ind+2))
+class Models(Base):
+    EXPORTABLE=["models","namesModels","mappingNamesModelsInd"]
+    def __init__(self,models=None,ID=None):
+        super().__init__(ID)
+        self.models=models
+        self.init()
+        self.initModelsAndNames()
+        
+    def init(self):
+        self.namesModels=None
+        self.indNamesModels=None
+        self.mappingNamesModelsInd=None
+
+    def initModelsAndNames(self):
+        if self.models is not None:
+            self.namesModels=np.array(uniquify([getClassName(i) for i in self.models]))
+            self.indNamesModels=np.array(rangel(len(self.models)))
+            self.mappingNamesModelsInd=dict(zip(self.namesModels,self.indNamesModels))
+            
+    def getIndexFromNames(self,arr,returnOK=True):
+        arr=flatArray(arr)
+        return [self.mappingNamesModelsInd[i] if isStr(i) else i for i in arr] if returnOK else None
+    
+    def __repr__(self,ind=1):
+        txt=super().__repr__(ind)
+        nt="\n"+"\t"*ind
+        stri=txt[:-1]+nt+"models : {},"+nt+"namesModels : {},"+nt+"indNamesModels : {},"+nt+"mappingNamesModelsInd : {}]"
+        return stri.format(BeautifulList(self.models).__repr__(ind+1),self.namesModels,self.indNamesModels, BeautifulDico(self.mappingNamesModelsInd).__repr__(ind+1))
+
+
+class Metric(Base):
+    EXPORTABLE=["metric","scorer"]
+    def __init__(self,metric=None,scorer=None,scorerToo=True,greaterIsBetter=True,ID=None,**xargs):
+        super().__init__(ID)
+        if metric is not None:
+            self._metric=metric
+            if isStr(metric):
+                self.metric=get_metric(metric)
+            else:
+                self.metric=metric
+            self.scorer=scorer
+            if scorerToo and scorer is None:
+                if isStr(metric):
+                    self.scorer = get_scorer(metric)
+                else:
+                    self.scorer = make_scorer(self.metric,greaterIsBetter=greaterIsBetter,**xargs)
+
+    def __repr__(self,ind=1):
+        txt=super().__repr__(ind)
+        nt="\n"+"\t"*ind
+        if isStr(self._metric):
+           return txt[:-1]+nt+"metric : {}]".format(self._metric) 
+        return txt
+
+            
+
+class CvOrigSorted(Base):
+    EXPORTABLE=["original","sorted"]
+    """docstring for CvOrigSorted"""
+    def __init__(self, original=None, sorted_=None, ID=None):
+        super().__init__(ID)
+        self.original = original
+        self.sorted = sorted_
+        
+
+class CvResultatsTrValOrigSorted(Base):
+    """docstring for CvResultatsPreds"""
+    EXPORTABLE=["Tr","Val"]
+    def __init__(self,tr:CvOrigSorted=None,val:CvOrigSorted=None, ID=None):
+        super().__init__(ID)
+        self.Tr=tr
+        self.Val=val
+
+class CvResultatsTrVal(Base):
+    """docstring for CvResultatsPreds"""
+    EXPORTABLE=["Tr","Val"]
+    def __init__(self,tr=None,val=None, ID=None):
+        super().__init__(ID)
+        self.Tr=tr
+        self.Val=val
+
+class CvSplit(Base):
+    """docstring for CvSplit"""
+    EXPORTABLE=["train","validation","all"]
+    def __init__(self, train=None, validation=None, all_=None, ID=None):
+        super().__init__(ID)
+        self.train = train
+        self.validation = validation
+        self.all_=all_
+
+    @staticmethod
+    def fromCvSplitted(cv):
+        return CvSplit([i[0] for i in cv],[i[1] for i in cv],cv)
+
+class CvResultatsCvValidate(Obj): pass
+class CvResultatsScores(CvResultatsTrVal): pass
+
+class CvResultatsPreds(CvResultatsTrValOrigSorted): pass
+
+class CvResultatsDecFn(CvResultatsTrValOrigSorted): pass
+class CvResultats(Base):
+    """docstring for CvResultats"""
+    EXPORTABLE=["preds","scores","cv_validate","decFn"]
+    def __init__(self, preds:CvResultatsPreds=None, scores=None, cv_validate=None, decFn=None, ID=None):
+        super().__init__(ID)
+        self.preds=preds
+        self.scores=scores
+        self.cv_validate=cv_validate
+        self.decFn=decFn
+        
+from typing import Iterable
+from typing import Dict, Tuple, Sequence, List
+
+class CrossValidItem(CvResultatsTrValOrigSorted):
+    EXPORTABLE=["cv","resultats","splitted","args"]
+    def __init__(self,ID:str=None,cv:CvSplit=None,resultats:List[CvResultats]=None,args:Dict=None):
+        if cv is None:
+             super().__init__()
+        else:
+            cvvTr=cv.train
+            cvvVal=cv.validation
+                               
+            cvvTrCon=np.argsort(np.concatenate(cvvTr))
+            cvvValCon=np.argsort(np.concatenate(cvvVal))
+
+            super().__init__(CvOrigSorted(cvvTr,cvvTrCon),
+                             CvOrigSorted(cvvVal,cvvValCon),ID)
+
+
+        # self.name=name
+        self.cv=cv
+        self.splitted=cv
+        self.resulats=resultats
+        self.args=args
+
+    def __repr__(self,ind=1):
+        # txt="\n"
+        # txt=super().__repr__(ind)
+        nt="\n"+"\t"*ind
+        stri="cv : {}"+nt+"splitted : {},"+nt+"resulats : {}"+nt+"args : [...]"
+        #securerRepr(BeautifulDico(self.args),ind)
+        return stri.format(self.cv,self.splitted,self.resulats)
+
+class CrossValid(Base):
+    EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
+    def __init__(self,cv=None,classifier=None,metric:Metric=None,nameCV=None,parallel=True,random_state=42,
+                 shuffle=True,recreate=False,models=None):
+        super().__init__(nameCV)
+        self.cv=cv
+        self.parallel=parallel
+        self.random_state=random_state
+        self.shuffle=shuffle
+        self.classifier=classifier
+        self.recreate=recreate
+        self.metric=metric
+        self.models=models
+        self.nameCV = self.ID
+        self.argu=dict(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
+            nameCV=self.nameCV,recreate=recreate,parallel=parallel,metric=metric,models=models)
+        self.cv=CrossValid.getCV(self)
+        
+    @staticmethod
+    def getCV(self):
+        if self.cv is None: return None
+        if isinstance(self.cv,check_cv2): cv=cv
+        elif isInt(self.cv): cv = check_cv2(self.cv,classifier=self.classifier,random_state=self.random_state,shuffle=self.shuffle)
+        else: cv=self.cv
+        return cv
+
+    def checkOK(self,names):
+        if (not self.recreate) and (self.nameCV in names):
+            a=input("[computeCV] name '{}' is already take, recreate ? (y/N)".format(self.nameCV))
+            if a=="y":
+                return True
+            else:
+                nn=newStringUniqueInDico(name,dict(zip(names,[None]*len(names))))
+                with ShowWarningsTmp():
+                    warnings.warn("[CrossValid checkOK] name '{}' is already take, mtn c'est '{}'".format(self.nameCV,nn))
+                self.nameCV=nn
+        return True
+            
+    def computeCV(self,X,y,**xargs):
+        self.cv = self.cv.split(X,y)
+        self.cv=CvSplit.fromCvSplitted(self.cv)
+        cv=self.cv
+        cvo=self.crossV(X,y,**xargs)
+        return (self.nameCV,CrossValidItem(self.nameCV,cv,cvo,self.argu))
+
+    def crossV(self,X,y,verbose=0,n_jobs=-1,**xargs):
+        cv=self.cv
+        cvv=cv
+        metric=self.metric.scorer
+        parallel=self.parallel
+        models=self.models
+        #models=ifelse(models,models,self.models)
+                           
+        cvvTr=cvv.train
+        cvvVal=cvv.validation
+                           
+        cvvTrCon=np.argsort(np.concatenate(cvvTr))
+        cvvValCon=np.argsort(np.concatenate(cvvVal))
+        
+        resu2=[cross_validate(mod ,X,y,return_train_score=True,
+                            return_estimator=True,cv=cvv.all,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
+
+        preduVal=[[i.predict(X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
+                           
+        preduuVal=[np.concatenate(preduI)[cvvValCon] for preduI in preduVal]
+        
+        scoreVal = [resuI["test_score"] for resuI in resu2]
+        
+        preduTr=[[i.predict(X[k]) for i,k in zipl(resuI["estimator"],cvvTr) ] for resuI in resu2]
+                           
+        preduuTr=[np.concatenate(preduI)[cvvTrCon] for preduI in preduTr]
+        
+        scoreTr = [resuI["train_score"] for resuI in resu2]
+        
+        decVal=[[getDecFn(i,X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
+        decVal2=[concatenateDecFn(preduI,cvvValCon) for preduI in decVal]
+
+        resul=[]
+        for i in range(len(models)):
+            resul.append(CvResultats(CvResultatsPreds(CvOrigSorted(preduTr,preduuTr),
+                                                      CvOrigSorted(preduVal,preduuVal)),
+                                     CvResultatsScores(scoreTr,scoreVal),
+                                     CvResultatsCvValidate(value=resu2),
+                                     CvResultatsDecFn(None,
+                                                     CvOrigSorted(decVal,decVal2)) ))
+
+        return resul
+        
+class BaseSupervise(Base):
+    # @abstractmethod
+    EXPORTABLE=["datas","models","metric","_cv","_nameCvCurr"]
+    def __init__(self,ID=None,datas:DatasSupervise=None,
+                    models:Models=None,metric:Metric=None,
+                    *args,**xargs):
+        super().__init__(ID)
+        self._datas=datas
+        self._models=models
+        self._metric=metric
+        self.init()
+    
+    def init(self):
+        self._cv={}
+        self._nameCvCurr=None
+        
+
+    def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,namesY=None):
+        #self.setDataX(X_train,X_test)
+        self._datas=DatasSupervise.from_XY_Train_Test(X_train,y_train,
+                                          X_test,y_test,
+                                          namesY)
+
+    def setModels(self,models):
+        self._models=Models(models)
+
+    def setMetric(self,metric):
+        self._metric=Metric(metric)
+
+    def computeCV(self,cv=5,random_state=42,shuffle=True,classifier=True,
+                 nameCV=None,recreate=False,parallel=True,metric=None,
+                 models=None):
+        if models is not None:
+            resu=self.getIndexFromNames(models)
+            models=np.array(self.models)[resu]
+        else:
+            models=self.models
+        if metric is None:
+            metric=self.scorer
+        cv=CrossValid(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
+                 nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
+                 models=models)
+        cv.checkOK(list(self.cv.keys()))
+        resu=cv.computeCV(self.X_train,self.y_train)
+        self.cv[resu[0]]=resu[1]
+        self.nameCvCurr=resu[0]
+        
+    
+    @staticmethod
+    def plan():
+        print("PLAN:")
+        print("\tCREATE_OR_GET WITH PROJECT, OTHERWISE")
+        print("\t\tCLASS_STUDY.addOrGet(ID_STUDY)")
+        print("\tSET DATA:")
+        print("\t\tWith X,y (train and test):")
+        print("\t\t\t"+"[Name_Variable_Study].setDataTrainTest(X_train, y_train, X_test, y_test, namesY)")
+        print("\t\tWith ProjectData ID:")
+        print("\t\t\t"+"[Name_Variable_Study].setDataTrainTest(id_=\"DATA_ID\")")
+        print("\tPREPROCESS ProjectData (If Data from Project, you have maybe to preprocess this data for the study (not preprocess for the ML) :")
+        print("\t\t[Name_Variable_Study].proprocessDataFromProject(fn=FUNCTION_TO_CALL)")
+        print("\t\tthe signature of the FUNCTION_TO_CALL is  FUNCTION_TO_CALL(X_train,y_train, X_test, y_test, namesY) and return a list or a tuple with [X_train,y_train, X_test, y_test, namesY]")
+        print("\tSET MODELS:")
+        print("\t\t"+"[Name_Variable_Study].setModels(models=MODELS)")
+        print("\t\t"+"MODELS MUST RESPECT THE INTERFACE OF SKLEARN (fit, transform, predict, (predict_proba or decision_function))")
+        print("\tCOMPUTE CROSS-VALIDATION:")
+        print("\t\t[Name_Variable_Study].computeCV()")
+        print("\tSAVE the study (if in studyProject preferes save with the project not the study):")
+        print("\t\t[Name_Variable_Study].save()")
+
+    def help(self):
+        getStaticMethodFromObj(self,"plan")()
+
+    def getIndexFromNames(self,m):
+        return self.models.getIndexFromNames(m)
+        
+    @property
+    def isMultiLabel(self):
+        return self.train_datas.isMultiLabel
+    
+    @property
+    def modelsObj(self):
+        return self._models
+    
+    @property
+    def metric(self):
+        return self._metric.metric
+    
+    @property
+    def datas(self):
+        return self._datas
+    
+    @property
+    def train_datas(self):
+        return self.datas.dataTrain
+    
+    @property
+    def test_datas(self):
+        return self.datas.dataTest
+    
+    @property
+    def X_train(self):
+        return self.train_datas.X
+    
+    @property
+    def y_train(self):
+        return self.train_datas.y
+    
+    @property
+    def X_test(self):
+        return self.test_datas.X
+    
+    @property
+    def y_test(self):
+        return self.test_datas.y
+    
+    @property
+    def models(self):
+        return self._models.models
+    
+    @property
+    def namesModels(self):
+        return self._models.namesModels
+    
+    @property
+    def namesModels(self):
+        return self._models.indNamesModels
+    
+    @property
+    def namesModels(self):
+        return self._models.mappingNamesModelsInd
+    
+    @property
+    def namesY(self):
+        return self.train_datas.namesY
+
+    @classmethod
+    def addOrGet(cls,id_,recreate=False,clone=False,deep=True,*args,**xargs):
+        # cls=self.__class__
+        def clonee(rrt):
+            return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
+        def recreatee():
+            rrt=cls(ID=id_)
+            if clone :
+                rrt=clonee(rrt)
+            # res =self.add(rrt)
+            return rrt
+        def cloneStudy(res):
+            ru=res
+            ru=clonee(ru)
+            # self._studies[id_]=ru
+            return ru
+        if recreate:
+            res=recreatee()
+        else:
+            res=cls.Load(id_,*args,**xargs)
+            if resu is None:
+                res=recreatee()
+            else:
+                if clone:
+                    res=cloneStudy(res)
+        return res
+
+    def __repr__(self,ind=1):
+        txt=super().__repr__(ind=ind)
+        nt="\n"+"\t"*ind
+        stri=txt[:-1]+nt+"datas : {},"+nt+"models : {},"+nt+"metric : {},"+nt+"cv : {},"+nt+"nameCvCurr : {}]"
+        # print(stri.format(self._datas,self._models,self._metric,self._cv,self._nameCvCurr))
+        return stri.format(self._datas,securerRepr(self._models,ind+2),self._metric.__repr__(ind+2),"Empty" if len(self._cv)==0 else securerRepr(BeautifulDico(self.cv),ind+1),self._nameCvCurr)
+
+def getDecFn(l,X):
+    attrs = ("predict_proba", "decision_function")
+
+    # Return the first resolved function
+    for attr in attrs:
+        try:
+            method = getattr(l, attr, None)
+            if method:
+                return method(X)
+        except AttributeError:
+            # Some Scikit-Learn estimators have both probability and
+            # decision functions but override __getattr__ and raise an
+            # AttributeError on access.
+            # Note that because of the ordering of our attrs above,
+            # estimators with both will *only* ever use probability.
+            continue
+    raise KeyError
+    
+def concatenateDecFn(ll,k):
+    #print(np.ndim(ll))
+    #print(np.ndim(ll[0]))
+    if np.ndim(ll[0])==3:
+        dfr=np.concatenate([i for i in ll],axis=1)
+        dfr=[i[k] for i  in dfr]
+        return dfr
+    return np.concatenate(ll)[k]    
+ 
