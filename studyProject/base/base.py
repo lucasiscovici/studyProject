@@ -77,8 +77,11 @@ class Base:
              recreate=False,
              suffix="",
              chut=True,
+             noDefaults=False,
              **xargs):
         ID=self.ID if ID is None else ID
+        if noDefaults:
+            repertoire=""
         if repertoire is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 repertoire=cls.DEFAULT_REP+suffix
@@ -86,6 +89,8 @@ class Base:
                 repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
                 if not chut:
                     warnings.warn("\n[Base save] repertoire est non spécifié, repertoire = {} ".format(repertoire))
+        if noDefaults:
+            ext=""
         if ext is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 ext =cls.DEFAULT_EXT+suffix
@@ -93,7 +98,8 @@ class Base:
                 ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
                 if not chut:
                     warnings.warn("\n[Base save] ext est non spécifié, ext = {} ".format(ext))
-        repo=path+delim+cls.DEFAULT_PATH+delim+repertoire
+        dp=cls.DEFAULT_PATH if not noDefaults else "" 
+        repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
         if not os.path.exists(repo):
             os.makedirs(repo)
         filo=repo+delim+ID+ext
@@ -120,7 +126,10 @@ class Base:
              delim="/",
              suffix="",
              chut=True,
+             noDefaults=False,
             **xargs):
+        if noDefaults:
+            repertoire=""
         if repertoire is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 repertoire =cls.DEFAULT_REP+suffix
@@ -128,6 +137,8 @@ class Base:
                 repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
                 if not chut:
                     warnings.warn("\n[Base load] repertoire est non spécifié, repertoire = {} ".format(repertoire)) 
+        if noDefaults:
+            ext=""
         if ext is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 ext =cls.DEFAULT_EXT+suffix
@@ -135,7 +146,8 @@ class Base:
                 ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
                 if not chut:
                     warnings.warn("\n[Base load] ext est non spécifié, ext = {} ".format(ext))
-        repo=path+delim+cls.DEFAULT_PATH+delim+repertoire
+        dp=cls.DEFAULT_PATH if not noDefaults else "" 
+        repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
         filo=repo+delim+ID+ext
         if not os.path.isfile(filo):
             if not chut:
