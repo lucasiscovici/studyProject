@@ -489,8 +489,8 @@ class Base:
             return cls.Save(rep,**opts)
         return rep
     @classmethod
-    def Export(cls,obj,save=True,saveArgs={}):
-        return cls.Export__(cls,obj,save=save,saveArgs=saveArgs)
+    def Export(cls,obj,save=True,version=None,saveArgs={}):
+        return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs)
 
     def export(self,save=True,*args,**xargs):
         # print(self.__class__.__name__)
