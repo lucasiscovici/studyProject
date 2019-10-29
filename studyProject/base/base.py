@@ -68,7 +68,7 @@ def get_args(l):
     except:
         rep=l
     if rep is None:
-        rep=[TypeVar("blabla")]
+        rep=[TypeVar("blabla"),TypeVar("blabla")]
     return rep
 class Base:
     DEFAULT_PATH="__studyFiles"
