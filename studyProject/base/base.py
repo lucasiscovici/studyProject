@@ -17,7 +17,8 @@ try:
     from typing import TypeVar, _GenericAlias
 except:
     from typing import GenericMeta as _GenericAlias
-    TypeVar=type("RIEN",(),{})
+    class TypeVar:
+        def __init__(self,*args,**xargs):pass
 import sys
 import inspect
 
@@ -67,7 +68,7 @@ def get_args(l):
     except:
         rep=l
     if rep is None:
-        rep=[TypeVar()]
+        rep=[TypeVar("blabla")]
     return rep
 class Base:
     DEFAULT_PATH="__studyFiles"
