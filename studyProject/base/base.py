@@ -17,6 +17,12 @@ try:
 except:
     from typing import GenericMeta as _GenericAlias
     TypeVar=type("RIEN",(),{})
+import sys
+
+def str2Class(str):
+    return getattr(sys.modules[__name__], str)
+
+
 def get_origin(l):
     try:
         rep=l.__origin__
@@ -78,7 +84,7 @@ class Base:
         #print( name)
         if deep:
             exported=self.export(save=False)
-            l=self.__class__.__import(self.__class__(),exported)
+            l=self.__class__.import__(self.__class__(),exported)
             l.ID=ID
 
             # l=self.__class__(ID)
@@ -202,57 +208,85 @@ class Base:
  
 
     @classmethod 
-    def __import(cls,ol,loaded):
+    def import__(cls,ol,loaded):
         # if not isinstance(cls(),Base):
         #     return loaded
-
-        try:
-            rrr=cls.__base__.__import
-            # rep=getAnnotationInit(rep)
-        except:
-            rrr=None
-            pass
-        if rrr is not None:
-            _=rrr(ol,loaded)
+        if loaded is None:
+            return None
+        if isinstance(loaded,dict) and len(loaded)==0:
+            return {}
+        if isinstance(loaded,list) and len(loaded)==0:
+            return []
+        if isinstance(loaded,tuple) and len(loaded)==0:
+            return tuple()
+        for i in cls.__bases__:
+            # print(i)
+            if hasattr(i,"import__"):
+                # print('ok')
+                ol=i.import__(ol,loaded)
+        # try:
+        #     rrr=cls.__base__.__import
+        #     # rep=getAnnotationInit(rep)
+        # except:
+        #     rrr=None
+        #     pass
+        # if rrr is not None:
+        #     ol=rrr(ol,loaded)
         # print(cls)
+        # print(ol)
         f=cls.EXPORTABLE
         ff=cls.EXPORTABLE_ARGS
         annot=getAnnotationInit(cls())
-        annot={k:v for k,v in annot.items() if k in f}
-        annot2=[i for i in f if i not in annot]
+        if "underscore" in ff:
+            annot={("_"+k):v for k,v in annot.items() if k in f}
+        else:
+            annot={k:v for k,v in annot.items() if k in f}
+        if "underscore" in ff:
+            annot2=["_"+i for i in f if "_"+i not in annot]
+        else:
+            annot2=[i for i in f if i not in annot]
         for k,v in annot.items():
             if get_origin(v) is list:
                 cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
                 if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
                     repo=loaded[k]
                 else:
-                    repo=[ cl.__import(cl(),i) for i in loaded[k]]
-                if "underscore" in ff:
-                    k="_"+k
+                    kk=loaded[k][0] if len(loaded[k])>0 else None
+                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                    repo=[ cl.import__(cl3(),i) for i in loaded[k]]
                 setattr(ol,k,repo)
             elif get_origin(v) is dict:
                 cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
                 if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
                     repo=loaded[k]
                 else:
-                    repo={k2:cl.__import(cl(),v2) for k2,v2 in loaded[k].items()}
-                if "underscore" in ff:
-                    k="_"+k
+                    kk=list(loaded[k].items())[0][1] if len(loaded[k])>0 else None
+                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                    repo={k2:cl.import__(cl2(),v2) for k2,v2 in loaded[k].items()}
+                # print(k)
+                # print(repo)
                 setattr(ol,k,repo)
             else:
                 if isinstance(get_origin(v)(),Base):
                     cl=get_origin(v)
-                    repo=cl.__import(cl(),loaded[k])
+                    kk=loaded[k]
+                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                    repo=cl.import__(cl2(),loaded[k])
                 else:
-                    repo=loaded[k]
-                if "underscore" in ff:
-                    k="_"+k
+                    try:
+                        repo=loaded[k]
+                    except Exception as e:
+                        print(loaded)
+                        print(k)
+                        print(v)
+                        print(get_origin(v))
+                        print(cls.__name__)
+                        print(ol)
+                        raise e
                 setattr(ol,k,repo)
 
         for i in annot2:
             repo=loaded[i]
-            if "underscore" in ff:
-                i="_"+i
             setattr(ol,i,repo)
         return ol
             # return obj.export(save=False)
@@ -275,7 +309,8 @@ class Base:
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
 
         ol=cls()
-        cls.__import(ol,loaded)
+        ol=cls.import__(ol,loaded)
+
         # if cls.__name__ == Base.__name__: 
         #     pass
         # else:
@@ -288,7 +323,7 @@ class Base:
         # ll=cls._import(loaded)
         # for k,v in ll.items():
         #     setattr(ol,k,v)
-        return ol
+        return cls._import(ol)
 
     @classmethod
     def __export(cls,obj):
@@ -299,15 +334,21 @@ class Base:
         elif isinstance(obj,dict):
             return {k:cls.__export(v) for k,v in obj.items()}
         if isinstance(obj,Base):
-            return obj.export(save=False)
+            rep=obj.export(save=False)
+            rep["____cls"]=obj.__class__.__name__
+            # rep.update({"____cls":obj.__class__.__name__})
+            return rep
         return obj
 
     @classmethod
     def _export(cls,obj,*args,**xargs):
         try:
-            rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
+            rpi=cls.EXPORTABLE
+            if "underscore" in cls.EXPORTABLE_ARGS:
+                rpi=["_"+i for i in rpi]
+            rep=takeInObjIfInArr(rpi,obj)
         except Exception as e:
-            print(cls.EXPORTABLE)
+            print(rpi)
             print(cls.__name__)
             print(obj)
             raise e
@@ -439,15 +480,16 @@ class Models(Base):
 
 
 class Metric(Base):
-    EXPORTABLE=["metric","scorer"]
+    EXPORTABLE=["metric","scorer","metricName"]
     def __init__(self,metric=None,scorer=None,scorerToo=True,greaterIsBetter=True,ID=None,**xargs):
         super().__init__(ID)
         if metric is not None:
-            self._metric=metric
+            self.metric=metric
             if isStr(metric):
                 self.metric=get_metric(metric)
             else:
                 self.metric=metric
+            self.metricName=self.metric.__repr__()
             self.scorer=scorer
             if scorerToo and scorer is None:
                 if isStr(metric):
@@ -458,8 +500,8 @@ class Metric(Base):
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
         nt="\n"+"\t"*ind
-        if isStr(self._metric):
-           return txt[:-1]+nt+"metric : {}]".format(self._metric) 
+        if isStr(self.metric):
+           return txt[:-1]+nt+"metric : {}]".format(self.metric) 
         return txt
 
             

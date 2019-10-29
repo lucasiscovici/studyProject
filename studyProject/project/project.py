@@ -215,7 +215,29 @@ class StudyProject(Base):
         obj=self.save(returnOK=True)
         return self.__class__.Export(obj,save=save,*args,**xargs)
 
-
+    @classmethod 
+    def _import(cls,loaded,clone=False):
+        sf={}
+        sl=loaded
+        for k,v_ in sl._studies.items():
+            v=ifelse(clone,lambda: clonee(v_),lambda:v_)()
+            print(isinstance(v,implements(IProject)))
+            if isinstance(v,implements(IProject)):
+                v.begin()
+                v.setProject(sl)
+                #print(v.idData)
+                v.setDataTrainTest(id_=v.getIdData())
+                try:
+                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn())
+                except:
+                    warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
+                    #print("Error")
+                    #print(inst)
+                        #print(v.isProcess)
+                v.check()
+            sf[k]=v
+        sl._studies=sf
+        return sl
 
     # @classmethod
     # def _export(cls,obj):
