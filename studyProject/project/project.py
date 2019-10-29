@@ -1,8 +1,9 @@
 from ..base import Base, DatasSupervise, BaseSupervise
-from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr
+from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass
 import os
 from . import IProject
 from typing import *
+from interface import implements
 class StudyProject(Base):
 
     DEFAULT_REP="study_project"
@@ -14,12 +15,12 @@ class StudyProject(Base):
         super().__init__(ID)
         self._studies={} if studies is None else studies
         self._curr=curr
-        self._data=data if data is not None else BeautifulDico({"_ZERO":DatasSupervise.from_XY_Train_Test(None,None,None,None,None,ID="_ZERO")})
+        self._data=data if data is not None else {}#BeautifulDico({"_ZERO":DatasSupervise.from_XY_Train_Test(None,None,None,None,None,ID="_ZERO")})
         
     def add(self,study_):
         study_2=study_
-        if isinstance(study_2,IProject):
-            study_2.project=self
+        if isinstance(study_2,implements(IProject)):
+            study_2._project=self
         self._studies[study_.ID]=study_2
         self._curr=study_2.ID
         return study_2
@@ -52,7 +53,7 @@ class StudyProject(Base):
             res=ifelse(id_ in self._studies,
                       lambda:self._studies[id_] if not clone else cloneStudy() ,
                       lambda:recreatee())()
-        if isinstance(res,IProject):res.check() 
+        if isinstance(res,implements(IProject)):res.check() 
         self._curr=id_
         return res
     
@@ -63,26 +64,31 @@ class StudyProject(Base):
     
     @staticmethod
     def getOrCreate(ID,repertoire=None,ext=None,
-                    path=os.getcwd(),delim="/",recreate=False,clone=False,deep=True,**xargs):
+                    path=os.getcwd(),delim="/",
+                    recreate=False,clone=False,deep=True,chut=True,**xargs):
         from .baseProject import IProject
-        repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
-        ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
+        # repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
+        # ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
-        repo=path+delim+repertoire
+        # repo=path+delim+repertoire
         # print(repo)
         if recreate:
             return StudyProject(ID)
+        repo = cls.get_repertoire(repertoire)
         if not os.path.exists(repo):
             return StudyProject(ID)
-        filo=repo+delim+ID+ext
+
+        filo,ok=cls.build_ext(repo,cls.get_ext(ext),ID,
+            delim=delim,recreate=recreate,chut=chut)
         if not os.path.isfile(filo):
             return StudyProject(ID)
+
         sl=SaveLoad.load(filo,**xargs)
         sf={}
         for k,v_ in sl._studies.items():
             v=ifelse(clone,lambda: clonee(v_),lambda:v_)()
-            if isinstance(v,IProject):
+            if isinstance(v,implements(IProject)):
                 v.begin()
                 v.setProject(sl)
                 #print(v.idData)
@@ -106,38 +112,54 @@ class StudyProject(Base):
     def save(self,repertoire=None,ext=None,path=os.getcwd(),
              delim="/",returnOK=False,**xargs):
         ID=self.ID
-        repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
-        ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
-        repo=path+delim+repertoire
-        if not os.path.exists(repo):
-            os.makedirs(repo)
-        filo=repo+delim+ID+ext
-        sl=StudyProject.clone(self,deep=True)
+        # repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
+        # ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
+        # repo=path+delim+repertoire
+        # if not os.path.exists(repo):
+        #     os.makedirs(repo)
+        # filo=repo+delim+ID+ext
+        sl=StudyProject.clone(self,deep=False)
+        # sl=StudyProject.clone(self,deep=True)
         ff={}
-        for k,v in sl._studies.items():
-            if isinstance(v,IProject):
+        for k,v_ in sl._studies.items():
+            v=v_
+            # print(isinstance(v_,implements(IProject)))
+            if isinstance(v_,implements(IProject)):
+                # v__=v.project
+                # v=v_.clone(withoutProject=True)
                 li=v.getIdData()
-                v.setDataTrainTest(id_="_ZERO")
+                # v._project=v__
+                v._datas={}
+                # v.setDataTrainTest(id_="_ZERO")
                 v.setIdData(li)
-                v.setProject(True)
+                v.setProject(v.ID)
+
+                # print(v)
             ff[k]=v
+
+        # print(ff)
         sl._studies=ff
+        # copye=StudyProject.clone(sl,deep=True)
+        # copye._studies=ff
+        # sl=copye
         if returnOK:
             return sl
         else:
-            SaveLoad.save(sl,filo,**xargs)
+            self.__class__.Save(sl,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
+            # SaveLoad.save(sl,filo,**xargs)
     
     
     
     def clone_(self,ID=None,deep=False):
         return getStaticMethodFromObj(self,"clone")(ID,deep)
         
-    @staticmethod
-    def clone(self,ID=None,deep=False):
-        cloned=Base.clone(self,ID=ID,deep=deep)
-        if deep:
-            cloned._studies={k:getStaticMethodFromObj(v,"clone")(v,v.ID,deep=True) for k,v in self._studies.items()}
-        return cloned
+    # @staticmethod
+    # def clone(self,ID=None,deep=False):
+
+    #     cloned=Base.clone(self,ID=ID,deep=deep)
+    #     if deep:
+    #         cloned._studies={k:getStaticMethodFromObj(v,"clone")(v,v.ID,deep=True) for k,v in self._studies.items()}
+    #     return cloned
     
     @staticmethod
     def fromStudyProject(self,studyG):
@@ -189,11 +211,18 @@ class StudyProject(Base):
             rep =(rep[:-1]+nt+"Datas : {}]").format(ntt)
         return rep
 
+    def export(self,save=True,*args,**xargs):
+        obj=self.save(returnOK=True)
+        return self.__class__.Export(obj,save=save,*args,**xargs)
 
-    @classmethod
-    def _export(cls,obj):
-        rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
-        rep={k:(v.export(save=False) if isinstance(v,Base) else v) for k,v in rep.items()}
-        rep["data"] = {k:v.export(save=False) for k,v in rep["data"].items()}
-        rep["studies"] = {k:v.export(save=False) for k,v in rep["studies"].items()}
-        return rep
+
+
+    # @classmethod
+    # def _export(cls,obj):
+    #     obj=obj.save(returnOK=True)
+    #     # rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
+
+    #     # rep={k:(v.export(save=False) if isinstance(v,Base) else v) for k,v in rep.items()}
+    #     # rep["data"] = {k:v.export(save=False) for k,v in rep["data"].items()}
+    #     # rep["studies"] = {k:v.export(save=False) for k,v in rep["studies"].items()}
+    #     return obj

@@ -14,10 +14,15 @@ F=False
 
 from inspect import getfullargspec
 def securerRepr(obj,ind=1,*args,**xargs):
+    if (isinstance(obj,dict) or isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==0:
+        return "Empty"
     try:
         u=obj.__repr__(ind,*args,**xargs)
     except:
-        u=obj.__repr__()
+        try:
+            u=obj.__repr__()
+        except:
+            u=None
     return u
 
 def getAnnotationInit(obj):

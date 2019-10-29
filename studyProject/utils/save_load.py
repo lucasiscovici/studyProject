@@ -20,7 +20,7 @@ class SaveLoad:
     def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,set_default_extension=False,chut=True,preventError=True,**xargs):
         #return dill.dump(selfo,open(name,n),)
         if not chut:
-            ty="\n[SaveLoad load] Saving {}".format(name)
+            ty="\n[SaveLoad Save] Saving {}".format(name)
             with showWarningsTmp:
                 warnings.warn(ty)
         if preventError:
@@ -29,10 +29,10 @@ class SaveLoad:
                     old=SaveLoad.load(name,chut=True)
                 except:
                     preventError=False
-                    if not chut:
-                        ty="\n[SaveLoad load] No prevent possible pour {}".format(name)
-                        with showWarningsTmp:
-                            warnings.warn(ty)
+                    # if not chut:
+                    #     ty="\n[SaveLoad load] No prevent possible pour {}".format(name)
+                    #     with showWarningsTmp:
+                    #         warnings.warn(ty)
             else:
                 preventError=False
         try:

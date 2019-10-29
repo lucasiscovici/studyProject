@@ -6,7 +6,7 @@ from .util2 import getPrivateAttr,flatArray, getClassName, has_method, merge, \
 					getStaticMethod, getStaticMethodFromObj, getStaticMethodFromCls, merge_two_dicts, ifNotNone,\
 					T, F, getsourceP, takeInObjIfInArr, convertCamelToSnake, securerRepr, getAnnotationInit
 from .is_ import isInt, isStr, isNumpyArr
-from .struct import StudyList, StudyDict, StudyNpArray, studyDico, studyList, Obj, BeautifulDico, BeautifulList
+from .struct import StudyList, StudyDict, StudyNpArray, studyDico, studyList, Obj, BeautifulDico, BeautifulList, StudyClass
 from .sklearn_utils import get_metric, check_cv2
 from .compress_pickle import compress_pickle
 from .save_load import SaveLoad

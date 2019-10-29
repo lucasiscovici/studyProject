@@ -41,6 +41,31 @@ class Base:
     EXPORTABLE=["ID"]
     EXPORTABLE_SUFFIX="EXP"
     EXPORTABLE_ARGS={}
+
+    @classmethod
+    def get_repertoire(cls,repertoire,suffix=None,chut=True):
+        suffix=cls.EXPORTABLE_SUFFIX if suffix is None else suffix
+        if repertoire is None:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
+                repertoire=cls.DEFAULT_REP+suffix
+            else:
+                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base save] repertoire est non spécifié, repertoire = {} ".format(repertoire))
+        return repertoire
+
+    @classmethod
+    def get_ext(cls,ext,suffix=None,chut=True):
+        suffix=cls.EXPORTABLE_SUFFIX if suffix is None else suffix
+        if ext is None:
+            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
+                ext =cls.DEFAULT_EXT+suffix
+            else:
+                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
+                if not chut:
+                    warnings.warn("\n[Base save] ext est non spécifié, ext = {} ".format(ext))
+        return ext
+
     def __init__(self,ID:str=None):
         self.ID=ifelse(ID is None,lambda:randomString(),lambda:ID)() 
 
@@ -68,6 +93,36 @@ class Base:
             return me
 
     @classmethod
+    def build_repertoire(cls,repertoire,path=os.getcwd(),dp=None,delim="/",
+        fn=lambda repo:os.makedirs(repo)):
+        dp=cls.DEFAULT_PATH if dp is None else dp 
+        repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
+        if not os.path.exists(repo):
+            fn()
+        return repo
+
+    @classmethod 
+    def build_ext(cls,repo,ext,ID,delim="/",recreate=False,chut=True):
+        ok=True
+        filo=repo+delim+ID+ext
+        if os.path.isfile(filo) and not recreate:
+            ok=False
+            if not chut:
+                warnings.warn("\n[Base save] {} exite deja est recreate est à faux".format(filo))
+        return (ok,filo)
+
+    @classmethod
+    def get_rep_ext(cls,repo,ext,chut=True):
+        return (cls.get_repertoire(repo,chut=chut),
+                cls.get_ext(ext,chut=chut))
+
+    @classmethod
+    def build_rep_ext(cls,repertoire,ext,ID,path=os.getcwd(),dp=None,delim="/",
+                        fn=lambda repo:os.makedirs(repo),recreate=False,chut=True):
+        repo=cls.build_repertoire(repertoire,path=path,dp=dp,delim=delim,fn=fn)
+        return (repo,
+            cls.build_ext(repo,ext,ID,delim,recreate,chut))
+    @classmethod
     def Save(cls,self,
              ID,
              repertoire=None,
@@ -82,31 +137,16 @@ class Base:
         ID=self.ID if ID is None else ID
         if noDefaults:
             repertoire=""
-        if repertoire is None:
-            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                repertoire=cls.DEFAULT_REP+suffix
-            else:
-                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
-                if not chut:
-                    warnings.warn("\n[Base save] repertoire est non spécifié, repertoire = {} ".format(repertoire))
-        if noDefaults:
             ext=""
-        if ext is None:
-            if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                ext =cls.DEFAULT_EXT+suffix
-            else:
-                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
-                if not chut:
-                    warnings.warn("\n[Base save] ext est non spécifié, ext = {} ".format(ext))
-        dp=cls.DEFAULT_PATH if not noDefaults else "" 
-        repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
-        if not os.path.exists(repo):
-            os.makedirs(repo)
-        filo=repo+delim+ID+ext
-        if os.path.isfile(filo) and not recreate:
-            if not chut:
-                warnings.warn("\n[Base save] {} exite deja est recreate est à faux".format(filo))
-        SaveLoad.save(self,filo,**xargs)
+
+
+        repertoire,ext=cls.get_rep_ext(repertoire,ext,chut=chut)
+
+        repo,(ok,filo)=cls.build_rep_ext(repertoire,ext,ID,dp=cls.DEFAULT_PATH if not noDefaults else "",
+                                            chut=chut,recreate=recreate)
+        # print(ok)
+        if ok:
+            SaveLoad.save(self,filo,chut=chut,**xargs)
     
     def save(self,
              repertoire=None,
@@ -264,7 +304,13 @@ class Base:
 
     @classmethod
     def _export(cls,obj,*args,**xargs):
-        rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
+        try:
+            rep=takeInObjIfInArr(cls.EXPORTABLE,obj)
+        except Exception as e:
+            print(cls.EXPORTABLE)
+            print(cls.__name__)
+            print(obj)
+            raise e
         rep={ k:cls.__export(v) 
                 for k,v in rep.items() 
             }
@@ -272,21 +318,29 @@ class Base:
 
     @classmethod
     def Export(cls,obj,save=True,saveArgs={}):
+        kk=False
+        # print(obj)
         if cls.__name__ == Base.__name__: 
             papa={}
         else:
             # print(cls.__base__)
-            try:
-                papa = cls.__base__.Export(obj,save=False)
-            except:
-                papa = {}
+            # try:
+            papa={}
+            for i in cls.__bases__:
+                if hasattr(i,"Export"):
+                    op=i.Export(obj,save=False)
+                    papa=merge_two_dicts(papa,op)
+            # except Exception as e:
+            #     papa = {}
+            #     # if cls.__name__  == "BaseSupervise":
+            #     print(cls.__name__)
+            #     print(obj)
+            #     raise e
+
         # print(cls.__name__)
-        # print(papa)
         rep  = cls._export(obj)
-        # print(rep)
         rep  = merge_two_dicts(papa,rep)
         # print(rep.keys())
-        # print(rep)
 
         if save:
             # print(rep)
@@ -437,7 +491,7 @@ class CvResultatsTrVal(Base):
 
 class CvSplit(Base):
     """docstring for CvSplit"""
-    EXPORTABLE=["train","validation","all"]
+    EXPORTABLE=["train","validation","all_"]
     def __init__(self, train=None, validation=None, all_=None, ID=None):
         super().__init__(ID)
         self.train = train
@@ -469,7 +523,7 @@ from typing import Dict, Tuple, Sequence, List
 
 class CrossValidItem(CvResultatsTrValOrigSorted):
     EXPORTABLE=["cv","resultats","splitted","args"]
-    def __init__(self,ID:str=None,cv:CvSplit=None,resultats:List[CvResultats]=None,args:Dict=None):
+    def __init__(self,ID:str=None,cv:CvSplit=None,resultats:Dict[str,CvResultats]={},args:Dict=None):
         if cv is None:
              super().__init__()
         else:
@@ -486,7 +540,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         # self.name=name
         self.cv=cv
         self.splitted=cv
-        self.resulats=resultats
+        self.resultats=resultats
         self.args=args
 
     def __repr__(self,ind=1):
@@ -500,7 +554,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
     def __init__(self,cv=None,classifier=None,metric:Metric=None,nameCV=None,parallel=True,random_state=42,
-                 shuffle=True,recreate=False,models=None):
+                 shuffle=True,recreate=False,models=None,namesMod=None):
         super().__init__(nameCV)
         self.cv=cv
         self.parallel=parallel
@@ -511,8 +565,9 @@ class CrossValid(Base):
         self.metric=metric
         self.models=models
         self.nameCV = self.ID
+        self.namesMod=namesMod
         self.argu=dict(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
-            nameCV=self.nameCV,recreate=recreate,parallel=parallel,metric=metric,models=models)
+            nameCV=self.nameCV,namesMod=namesMod,recreate=recreate,parallel=parallel,metric=metric,models=models)
         self.cv=CrossValid.getCV(self)
         
     @staticmethod
@@ -548,6 +603,7 @@ class CrossValid(Base):
         metric=self.metric.scorer
         parallel=self.parallel
         models=self.models
+        namesMod=[i.__class__.__name__ for i in models] if self.namesMod is None else self.namesMod
         #models=ifelse(models,models,self.models)
                            
         cvvTr=cvv.train
@@ -557,7 +613,7 @@ class CrossValid(Base):
         cvvValCon=np.argsort(np.concatenate(cvvVal))
         
         resu2=[cross_validate(mod ,X,y,return_train_score=True,
-                            return_estimator=True,cv=cvv.all,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
+                            return_estimator=True,cv=cvv.all_,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
 
         preduVal=[[i.predict(X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
                            
@@ -574,32 +630,37 @@ class CrossValid(Base):
         decVal=[[getDecFn(i,X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
         decVal2=[concatenateDecFn(preduI,cvvValCon) for preduI in decVal]
 
-        resul=[]
-        for i in range(len(models)):
-            resul.append(CvResultats(CvResultatsPreds(CvOrigSorted(preduTr,preduuTr),
-                                                      CvOrigSorted(preduVal,preduuVal)),
-                                     CvResultatsScores(scoreTr,scoreVal),
-                                     CvResultatsCvValidate(value=resu2),
+        resul={}
+        for i,name in enumerate(namesMod):
+            resul[name]=CvResultats(CvResultatsPreds(CvOrigSorted(preduTr[i],preduuTr[i]),
+                                                      CvOrigSorted(preduVal[i],preduuVal[i])),
+                                     CvResultatsScores(scoreTr[i],scoreVal[i]),
+                                     CvResultatsCvValidate(value=resu2[i]),
                                      CvResultatsDecFn(None,
-                                                     CvOrigSorted(decVal,decVal2)) ))
+                                                     CvOrigSorted(decVal[i],decVal2[i])) )
 
         return resul
         
 class BaseSupervise(Base):
     # @abstractmethod
-    EXPORTABLE=["datas","models","metric","_cv","_nameCvCurr"]
+    EXPORTABLE=["datas","models","metric","cv","nameCvCurr"]
+    EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,datas:DatasSupervise=None,
                     models:Models=None,metric:Metric=None,
+                    cv:Dict[str,CrossValidItem]={},nameCvCurr=None,
                     *args,**xargs):
         super().__init__(ID)
         self._datas=datas
         self._models=models
         self._metric=metric
+        self._cv=cv
+        self._nameCvCurr=nameCvCurr
         self.init()
     
     def init(self):
-        self._cv={}
-        self._nameCvCurr=None
+        # self._cv={}
+        pass
+        # self._nameCvCurr=None
         
 
     def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,namesY=None):
@@ -620,17 +681,19 @@ class BaseSupervise(Base):
         if models is not None:
             resu=self.getIndexFromNames(models)
             models=np.array(self.models)[resu]
+            namesMod=np.array(self._models.namesModels)[resu]
         else:
             models=self.models
+            namesMod=self._models.namesModels
         if metric is None:
             metric=self.scorer
         cv=CrossValid(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
                  nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
-                 models=models)
+                 models=models,namesMod=namesMod)
         cv.checkOK(list(self.cv.keys()))
         resu=cv.computeCV(self.X_train,self.y_train)
-        self.cv[resu[0]]=resu[1]
-        self.nameCvCurr=resu[0]
+        self._cv[resu[0]]=resu[1]
+        self._nameCvCurr=resu[0]
         
     
     @staticmethod
@@ -752,7 +815,7 @@ class BaseSupervise(Base):
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"datas : {},"+nt+"models : {},"+nt+"metric : {},"+nt+"cv : {},"+nt+"nameCvCurr : {}]"
         # print(stri.format(self._datas,self._models,self._metric,self._cv,self._nameCvCurr))
-        return stri.format(self._datas,securerRepr(self._models,ind+2),self._metric.__repr__(ind+2),"Empty" if len(self._cv)==0 else securerRepr(BeautifulDico(self.cv),ind+1),self._nameCvCurr)
+        return stri.format(securerRepr(self._datas),securerRepr(self._models,ind+2),self._metric.__repr__(ind+2),securerRepr(BeautifulDico(self.cv),ind+1),self._nameCvCurr)
 
 def getDecFn(l,X):
     attrs = ("predict_proba", "decision_function")

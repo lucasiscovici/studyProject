@@ -2,6 +2,14 @@ from collections import UserDict,UserList
 import numpy as np
 from . import getPrivateAttr, isInt, isNumpyArr
 class StudyList(UserList): pass
+
+
+class StudyClass:
+    def __init__(self,**xargs):
+        for k,v in xargs.items():
+            setattr(self,k,v)
+
+
 class StudyDict(UserDict):
     def __getitem__(self, key):
         key=list(self.keys())[key] if isInt(key) else key

@@ -7,16 +7,11 @@ import warnings
 from .interfaceProject import IProject
 from abc import abstractmethod
 from interface import implements, Interface
-def securerRepr(obj,ind=1,*args,**xargs):
-    try:
-        u=obj.__repr__(ind,*args,**xargs)
-    except:
-        u=obj.__repr__()
-    return u
+from ..utils import securerRepr
 
 class BaseSuperviseProject(BaseSupervise,implements(IProject)):
-    EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn","_isProcessedDataFromProject"]
-
+    EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn","isProcessedDataFromProject"]
+    EXPORTABLE_ARGS=dict(underscore=True)
     @abstractmethod
     def __init__(self,ID=None,datas:DatasSupervise=None,
                         models:Models=None,metric:Metric=None,project:StudyProject=None,*args,**xargs):
@@ -78,7 +73,15 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"project : {},"+nt+"idDataProject : {},"+nt+"proprocessDataFromProjectFn : {},"+nt+"isProcessedDataFromProject : {}]"
+        # print(stri)
         return stri.format(securerRepr(self.project,ind+2,onlyID=True),self.idDataProject,self.proprocessDataFromProjectFn,self.isProcessedDataFromProject)
+
+    def clone(self,withoutProject=True,*args,**xargs):
+        p=self.project
+        self._project=p.ID if p is not None else None
+        r=super().clone(*args,**xargs)
+        self._project=p
+        return r
 
 
 
