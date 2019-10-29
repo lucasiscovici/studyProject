@@ -6,8 +6,8 @@ from typing import *
 from interface import implements
 class StudyProject(Base):
 
-    DEFAULT_REP="study_project"
-    DEFAULT_EXT=".studyProject"
+    # DEFAULT_REP="study_project"
+    # DEFAULT_EXT=".studyProject"
     EXPORTABLE=["studies","curr","data"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,studies:Dict[str,BaseSupervise]=None,

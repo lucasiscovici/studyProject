@@ -11,6 +11,7 @@ import os
 import warnings
 from interface import implements, Interface
 from abc import ABCMeta, abstractmethod, ABC
+from ..version import __version__
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
 try:
@@ -77,6 +78,33 @@ class Base:
     EXPORTABLE=["ID"]
     EXPORTABLE_SUFFIX="EXP"
     EXPORTABLE_ARGS={}
+
+
+    # def __getstate__(self):
+    #     try:
+    #         state = super().__getstate__()
+    #     except AttributeError:
+    #         state = self.__dict__.copy()
+
+    #     if type(self).__module__.startswith('sklearn.'):
+    #         return dict(state.items(), _sklearn_version=__version__)
+    #     else:
+    #         return state
+
+    # def __setstate__(self, state):
+    #     if type(self).__module__.startswith('sklearn.'):
+    #         pickle_version = state.pop("_sklearn_version", "pre-0.18")
+    #         if pickle_version != __version__:
+    #             warnings.warn(
+    #                 "Trying to unpickle estimator {0} from version {1} when "
+    #                 "using version {2}. This might lead to breaking code or "
+    #                 "invalid results. Use at your own risk.".format(
+    #                     self.__class__.__name__, pickle_version, __version__),
+    #                 UserWarning)
+    #     try:
+    #         super().__setstate__(state)
+    #     except AttributeError:
+    #         self.__dict__.update(state)
 
     @classmethod
     def get_repertoire(cls,repertoire,suffix=None,chut=True):
@@ -362,6 +390,14 @@ class Base:
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
 
+        if "__version__" in loaded:
+            if loaded["__version__"] != __version__:
+                warnings.warn(
+                    "Trying to unpickle {0} from version {1} when "
+                    "using version {2}. This might lead to breaking code or "
+                    "invalid results. Use at your own risk.".format(
+                        cls.__name__, loaded["__version__"], __version__),
+                    UserWarning)
         ol=cls()
         ol=cls.import__(ol,loaded)
 
@@ -413,7 +449,7 @@ class Base:
         return rep
 
     @staticmethod
-    def Export__(cls,obj,save=True,saveArgs={}):
+    def Export__(cls,obj,save=True,saveArgs={},version=None):
         kk=False
         # print(obj)
         if cls.__name__ == Base.__name__: 
@@ -443,6 +479,8 @@ class Base:
         # print(cls.__name__)
         rep  = cls._export(obj)
         rep  = merge_two_dicts(papa,rep)
+        if version is not None:
+            rep["__version__"]=version
         # print(rep.keys())
 
         if save:
@@ -457,7 +495,7 @@ class Base:
     def export(self,save=True,*args,**xargs):
         # print(self.__class__.__name__)
         # print(self)
-        return self.__class__.Export(self,save,*args,**xargs)
+        return self.__class__.Export(self,save,version=__version__,*args,**xargs)
 
     def __repr__(self,ind=1):
         nt="\n"+"\t"*ind
