@@ -3,10 +3,14 @@ import warnings
 from . import showWarningsTmp
 import os
 DEFAULT_COMPRESSION="bz2"
+COMPRESSION_TYPES=["None","bz2","gzip","zipfile","pickle","lzma"]
 class SaveLoad:
     @staticmethod
-    def load(name,n="rb", compression=DEFAULT_COMPRESSION,set_default_extension=False,chut=True,**xargs):
+    def load(name,n="rb", compression=DEFAULT_COMPRESSION,
+        set_default_extension=False,chut=True,addExtension=False,**xargs):
         #return dill.load(open(name,n))
+        if addExtension:
+            name=name+(".{}").format(compression)
         ty="\n[SaveLoad load] Loading {}".format(name)
         # warnings.warn(ty)
         # print("id")
@@ -17,8 +21,10 @@ class SaveLoad:
                                     set_default_extension=set_default_extension,**xargs)
         return rep
     @staticmethod
-    def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,set_default_extension=False,chut=True,preventError=True,**xargs):
+    def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,addExtension=False,set_default_extension=False,chut=True,preventError=True,**xargs):
         #return dill.dump(selfo,open(name,n),)
+        if addExtension:
+            name=name+(".{}").format(compression)
         if not chut:
             ty="\n[SaveLoad Save] Saving {}".format(name)
             with showWarningsTmp:

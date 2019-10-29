@@ -33,7 +33,7 @@ class StudyProject(Base):
         self._curr=id_
         return self.get(od_)
         
-    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True):
+    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,imported=False):
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
         def recreatee():
@@ -50,9 +50,14 @@ class StudyProject(Base):
         if recreate:
             res=recreatee()
         else:
-            res=ifelse(id_ in self._studies,
-                      lambda:self._studies[id_] if not clone else cloneStudy() ,
-                      lambda:recreatee())()
+            if imported:
+                res= cls.Import(id_)
+                res = clonee(res) if clone else res
+                self.add(res)
+            else:
+                res=ifelse(id_ in self._studies,
+                          lambda:self._studies[id_] if not clone else cloneStudy() ,
+                          lambda:recreatee())()
         if isinstance(res,implements(IProject)):res.check() 
         self._curr=id_
         return res
@@ -84,7 +89,7 @@ class StudyProject(Base):
         if not os.path.isfile(filo):
             return StudyProject(ID)
 
-        sl=SaveLoad.load(filo,**xargs)
+        sl=cls.Load(filo,**xargs)
         sf={}
         for k,v_ in sl._studies.items():
             v=ifelse(clone,lambda: clonee(v_),lambda:v_)()
@@ -145,7 +150,7 @@ class StudyProject(Base):
         if returnOK:
             return sl
         else:
-            self.__class__.Save(sl,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
+            self.__class__.Save(sl,ID,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
             # SaveLoad.save(sl,filo,**xargs)
     
     

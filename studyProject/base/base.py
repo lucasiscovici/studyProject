@@ -73,7 +73,7 @@ def get_args(l):
 class Base:
     DEFAULT_PATH="__studyFiles"
     DEFAULT_REP="study_"
-    DEFAULT_EXT=".study"
+    DEFAULT_EXT=".study_"
     EXPORTABLE=["ID"]
     EXPORTABLE_SUFFIX="EXP"
     EXPORTABLE_ARGS={}
@@ -83,9 +83,9 @@ class Base:
         suffix=cls.EXPORTABLE_SUFFIX if suffix is None else suffix
         if repertoire is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                repertoire=cls.DEFAULT_REP+suffix
+                repertoire=cls.DEFAULT_REP+"_"+suffix
             else:
-                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
+                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+"_"+suffix
                 if not chut:
                     warnings.warn("\n[Base save] repertoire est non spécifié, repertoire = {} ".format(repertoire))
         return repertoire
@@ -95,9 +95,9 @@ class Base:
         suffix=cls.EXPORTABLE_SUFFIX if suffix is None else suffix
         if ext is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                ext =cls.DEFAULT_EXT+suffix
+                ext =cls.DEFAULT_EXT+"."+suffix
             else:
-                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
+                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+"."+suffix
                 if not chut:
                     warnings.warn("\n[Base save] ext est non spécifié, ext = {} ".format(ext))
         return ext
@@ -169,6 +169,7 @@ class Base:
              suffix="",
              chut=True,
              noDefaults=False,
+             addExtension=True,
              **xargs):
         ID=self.ID if ID is None else ID
         if noDefaults:
@@ -182,7 +183,7 @@ class Base:
                                             chut=chut,recreate=recreate)
         # print(ok)
         if ok:
-            SaveLoad.save(self,filo,chut=chut,**xargs)
+            SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,**xargs)
     
     def save(self,
              repertoire=None,
@@ -191,6 +192,7 @@ class Base:
              path=os.getcwd(),
              delim="/",
              recreate=False,
+             addExtension=True,
              **xargs):
         self.__class__.Save(self,ID,repertoire,ext,path,delim,recreate,**xargs)
     
@@ -203,23 +205,24 @@ class Base:
              suffix="",
              chut=True,
              noDefaults=False,
+             addExtension=True,
             **xargs):
         if noDefaults:
             repertoire=""
         if repertoire is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                repertoire =cls.DEFAULT_REP+suffix
+                repertoire =cls.DEFAULT_REP+"_"+suffix
             else:
-                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+suffix
+                repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+"_"+suffix
                 if not chut:
                     warnings.warn("\n[Base load] repertoire est non spécifié, repertoire = {} ".format(repertoire)) 
         if noDefaults:
             ext=""
         if ext is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
-                ext =cls.DEFAULT_EXT+suffix
+                ext =cls.DEFAULT_EXT+"."+suffix
             else:
-                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+suffix
+                ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+"."+suffix
                 if not chut:
                     warnings.warn("\n[Base load] ext est non spécifié, ext = {} ".format(ext))
         dp=cls.DEFAULT_PATH if not noDefaults else "" 
@@ -229,7 +232,7 @@ class Base:
             if not chut:
                 warnings.warn("\n[Base load] {} n'exite pas ".format(filo))
         try:
-            resu=SaveLoad.load(filo,**xargs)
+            resu=SaveLoad.load(filo,addExtension=addExtension,chut=chut,**xargs)
         except Exception as e:
             raise e
             resu=None
@@ -464,7 +467,7 @@ class Base:
     def __getattr__(self,a):
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
         else: raise AttributeError(a)
-
+# factoryCls.register_class(Base)
 class Datas(Base):
     EXPORTABLE=["X","y","namesY"]
     def __init__(self,X=None,y=None,namesY=None,ID=None):
@@ -487,6 +490,7 @@ class Datas(Base):
         stri=txt[:-1]+nt+"X : {},"+nt+"y : {},"+nt+"namesY : {}]"
         return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None,self.namesY)
 
+factoryCls.register_class(Datas)
 
 
 class DatasSupervise(Base):
@@ -511,6 +515,7 @@ class DatasSupervise(Base):
         stri=txt[:-1]+nt+"dataTrain : {},"+nt+"dataTest : {}]"
         return stri.format(securerRepr(self.dataTrain,ind+2),
                             securerRepr(self.dataTest,ind+2))
+factoryCls.register_class(DatasSupervise)
 class Models(Base):
     EXPORTABLE=["models","namesModels","mappingNamesModelsInd","indNamesModels"]
     def __init__(self,models=None,ID=None):
@@ -543,7 +548,7 @@ class Models(Base):
                         securerRepr(BeautifulList(self.indNamesModels) if self.indNamesModels is not None else self.indNamesModels,ind+1),
                         securerRepr(BeautifulDico(self.mappingNamesModelsInd),ind+1))
 
-
+factoryCls.register_class(Models)
 class Metric(Base):
     EXPORTABLE=["metric","scorer","metricName"]
     def __init__(self,metric=None,scorer=None,scorerToo=True,greaterIsBetter=True,ID=None,**xargs):
@@ -570,7 +575,7 @@ class Metric(Base):
         return txt
 
             
-
+factoryCls.register_class(Metric)
 class CvOrigSorted(Base):
     EXPORTABLE=["original","sorted"]
     """docstring for CvOrigSorted"""
@@ -579,7 +584,7 @@ class CvOrigSorted(Base):
         self.original = original
         self.sorted = sorted_
         
-
+factoryCls.register_class(CvOrigSorted)
 class CvResultatsTrValOrigSorted(Base):
     """docstring for CvResultatsPreds"""
     EXPORTABLE=["Tr","Val"]
@@ -587,7 +592,7 @@ class CvResultatsTrValOrigSorted(Base):
         super().__init__(ID)
         self.Tr=tr
         self.Val=val
-
+factoryCls.register_class(CvResultatsTrValOrigSorted)
 class CvResultatsTrVal(Base):
     """docstring for CvResultatsPreds"""
     EXPORTABLE=["Tr","Val"]
@@ -595,7 +600,7 @@ class CvResultatsTrVal(Base):
         super().__init__(ID)
         self.Tr=tr
         self.Val=val
-
+factoryCls.register_class(CvResultatsTrVal)
 class CvSplit(Base):
     """docstring for CvSplit"""
     EXPORTABLE=["train","validation","all_"]
@@ -608,13 +613,15 @@ class CvSplit(Base):
     @staticmethod
     def fromCvSplitted(cv):
         return CvSplit([i[0] for i in cv],[i[1] for i in cv],cv)
-
+factoryCls.register_class(CvSplit)
 class CvResultatsCvValidate(Obj): pass
+factoryCls.register_class(CvResultatsCvValidate)
 class CvResultatsScores(CvResultatsTrVal): pass
-
+factoryCls.register_class(CvResultatsScores)
 class CvResultatsPreds(CvResultatsTrValOrigSorted): pass
-
+factoryCls.register_class(CvResultatsPreds)
 class CvResultatsDecFn(CvResultatsTrValOrigSorted): pass
+factoryCls.register_class(CvResultatsDecFn)
 class CvResultats(Base):
     """docstring for CvResultats"""
     EXPORTABLE=["preds","scores","cv_validate","decFn"]
@@ -624,7 +631,7 @@ class CvResultats(Base):
         self.scores=scores
         self.cv_validate=cv_validate
         self.decFn=decFn
-        
+factoryCls.register_class(CvResultatsPreds)
 from typing import Iterable
 from typing import Dict, Tuple, Sequence, List
 
@@ -658,7 +665,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         #securerRepr(BeautifulDico(self.args),ind)
         return stri.format(securerRepr(self.cv,ind=ind+1),
             securerRepr(BeautifulDico(self.resultats),ind=ind+1))
-
+factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
     def __init__(self,cv=None,classifier=None,metric:Metric=None,nameCV=None,parallel=True,random_state=42,
@@ -748,7 +755,7 @@ class CrossValid(Base):
                                                      CvOrigSorted(decVal[i],decVal2[i])) )
 
         return resul
-        
+factoryCls.register_class(CrossValid)
 class BaseSupervise(Base):
     # @abstractmethod
     EXPORTABLE=["datas","models","metric","cv","nameCvCurr"]
