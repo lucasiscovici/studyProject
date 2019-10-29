@@ -54,10 +54,10 @@ def str2Class(str):
     return rep
 def get_origin(l):
     try:
-        rep=l.__origin__
+        rep=l.__orig_bases__[0]
     except:
         try:
-            rep=l.__orig_bases__[0]
+            rep=l.__origin__
         except:
             rep=l
     return rep
