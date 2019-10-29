@@ -89,6 +89,14 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         self._project=p
         return r
 
+    @classmethod
+    def Export(cls,obj,save=True,saveArgs={},me="BaseSuperviseProject"):
+        # print("ici")# TODO: TWO LOOP ON wHY ?
+        po=obj._project
+        if not isStr(po):
+            obj._project=po.ID
+        return cls.Export__(cls,obj,save=save,saveArgs=saveArgs)
+
     @classmethod 
     def import__(cls,ol,loaded,me="BaseSuperviseProject"):
         # print("ici")

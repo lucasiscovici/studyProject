@@ -408,8 +408,8 @@ class Base:
         rep["____cls"]=cls.__name__
         return rep
 
-    @classmethod
-    def Export(cls,obj,save=True,saveArgs={}):
+    @staticmethod
+    def Export__(cls,obj,save=True,saveArgs={}):
         kk=False
         # print(obj)
         if cls.__name__ == Base.__name__: 
@@ -418,8 +418,15 @@ class Base:
             # print(cls.__base__)
             # try:
             papa={}
+            # argus=get_default_args(cls.Export)
             for i in cls.__bases__:
                 if hasattr(i,"Export"):
+                    # if "me" in argus:
+                    #     print(cls.__name__)
+                    #     print(argus)
+                    #     print(i.__name__)
+                    #     if argus["me"] == i.__name__ and False:
+                    #         continue
                     op=i.Export(obj,save=False)
                     papa=merge_two_dicts(papa,op)
             # except Exception as e:
@@ -439,6 +446,9 @@ class Base:
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
             return cls.Save(rep,**opts)
         return rep
+    @classmethod
+    def Export(cls,obj,save=True,saveArgs={}):
+        return cls.Export__(cls,obj,save=save,saveArgs=saveArgs)
 
     def export(self,save=True,*args,**xargs):
         # print(self.__class__.__name__)
