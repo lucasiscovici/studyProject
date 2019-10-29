@@ -245,13 +245,13 @@ class Base:
             return []
         if isinstance(loaded,tuple) and len(loaded)==0:
             return tuple()
-        argus=get_default_args(cls.import__)
+        # argus=get_default_args(cls.import__)
         for i in cls.__bases__:
             # print(i)
             if hasattr(i,"import__"):
-                if "me" in argus:
-                    if argus["me"] == i.__name__:
-                        continue
+                # if "me" in argus:
+                #     if argus["me"] == i.__name__:
+                #         continue
                 # print('ok')
                 # if cls.__name__ == "BaseSuperviseProject":
                 #     print("")
@@ -508,9 +508,10 @@ class DatasSupervise(Base):
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"dataTrain : {},"+nt+"dataTest : {}]"
-        return stri.format(securerRepr(self.dataTrain,ind+2),securerRepr(self.dataTest,ind+2))
+        return stri.format(securerRepr(self.dataTrain,ind+2),
+                            securerRepr(self.dataTest,ind+2))
 class Models(Base):
-    EXPORTABLE=["models","namesModels","mappingNamesModelsInd"]
+    EXPORTABLE=["models","namesModels","mappingNamesModelsInd","indNamesModels"]
     def __init__(self,models=None,ID=None):
         super().__init__(ID)
         self.models=models
@@ -536,7 +537,10 @@ class Models(Base):
         txt=super().__repr__(ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"models : {},"+nt+"namesModels : {},"+nt+"indNamesModels : {},"+nt+"mappingNamesModelsInd : {}]"
-        return stri.format(BeautifulList(self.models).__repr__(ind+1),self.namesModels,self.indNamesModels, BeautifulDico(self.mappingNamesModelsInd).__repr__(ind+1))
+        return stri.format(securerRepr(BeautifulList(self.models),ind+1),
+                        self.namesModels,
+                        securerRepr(BeautifulList(self.indNamesModels) if self.indNamesModels is not None else self.indNamesModels,ind+1),
+                        securerRepr(BeautifulDico(self.mappingNamesModelsInd),ind+1))
 
 
 class Metric(Base):
@@ -649,10 +653,10 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         # txt="\n"
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
-        stri=txt[:-1]+nt+"cv_ : {}"+nt+"splitted : {},"+nt+"resultats : {}"+nt+"args : [...]"
+        stri=txt[:-1]+nt+"cv_ : {}"+nt+"resultats : {}"+nt+"args : [...]"
         #securerRepr(BeautifulDico(self.args),ind)
         return stri.format(securerRepr(self.cv,ind=ind+1),
-            securerRepr(self.splitted,ind=ind+1),securerRepr(BeautifulDico(self.resultats),ind=ind+1))
+            securerRepr(BeautifulDico(self.resultats),ind=ind+1))
 
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
@@ -920,10 +924,10 @@ class BaseSupervise(Base):
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"datas : {},"+nt+"models : {},"+nt+"metric : {},"+nt+"cv : {},"+nt+"nameCvCurr : {}]"
         # print(stri.format(self._datas,self._models,self._metric,self._cv,self._nameCvCurr))
-        return stri.format(securerRepr(self._datas,ind=ind+1),
+        return stri.format(securerRepr(self._datas,ind=ind+2),
             securerRepr(self._models,ind+2),
             securerRepr(self._metric,ind+2),
-            securerRepr(BeautifulDico(self._cv),ind+1),self._nameCvCurr)
+            securerRepr(BeautifulDico(self._cv),ind+1,ademas=2),self._nameCvCurr)
 
 def getDecFn(l,X):
     attrs = ("predict_proba", "decision_function")

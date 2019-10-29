@@ -99,7 +99,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
 
     @classmethod 
     def import__(cls,ol,loaded,me="BaseSuperviseProject"):
-        # print("ici")
+        # print("ici")# TODO: TWO LOOP ON wHY ?
         # print(loaded)
         if loaded is None:
             return cls.import___(cls,ol,loaded)
@@ -109,8 +109,8 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             loaded["_project"]=None
         # print(loaded["_project"])
         rep=cls.import___(cls,ol,loaded)
-        if po is str:
-            rep["_project"]= po
+        if isStr(po):
+            rep._project= po
         return rep
 
 

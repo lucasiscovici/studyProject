@@ -22,7 +22,7 @@ def securerRepr(obj,ind=1,*args,**xargs):
         try:
             u=obj.__repr__()
         except:
-            u=None
+            u="None"
     return u
 
 def getAnnotationInit(obj):
@@ -60,7 +60,7 @@ def merge_dicts(*dict_args):
     for dictionary in dict_args:
         result.update(dictionary)
     return result
-    
+
 def merge(source, destination_):
     destination=copy.deepcopy(destination_)
     for key, value in source.items():
@@ -85,7 +85,12 @@ def randomString(stringLength=10):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
 
-
+def iterable(a):
+    try:
+        (x for x in a)
+        return True
+    except TypeError:
+        return False
 def uniquify(arr):
     """Make all the items unique by adding a suffix (1, 2, etc).
 

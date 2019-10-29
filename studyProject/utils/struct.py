@@ -1,6 +1,6 @@
 from collections import UserDict,UserList
 import numpy as np
-from . import getPrivateAttr, isInt, isNumpyArr
+from . import getPrivateAttr, isInt, isNumpyArr, iterable
 class StudyList(UserList): pass
 
 
@@ -78,14 +78,14 @@ class Obj(object):
             setattr(self,i,j)
 
 class BeautifulDico(dict):
-    def __repr__(self,ind=1):
+    def __repr__(self,ind=1,ademas=1):
         stri="\n"
         for k,v in self.items():
             stri+="\t"*ind
             stri+=k+" : "
             # stri+="\t"*ind
             try:
-                stri+=v.__repr__(ind=ind+1)+"\n"
+                stri+=v.__repr__(ind=ind+ademas)+"\n"
             except:
                 stri+=v.__repr__()+"\n"
 
@@ -93,6 +93,8 @@ class BeautifulDico(dict):
 class BeautifulList(list):
     def __repr__(self,ind=1):
         stri=""
+        if not iterable(self):
+            return self
         for v in self:
             stri+="\n"
             try:
