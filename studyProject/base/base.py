@@ -1,7 +1,8 @@
 from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify, \
                     getClassName, rangel, SaveLoad, merge_two_dicts, \
                     newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
-                    isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj, takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr
+                    isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj,\
+                    takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts
 from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
@@ -18,11 +19,39 @@ except:
     from typing import GenericMeta as _GenericAlias
     TypeVar=type("RIEN",(),{})
 import sys
+import inspect
+
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+class BaseSupFactory:
+
+    def __init__(self):
+        self._classes = {}
+
+    def register_class(self, class_):
+        self._classes[class_.__name__] = class_
+
+    def get_class(self, class_name):
+        class_ = self._classes.get(class_name)
+        if not class_:
+            raise ValueError(class_name)
+        return class_
+factoryCls= BaseSupFactory()
 
 def str2Class(str):
-    return getattr(sys.modules[__name__], str)
-
-
+    try:
+        rep=getattr(sys.modules[__name__], str)
+    except Exception as e2:
+        try:
+            rep=factoryCls.get_class(str)
+        except Exception as e:
+            raise e
+    return rep
 def get_origin(l):
     try:
         rep=l.__origin__
@@ -104,7 +133,7 @@ class Base:
         dp=cls.DEFAULT_PATH if dp is None else dp 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
         if not os.path.exists(repo):
-            fn()
+            fn(repo)
         return repo
 
     @classmethod 
@@ -206,11 +235,8 @@ class Base:
         return resu
 
  
-
-    @classmethod 
-    def import__(cls,ol,loaded):
-        # if not isinstance(cls(),Base):
-        #     return loaded
+    @staticmethod
+    def import___(cls,ol,loaded):
         if loaded is None:
             return None
         if isinstance(loaded,dict) and len(loaded)==0:
@@ -219,10 +245,17 @@ class Base:
             return []
         if isinstance(loaded,tuple) and len(loaded)==0:
             return tuple()
+        argus=get_default_args(cls.import__)
         for i in cls.__bases__:
             # print(i)
             if hasattr(i,"import__"):
+                if "me" in argus:
+                    if argus["me"] == i.__name__:
+                        continue
                 # print('ok')
+                # if cls.__name__ == "BaseSuperviseProject":
+                #     print("")
+                # print("hi",i)
                 ol=i.import__(ol,loaded)
         # try:
         #     rrr=cls.__base__.__import
@@ -232,7 +265,7 @@ class Base:
         #     pass
         # if rrr is not None:
         #     ol=rrr(ol,loaded)
-        # print(cls)
+        # print(cls.__name__)
         # print(ol)
         f=cls.EXPORTABLE
         ff=cls.EXPORTABLE_ARGS
@@ -246,6 +279,8 @@ class Base:
         else:
             annot2=[i for i in f if i not in annot]
         for k,v in annot.items():
+            # print(k)
+            # print(cls.__name__)
             if get_origin(v) is list:
                 cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
                 if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
@@ -253,8 +288,8 @@ class Base:
                 else:
                     kk=loaded[k][0] if len(loaded[k])>0 else None
                     cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    repo=[ cl.import__(cl3(),i) for i in loaded[k]]
-                setattr(ol,k,repo)
+                    repo=[ cl2.import__(cl2(),i) for i in loaded[k] ]
+                # setattr(ol,k,repo)
             elif get_origin(v) is dict:
                 cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
                 if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
@@ -262,16 +297,21 @@ class Base:
                 else:
                     kk=list(loaded[k].items())[0][1] if len(loaded[k])>0 else None
                     cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    repo={k2:cl.import__(cl2(),v2) for k2,v2 in loaded[k].items()}
+                    # print("bg")
+                    # print(len(loaded[k].items()))
+                    # print(cl2)
+                    repo={k2:cl2.import__(cl2(),v2) for k2,v2 in loaded[k].items()}
+                    # print("FINbg")
+
                 # print(k)
                 # print(repo)
-                setattr(ol,k,repo)
+                # setattr(ol,k,repo)
             else:
                 if isinstance(get_origin(v)(),Base):
                     cl=get_origin(v)
                     kk=loaded[k]
                     cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    repo=cl.import__(cl2(),loaded[k])
+                    repo=cl2.import__(cl2(),loaded[k])
                 else:
                     try:
                         repo=loaded[k]
@@ -283,14 +323,24 @@ class Base:
                         print(cls.__name__)
                         print(ol)
                         raise e
-                setattr(ol,k,repo)
-
-        for i in annot2:
-            repo=loaded[i]
-            setattr(ol,i,repo)
+                # setattr(ol,k,repo)
+            # print(cls.__name__)
+            # if cls.__name__=="BaseSuperviseProject":
+            #     print(k)
+            #     print(repo)
+            setattr(ol,k,repo)
+        for k in annot2:
+            # print("kk",k)
+            repo=loaded[k]
+            # if cls.__name__=="BaseSuperviseProject":
+            #     print(k)
+            #     print(repo)
+            setattr(ol,k,repo)
         return ol
-            # return obj.export(save=False)
-        # return loaded
+
+    @classmethod 
+    def import__(cls,ol,loaded):
+       return cls.import___(cls,ol,loaded)
 
     @classmethod 
     def _import(cls,loaded):
@@ -355,6 +405,7 @@ class Base:
         rep={ k:cls.__export(v) 
                 for k,v in rep.items() 
             }
+        rep["____cls"]=cls.__name__
         return rep
 
     @classmethod
@@ -385,9 +436,8 @@ class Base:
 
         if save:
             # print(rep)
-            return cls.Save(rep,
-                obj.ID,
-                suffix=cls.EXPORTABLE_SUFFIX,**saveArgs)
+            opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
+            return cls.Save(rep,**opts)
         return rep
 
     def export(self,save=True,*args,**xargs):
@@ -587,11 +637,12 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
 
     def __repr__(self,ind=1):
         # txt="\n"
-        # txt=super().__repr__(ind)
+        txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
-        stri="cv : {}"+nt+"splitted : {},"+nt+"resulats : {}"+nt+"args : [...]"
+        stri=txt[:-1]+nt+"cv_ : {}"+nt+"splitted : {},"+nt+"resultats : {}"+nt+"args : [...]"
         #securerRepr(BeautifulDico(self.args),ind)
-        return stri.format(self.cv,self.splitted,self.resulats)
+        return stri.format(securerRepr(self.cv,ind=ind+1),
+            securerRepr(self.splitted,ind=ind+1),securerRepr(BeautifulDico(self.resultats),ind=ind+1))
 
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
@@ -852,12 +903,17 @@ class BaseSupervise(Base):
                     res=cloneStudy(res)
         return res
 
-    def __repr__(self,ind=1):
+    def __repr__(self,ind=1,orig=False):
+        if orig:
+            return object.__repr__(self)
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"datas : {},"+nt+"models : {},"+nt+"metric : {},"+nt+"cv : {},"+nt+"nameCvCurr : {}]"
         # print(stri.format(self._datas,self._models,self._metric,self._cv,self._nameCvCurr))
-        return stri.format(securerRepr(self._datas),securerRepr(self._models,ind+2),self._metric.__repr__(ind+2),securerRepr(BeautifulDico(self.cv),ind+1),self._nameCvCurr)
+        return stri.format(securerRepr(self._datas,ind=ind+1),
+            securerRepr(self._models,ind+2),
+            securerRepr(self._metric,ind+2),
+            securerRepr(BeautifulDico(self._cv),ind+1),self._nameCvCurr)
 
 def getDecFn(l,X):
     attrs = ("predict_proba", "decision_function")

@@ -62,8 +62,8 @@ class StudyProject(Base):
         return self.get()
         
     
-    @staticmethod
-    def getOrCreate(ID,repertoire=None,ext=None,
+    @classmethod
+    def getOrCreate(cls,ID,repertoire=None,ext=None,
                     path=os.getcwd(),delim="/",
                     recreate=False,clone=False,deep=True,chut=True,**xargs):
         from .baseProject import IProject
@@ -221,11 +221,12 @@ class StudyProject(Base):
         sl=loaded
         for k,v_ in sl._studies.items():
             v=ifelse(clone,lambda: clonee(v_),lambda:v_)()
-            print(isinstance(v,implements(IProject)))
+            # print(v)
             if isinstance(v,implements(IProject)):
+                # print(v_)
                 v.begin()
                 v.setProject(sl)
-                #print(v.idData)
+                # print(v.getIdData())
                 v.setDataTrainTest(id_=v.getIdData())
                 try:
                     v.proprocessDataFromProject(v.getProprocessDataFromProjectFn())

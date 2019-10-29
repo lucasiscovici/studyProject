@@ -7,11 +7,13 @@ import warnings
 from .interfaceProject import IProject
 from abc import abstractmethod
 from interface import implements, Interface
-from ..utils import securerRepr
+from ..utils import securerRepr, mapl , isStr
 
 class BaseSuperviseProject(BaseSupervise,implements(IProject)):
-    EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn","isProcessedDataFromProject"]
+    EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn",
+    "isProcessedDataFromProject"]
     EXPORTABLE_ARGS=dict(underscore=True)
+    
     @abstractmethod
     def __init__(self,ID=None,datas:DatasSupervise=None,
                         models:Models=None,metric:Metric=None,project:StudyProject=None,*args,**xargs):
@@ -69,10 +71,14 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
          if not self.isProcessedDataFromProject and self.proprocessDataFromProjectFn is not None:
             warnings.warn("Attention vous devez appeler impérativement  la méthode proprocessDataFromProject de l'object '{}' reçu pour que les données soit les bonnes".format(getClassName(self)))
 
-    def __repr__(self,ind=1):
+    def __repr__(self,ind=1,orig=False):
+        if orig:
+            return object.__repr__(self)
         txt=super().__repr__(ind=ind)
         nt="\n"+"\t"*ind
         stri=txt[:-1]+nt+"project : {},"+nt+"idDataProject : {},"+nt+"proprocessDataFromProjectFn : {},"+nt+"isProcessedDataFromProject : {}]"
+        # print(securerRepr(self.project,ind+2,onlyID=True))
+        # print(self)
         # print(stri)
         return stri.format(securerRepr(self.project,ind+2,onlyID=True),self.idDataProject,self.proprocessDataFromProjectFn,self.isProcessedDataFromProject)
 
@@ -83,6 +89,21 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         self._project=p
         return r
 
+    @classmethod 
+    def import__(cls,ol,loaded,me="BaseSuperviseProject"):
+        # print("ici")
+        # print(loaded)
+        if loaded is None:
+            return cls.import___(cls,ol,loaded)
+        # print("p",loaded["ID"])
+        po=loaded["_project"]
+        if isStr(po):
+            loaded["_project"]=None
+        # print(loaded["_project"])
+        rep=cls.import___(cls,ol,loaded)
+        if po is str:
+            rep["_project"]= po
+        return rep
 
 
 

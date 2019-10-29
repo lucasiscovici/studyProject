@@ -4,7 +4,7 @@ from .util2 import getPrivateAttr,flatArray, getClassName, has_method, merge, \
 					offWarnings, onWarnings, ShowWarningsTmp, HideWarningsTmp, \
 					hideWarningsTmp, showWarningsTmp, newStringUniqueInDico, removeNone, \
 					getStaticMethod, getStaticMethodFromObj, getStaticMethodFromCls, merge_two_dicts, ifNotNone,\
-					T, F, getsourceP, takeInObjIfInArr, convertCamelToSnake, securerRepr, getAnnotationInit
+					T, F, getsourceP, takeInObjIfInArr, convertCamelToSnake, securerRepr, getAnnotationInit, merge_dicts
 from .is_ import isInt, isStr, isNumpyArr
 from .struct import StudyList, StudyDict, StudyNpArray, studyDico, studyList, Obj, BeautifulDico, BeautifulList, StudyClass
 from .sklearn_utils import get_metric, check_cv2
