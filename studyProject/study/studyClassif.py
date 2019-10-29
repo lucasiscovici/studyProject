@@ -13,37 +13,37 @@ class StudyClassif_:
         # print("la")
         return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models)
 
-    def save(self,repertoire=None,ext=None,ID=None,path=os.getcwd(),
-             delim="/",recreate=False,**xargs):
-        print(recreate)
-        return super().save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
-                        ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),
-                        ID,path,delim,recreate,**xargs)
+    # def save(self,repertoire=None,ext=None,ID=None,path=os.getcwd(),
+    #          delim="/",recreate=False,**xargs):
+    #     # print(recreate)
+    #     return super().save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
+    #                     ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),
+    #                     ID,path,delim,recreate,**xargs)
 
-    @staticmethod
-    def Save(self,
-             ID=None,
-             repertoire=None,
-             ext=None,
-             path=os.getcwd(),
-             delim="/",
-             recreate=False,
-             **xargs):
-        # print("ici")
-        return self.save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
-                        ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),ID,path,delim,recreate,**xargs)
+    # @staticmethod
+    # def Save(self,
+    #          ID=None,
+    #          repertoire=None,
+    #          ext=None,
+    #          path=os.getcwd(),
+    #          delim="/",
+    #          recreate=False,
+    #          **xargs):
+    #     # print("ici")
+    #     return self.save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
+    #                     ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),ID,path,delim,recreate,**xargs)
 
-    @classmethod
-    def Load(cls,ID,
-             repertoire=None,
-             ext=None,
-             path=os.getcwd(),
-             delim="/",
-            **xargs):
+    # @classmethod
+    # def Load(cls,ID,
+    #          repertoire=None,
+    #          ext=None,
+    #          path=os.getcwd(),
+    #          delim="/",
+    #         **xargs):
 
-        return cls.__bases__[-1].Load(ID,repertoire if repertoire is not None else getStaticMethodFromCls(cls,"DEFAULT_REP"),
-                                    ext if ext is not None else getStaticMethodFromCls(cls,"DEFAULT_EXT"),
-                                    path,delim,**xargs)
+    #     return cls.__bases__[-1].Load(ID,repertoire if repertoire is not None else getStaticMethodFromCls(cls,"DEFAULT_REP"),
+    #                                 ext if ext is not None else getStaticMethodFromCls(cls,"DEFAULT_EXT"),
+    #                                 path,delim,**xargs)
 
 
 class StudyClassif(StudyClassif_,BaseSupervise):
