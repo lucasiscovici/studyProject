@@ -26,7 +26,7 @@ def importFromFile(path,pathHere=os.getcwd(),delim="/",dirStudyFiles="__studyFil
 
 	cls0=to_camel_case(cls[len("study_"):])
 	if inferDirs:
-		path=pathHere+delim+dirStudyFiles+delim+cls+"_EXP"+delim+path
+		path=dirStudyFiles+delim+cls+"_EXP"+delim+path
 	cls0=cls0[0].upper()+cls0[1:]
 
 	if cls0 not in factoryCls._classes:
@@ -34,5 +34,6 @@ def importFromFile(path,pathHere=os.getcwd(),delim="/",dirStudyFiles="__studyFil
 
 	clsO=factoryCls._classes[cls0]
 
+	path=path if pathHere == "" else pathHere+delim+path
 	return clsO.Import(path,noDefaults=True,path="",addExtension=False,loadArgs=dict(compression=ext))
 
