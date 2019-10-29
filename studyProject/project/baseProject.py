@@ -95,7 +95,9 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         po=obj._project
         if not isStr(po):
             obj._project=po.ID
-        return cls.Export__(cls,obj,save=save,saveArgs=saveArgs,*args,**xargs)
+        oo=cls.Export__(cls,obj,save=save,saveArgs=saveArgs,*args,**xargs)
+        oo._project=po
+        return oo
 
     @classmethod 
     def import__(cls,ol,loaded,me="BaseSuperviseProject"):
