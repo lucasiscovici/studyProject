@@ -133,16 +133,16 @@ class Base:
     def __init__(self,ID:str=None):
         self.ID=ifelse(ID is None,lambda:randomString(),lambda:ID)() 
 
-    def clone(self,name=None,deep=True):
-        return self.__class__.Clone(self,name,deep)
+    def clone(self,ID=None,newIDS=False,deep=True):
+        return self.__class__.Clone(self,ID,newIDS=newIDS,deep=deep)
         
     @staticmethod
-    def Clone(self,ID=None,deep=True):
+    def Clone(self,ID=None,deep=True,newIDS=False):
         ID = ifelse(ID is not None,ID,self.ID)
         #print( name)
         if deep:
             exported=self.export(save=False)
-            l=self.__class__.import__(self.__class__(),exported)
+            l=self.__class__.import__(self.__class__(),exported,newIDS=newIDS)
             l.ID=ID
 
             # l=self.__class__(ID)
@@ -158,12 +158,14 @@ class Base:
 
     @classmethod
     def build_repertoire(cls,repertoire,path=os.getcwd(),dp=None,delim="/",
-        fn=lambda repo:os.makedirs(repo)):
+        fn=lambda repo:os.makedirs(repo),returnFn=False):
         dp=cls.DEFAULT_PATH if dp is None else dp 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
+        repu=[]
         if not os.path.exists(repo):
-            fn(repo)
-        return repo
+            if returnOK:
+                repu=repu+[fn(repo)]
+        return [repo]+repu
 
     @classmethod 
     def build_ext(cls,repo,ext,ID,delim="/",recreate=False,chut=True):
@@ -182,10 +184,15 @@ class Base:
 
     @classmethod
     def build_rep_ext(cls,repertoire,ext,ID,path=os.getcwd(),dp=None,delim="/",
-                        fn=lambda repo:os.makedirs(repo),recreate=False,chut=True):
-        repo=cls.build_repertoire(repertoire,path=path,dp=dp,delim=delim,fn=fn)
-        return (repo,
-            cls.build_ext(repo,ext,ID,delim,recreate,chut))
+                        fn=lambda repo:os.makedirs(repo),recreate=False,chut=True,
+                        returnFn=False):
+        if fn is None:
+            fn=lambda repo:os.makedirs(repo)
+        repos=cls.build_repertoire(repertoire,path=path,dp=dp,delim=delim,fn=fn,returnFn=returnFn)
+        if isinstance(repos,list):
+            repo=repos[0]
+        return (repos,
+                     cls.build_ext(repo,ext,ID,delim,recreate,chut))
     @classmethod
     def Save(cls,self,
              ID,
@@ -198,6 +205,7 @@ class Base:
              chut=True,
              noDefaults=False,
              addExtension=True,
+             fnBuildRepExt=None,
              **xargs):
         ID=self.ID if ID is None else ID
         if noDefaults:
@@ -208,7 +216,7 @@ class Base:
         repertoire,ext=cls.get_rep_ext(repertoire,ext,chut=chut)
 
         repo,(ok,filo)=cls.build_rep_ext(repertoire,ext,ID,dp=cls.DEFAULT_PATH if not noDefaults else "",
-                                            chut=chut,recreate=recreate)
+                                            chut=chut,recreate=recreate,fn=fnBuildRepExt)
         # print(ok)
         if ok:
             SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,**xargs)
@@ -268,7 +276,7 @@ class Base:
 
  
     @staticmethod
-    def import___(cls,ol,loaded):
+    def import___(cls,ol,loaded,newIDS=False,papaExport=[],*args,**xargs):
         if loaded is None:
             return None
         if isinstance(loaded,dict) and len(loaded)==0:
@@ -278,6 +286,7 @@ class Base:
         if isinstance(loaded,tuple) and len(loaded)==0:
             return tuple()
         # argus=get_default_args(cls.import__)
+        sameExport=False
         for i in cls.__bases__:
             # print(i)
             if hasattr(i,"import__"):
@@ -288,7 +297,9 @@ class Base:
                 # if cls.__name__ == "BaseSuperviseProject":
                 #     print("")
                 # print("hi",i)
-                ol=i.import__(ol,loaded)
+                jj=i.EXPORTABLE==cls.EXPORTABLE
+                sameExport|=jj
+                ol=i.import__(ol,loaded,newIDS=newIDS,papaExport=cls.EXPORTABLE if not jj else [],*args,**xargs)
         # try:
         #     rrr=cls.__base__.__import
         #     # rep=getAnnotationInit(rep)
@@ -299,6 +310,8 @@ class Base:
         #     ol=rrr(ol,loaded)
         # print(cls.__name__)
         # print(ol)
+        if sameExport:
+            return ol
         f=cls.EXPORTABLE
         ff=cls.EXPORTABLE_ARGS
         annot=getAnnotationInit(cls())
@@ -312,27 +325,49 @@ class Base:
             annot2=[i for i in f if i not in annot]
         for k,v in annot.items():
             # print(k)
+            # if k in papaExport:
+            #     print(papaExport)
+            #     continue    
             # print(cls.__name__)
             if get_origin(v) is list:
-                cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
-                if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
-                    repo=loaded[k]
+                if k not in loaded:
+                    repo=getattr(ol,k)
                 else:
-                    kk=loaded[k][0] if len(loaded[k])>0 else None
-                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    repo=[ cl2.import__(cl2(),i) for i in loaded[k] ]
+                    cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
+                    if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
+                        repo=loaded[k]
+                    else:
+                        kk=loaded[k][0] if len(loaded[k])>0 else None
+                        cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                        if isinstance(cl(),cl2):
+                            cl2=cl
+                        repo=[ cl2.import__(cl2(),i,newIDS=newIDS,*args,**xargs) for i in loaded[k] ]
                 # setattr(ol,k,repo)
             elif get_origin(v) is dict:
-                cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
-                if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
-                    repo=loaded[k]
+                if k not in loaded:
+                    repo=getattr(ol,k)
                 else:
-                    kk=list(loaded[k].items())[0][1] if len(loaded[k])>0 else None
-                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    # print("bg")
-                    # print(len(loaded[k].items()))
-                    # print(cl2)
-                    repo={k2:cl2.import__(cl2(),v2) for k2,v2 in loaded[k].items()}
+                    cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
+                    if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
+                        repo=loaded[k]
+                    else:
+                        kk=list(loaded[k].items())[0][1] if len(loaded[k])>0 else None
+                        cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                        # print("bg±")
+                        # if k == "cv" or k == "_cv":
+                        #     # print(loaded)
+                        #     print(k)
+                        #     print(v)
+                        #     print(get_origin(v))
+                        #     print(cls.__name__)
+                        #     print(cl2)
+                        #     print(ol)
+                        #     print(kk)
+                        # print(len(loaded[k].items()))
+                        # print(cl2)
+                        if isinstance(cl(),cl2):
+                            cl2=cl
+                        repo={k2:cl2.import__(cl2(),v2,newIDS=newIDS,*args,**xargs) for k2,v2 in loaded[k].items()}
                     # print("FINbg")
 
                 # print(k)
@@ -340,14 +375,28 @@ class Base:
                 # setattr(ol,k,repo)
             else:
                 if isinstance(get_origin(v)(),Base):
-                    cl=get_origin(v)
-                    kk=loaded[k]
-                    cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                    repo=cl2.import__(cl2(),loaded[k])
+                    if k not in loaded:
+                        repo=getattr(ol,k)
+                    else:
+                        cl=get_origin(v)
+                        kk=loaded[k]
+                        cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
+                        if isinstance(cl(),cl2):
+                            cl2=cl
+                        repo=cl2.import__(cl2(),loaded[k],newIDS=newIDS,*args,**xargs)
                 else:
                     try:
-                        repo=loaded[k]
+                        # prinst(k)
+                        # print(newIDS)
+                        if k != "ID" or not newIDS:
+                            if k not in loaded:
+                                repo=getattr(ol,k)
+                            else:
+                                repo=loaded[k]
+                        else:
+                            repo=getattr(ol,k)
                     except Exception as e:
+                        # pass
                         print(loaded)
                         print(k)
                         print(v)
@@ -362,17 +411,20 @@ class Base:
             #     print(repo)
             setattr(ol,k,repo)
         for k in annot2:
+            if k in papaExport:
+                continue 
             # print("kk",k)
-            repo=loaded[k]
-            # if cls.__name__=="BaseSuperviseProject":
-            #     print(k)
-            #     print(repo)
-            setattr(ol,k,repo)
+            if k != "ID" or not newIDS:
+                if k not in loaded:
+                    repo=getattr(ol,k)
+                else:
+                    repo=loaded[k]
+                setattr(ol,k,repo)
         return ol
 
     @classmethod 
-    def import__(cls,ol,loaded):
-       return cls.import___(cls,ol,loaded)
+    def import__(cls,ol,loaded,newIDS=False,*args,**xargs):
+       return cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
 
     @classmethod 
     def _import(cls,loaded):
@@ -431,7 +483,7 @@ class Base:
         return obj
 
     @classmethod
-    def _export(cls,obj,*args,**xargs):
+    def _export(cls,obj,papaExport=[],*args,**xargs):
         try:
             rpi=cls.EXPORTABLE
             if "underscore" in cls.EXPORTABLE_ARGS:
@@ -443,13 +495,13 @@ class Base:
             print(obj)
             raise e
         rep={ k:cls.__export(v) 
-                for k,v in rep.items() 
+                for k,v in rep.items() if k not in papaExport
             }
         rep["____cls"]=cls.__name__
         return rep
 
     @staticmethod
-    def Export__(cls,obj,save=True,saveArgs={},version=None):
+    def Export___(cls,obj,save=True,version=None,papaExport=[]):
         kk=False
         # print(obj)
         if cls.__name__ == Base.__name__: 
@@ -458,6 +510,7 @@ class Base:
             # print(cls.__base__)
             # try:
             papa={}
+            sameExport=False
             # argus=get_default_args(cls.Export)
             for i in cls.__bases__:
                 if hasattr(i,"Export"):
@@ -467,7 +520,9 @@ class Base:
                     #     print(i.__name__)
                     #     if argus["me"] == i.__name__ and False:
                     #         continue
-                    op=i.Export(obj,save=False)
+                    jj=i.EXPORTABLE==cls.EXPORTABLE
+                    sameExport|=jj
+                    op=i.Export(obj,save=False,papaExport=cls.EXPORTABLE if not jj else [])
                     papa=merge_two_dicts(papa,op)
             # except Exception as e:
             #     papa = {}
@@ -477,8 +532,13 @@ class Base:
             #     raise e
 
         # print(cls.__name__)
-        rep  = cls._export(obj)
+        rep  = cls._export(obj,papaExport=papaExport)
         rep  = merge_two_dicts(papa,rep)
+        return rep
+
+    @staticmethod
+    def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[]):
+        rep=cls.Export___(cls,obj,papaExport=papaExport,save=save)
         if version is not None:
             rep["__version__"]=version
         # print(rep.keys())
@@ -489,8 +549,8 @@ class Base:
             return cls.Save(rep,**opts)
         return rep
     @classmethod
-    def Export(cls,obj,save=True,version=None,saveArgs={}):
-        return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs)
+    def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[]):
+        return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport)
 
     def export(self,save=True,*args,**xargs):
         # print(self.__class__.__name__)
@@ -556,22 +616,22 @@ class DatasSupervise(Base):
 factoryCls.register_class(DatasSupervise)
 class Models(Base):
     EXPORTABLE=["models","namesModels","mappingNamesModelsInd","indNamesModels"]
-    def __init__(self,models=None,ID=None):
+    def __init__(self,models=None,names=None,indNames=None,mappingNames=None,ID=None):
         super().__init__(ID)
         self.models=models
-        self.init()
+        self.init(names=names,indNames=indNames,mappingNames=mappingNames)
         self.initModelsAndNames()
         
-    def init(self):
-        self.namesModels=None
-        self.indNamesModels=None
-        self.mappingNamesModelsInd=None
+    def init(self,names=None,indNames=None,mappingNames=None):
+        self.namesModels=names
+        self.indNamesModels=indNames
+        self.mappingNamesModelsInd=mappingNames
 
     def initModelsAndNames(self):
         if self.models is not None:
-            self.namesModels=np.array(uniquify([getClassName(i) for i in self.models]))
-            self.indNamesModels=np.array(rangel(len(self.models)))
-            self.mappingNamesModelsInd=dict(zip(self.namesModels,self.indNamesModels))
+            self.namesModels=self.namesModels if self.namesModels is not None else np.array(uniquify([getClassName(i) for i in self.models]))
+            self.indNamesModels=self.indNamesModels if self.indNamesModels is not None else np.array(rangel(len(self.models)))
+            self.mappingNamesModelsInd=self.mappingNamesModelsInd if self.mappingNamesModelsInd is not None else dict(zip(self.namesModels,self.indNamesModels))
             
     def getIndexFromNames(self,arr,returnOK=True):
         arr=flatArray(arr)
@@ -703,11 +763,19 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         #securerRepr(BeautifulDico(self.args),ind)
         return stri.format(securerRepr(self.cv,ind=ind+1),
             securerRepr(BeautifulDico(self.resultats),ind=ind+1))
+
+    @classmethod 
+    def import__(cls,ol,loaded,newIDS=False,*args,**xargs):
+        rep=cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
+        if rep.args["metric"] is not None and not isStr(rep.args["metric"]) and not isinstance(rep.args["metric"],Metric):
+            rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
+        return rep
+
 factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
-    EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu"]
+    EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu","namesMod"]
     def __init__(self,cv=None,classifier=None,metric:Metric=None,nameCV=None,parallel=True,random_state=42,
-                 shuffle=True,recreate=False,models=None,namesMod=None):
+                 shuffle=True,recreate=False,models=None,namesMod=None,_models=None,_metric=None):
         super().__init__(nameCV)
         self.cv=cv
         self.parallel=parallel
@@ -720,7 +788,7 @@ class CrossValid(Base):
         self.nameCV = self.ID
         self.namesMod=namesMod
         self.argu=dict(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
-            nameCV=self.nameCV,namesMod=namesMod,recreate=recreate,parallel=parallel,metric=metric,models=models)
+            nameCV=self.nameCV,recreate=recreate,parallel=parallel,metric=_metric,models=_models)
         self.cv=CrossValid.getCV(self)
         
     @staticmethod
@@ -744,8 +812,9 @@ class CrossValid(Base):
         return True
             
     def computeCV(self,X,y,**xargs):
-        self.cv = self.cv.split(X,y)
-        self.cv=CvSplit.fromCvSplitted(self.cv)
+        if not isinstance(self.cv,CvSplit):
+            self.cv = self.cv.split(X,y)
+            self.cv=CvSplit.fromCvSplitted(self.cv)
         cv=self.cv
         cvo=self.crossV(X,y,**xargs)
         return (self.nameCV,CrossValidItem(self.nameCV,cv,cvo,self.argu))
@@ -822,15 +891,17 @@ class BaseSupervise(Base):
                                           X_test,y_test,
                                           namesY)
 
-    def setModels(self,models):
-        self._models=Models(models)
+    def setModels(self,models,*args,**xargs):
+        self._models=Models(models,*args,**xargs)
 
     def setMetric(self,metric):
         self._metric=Metric(metric)
 
     def computeCV(self,cv=5,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=None,
-                 models=None):
+                 models=None,**xargs):
+        _models=models
+        _metric=metric
         if models is not None:
             resu=self.getIndexFromNames(models)
             models=np.array(self.models)[resu]
@@ -842,7 +913,7 @@ class BaseSupervise(Base):
             metric=self.scorer
         cv=CrossValid(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
                  nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
-                 models=models,namesMod=namesMod)
+                 models=models,namesMod=namesMod,_models=_models,_metric=_metric)
         cv.checkOK(list(self.cv.keys()))
         resu=cv.computeCV(self.X_train,self.y_train)
         self._cv[resu[0]]=resu[1]
@@ -876,6 +947,10 @@ class BaseSupervise(Base):
     def getIndexFromNames(self,m):
         return self.models.getIndexFromNames(m)
         
+    @property
+    def currCV(self):
+        return self._cv[self._nameCvCurr]
+    
     @property
     def isMultiLabel(self):
         return self.train_datas.isMultiLabel
@@ -925,11 +1000,11 @@ class BaseSupervise(Base):
         return self._models.namesModels
     
     @property
-    def namesModels(self):
+    def indNamesModels(self):
         return self._models.indNamesModels
     
     @property
-    def namesModels(self):
+    def mappingNamesModelsInd(self):
         return self._models.mappingNamesModelsInd
     
     @property

@@ -9,9 +9,9 @@ class StudyClassif_:
 
     def computeCV(self,cv=3,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=Metric("accuracy"),
-                 models=None):
+                 models=None,**xargs):
         # print("la")
-        return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models)
+        return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models,**xargs)
 
     # def save(self,repertoire=None,ext=None,ID=None,path=os.getcwd(),
     #          delim="/",recreate=False,**xargs):

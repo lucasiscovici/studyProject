@@ -5,6 +5,12 @@ import os
 DEFAULT_COMPRESSION="bz2"
 COMPRESSION_TYPES=["None","bz2","gzip","zipfile","pickle","lzma"]
 class SaveLoad:
+
+    @staticmethod
+    def getPath(name, compression=DEFAULT_COMPRESSION,addExtension=False):
+        if addExtension:
+            name=name+(".{}").format(compression)
+        return name
     @staticmethod
     def load(name,n="rb", compression=DEFAULT_COMPRESSION,
         set_default_extension=False,chut=True,addExtension=False,**xargs):

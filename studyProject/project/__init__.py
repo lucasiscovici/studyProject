@@ -1,3 +1,3 @@
 from .interfaceProject import IProject
-from .baseProject import BaseSuperviseProject
-from .project import StudyProject
+# from .baseProject import 
+from .project import StudyProject,BaseSuperviseProject
