@@ -6,11 +6,22 @@ class StudyList(UserList): pass
 
 class StudyClass:
     def __init__(self,**xargs):
+        self.items={}
         for k,v in xargs.items():
             setattr(self,k,v)
+    def __setattr__(self, k, v):
+        super().__setattr__(k,v)
+        if k!="items":
+            self.items[k]=v
 
-
-class StudyDict(UserDict):
+    def __repr__(self):
+        a=""
+        for k,v in self.items.items():
+            a+="{} :\n".format(k)
+            a+="{}\n".format(v)
+            a+="\n"
+        return a
+class StudyDict(UserDict,dict):
     def __getitem__(self, key):
         key=list(self.keys())[key] if isInt(key) else key
         #key=key if isStr(key) else key
@@ -103,3 +114,29 @@ class BeautifulList(list):
                 stri+="\t"*(ind)+v.__repr__()
 
         return stri
+
+from collections import defaultdict
+class structClsAuto:
+    def __init__(self,arr=[]):
+        self.__strucDictAuto__=arr
+    def __getattr__(self,x):
+        return structClsAuto(self.__strucDictAuto__+[x])
+    def __getitem__(self,arrs):
+        if isinstance(arrs,list):
+            return structClsAuto(self.__strucDictAuto__+[arrs])
+    def __eq__(self, other):
+        s=dict()
+        st=self.__strucDictAuto__[::-1]
+        x=st[0]
+        st=st[1:]
+        s[x]=other
+        for k in st:
+            u=dict()
+            if isinstance(k,list):
+                for j in k:
+                    u[j]=s
+            else:
+                u[k]=s
+            s=u
+        return s
+dicoAuto=structClsAuto()

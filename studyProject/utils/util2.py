@@ -9,10 +9,27 @@ import random
 from functools import wraps
 from inspect import getsource
 import re
+from .is_ import isNumpyArr
 T=True
 F=False
 
 from inspect import getfullargspec
+def check_names(l):
+    return [isNotPossible(lambda:int(i)) for i in l]
+def namesEscape(l):
+    return [l[i_] if i else "`"+l[i_]+"`" for i_,i in enumerate(check_names(l))]
+def listl(*args):
+    return args
+def isPossible(fn,*args,**xargs):
+    possible=True
+    try:
+        fn(*args,**xargs)
+    except:
+        possible=False
+    return possible
+def isNotPossible(fn,*args,**xargs):
+    return np.logical_not(isPossible(fn,*args,**xargs))
+    
 def securerRepr(obj,ind=1,*args,**xargs):
     if (isinstance(obj,dict) or isinstance(obj,tuple) or isinstance(obj,list)) and len(obj)==0:
         return "Empty"
@@ -57,7 +74,7 @@ def getClassName(i):
 def has_method(o, name):
     return name in dir(o)
 
-def merge_dicts(*dict_args):
+def merge_dicts(*dict_args,deep=True):
     """
     Given any number of dicts, shallow copy and merge into a new dict,
     precedence goes to key value pairs in latter dicts.
@@ -67,21 +84,21 @@ def merge_dicts(*dict_args):
         result.update(dictionary)
     return result
 
-def merge(source, destination_):
+def merge(source, destination_,add=True):
     destination=copy.deepcopy(destination_)
     for key, value in source.items():
         if isinstance(value, dict):
             node = copy.deepcopy(destination.setdefault(key, {}))
-            destination[key]=merge(value, node)
+            destination[key]=merge(value, node,add=add)
         else:
             if key in destination.keys():
                 if isinstance(value,list):
                     d=destination[key]
-                    destination[key]=value+destination[key]
+                    destination[key]=value+destination[key] if add else destination[key]
                 elif isNumpyArr(value):
-                    destination[key]=np.concatenate((value,destination[key]),axis=0)
+                    destination[key]=np.concatenate((value,destination[key]),axis=0) if add else destination[key]
                 else:
-                    destination[key]=[value,destination[key]]
+                    destination[key]=[value,destination[key]] if add else destination[key]
             else:
                 destination[key] = value
 

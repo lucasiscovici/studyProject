@@ -3,6 +3,7 @@ from .utils import *
 from .project import *
 from .study import *
 from .helpers import *
+from .viz import *
 factoryCls.register_class(StudyProject)
 factoryCls.register_class(StudyClassif)
 factoryCls.register_class(StudyClassifProject)

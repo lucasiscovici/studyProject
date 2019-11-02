@@ -1,6 +1,6 @@
 from ..base import Base, DatasSupervise, BaseSupervise, factoryCls
 from ..base.base import CrossValidItem, CvSplit, CvResultats
-from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass
+from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico
 import os
 from . import IProject
 from typing import *
@@ -24,7 +24,7 @@ factoryCls.register_class(CrossValidItemProject)
 
 class basedCv:
     EXPORTABLE=["based","resu"]
-    def __init__(self,based ,resu):
+    def __init__(self,based=None ,resu=None):
         self.based = based
         self.resu = resu
 
@@ -60,23 +60,26 @@ class StudyProject(Base):
 
     # DEFAULT_REP="study_project"
     # DEFAULT_EXT=".studyProject"
-    EXPORTABLE=["studies","curr","data","cv"]
+    EXPORTABLE=["studies","curr","data","cv","cvOpti"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,studies:Dict[str,BaseSupervise]=None,
-                    curr=None,data:Dict[str,DatasSupervise]=None,cv:Dict[str,basedCv]={}):
+                    curr=None,data:Dict[str,DatasSupervise]=None,cv:Dict[str,basedCv]={},
+                    cvOpti=True):
         super().__init__(ID)
         self._studies={} if studies is None else studies
         self._curr=curr
         self._data=data if data is not None else {} #BeautifulDico({"_ZERO":DatasSupervise.from_XY_Train_Test(None,None,None,None,None,ID="_ZERO")})
         self._cv={}
+        self._cvOpti=cvOpti
         # self._cvK=defaultdict(list);
 
     def addCV(self,name,cv):
-        if cv._based is not None:
-            rpo=list(self._cv[cv._based].resu.resultats.keys())
-            self._cv[cv._based]=basedCv(name,rpo)
-            # self._cvK[name]=se .lf._cvK[name]+[cv._based]
-        self._cv[name]=basedCv(None,cv)
+        if self._cvOpti:
+            if cv._based is not None:
+                rpo=list(self._cv[cv._based].resu.resultats.keys())
+                self._cv[cv._based]=basedCv(name,rpo)
+                # self._cvK[name]=se .lf._cvK[name]+[cv._based]
+            self._cv[name]=basedCv(None,cv)            
         
 
     def add(self,study_):
@@ -203,6 +206,7 @@ class StudyProject(Base):
     def save(self,repertoire=None,ext=None,path=os.getcwd(),
              delim="/",returnOK=False,**xargs):
         ID=self.ID
+        cvOpti=self._cvOpti
         # repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
         # ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
         # repo=path+delim+repertoire
@@ -223,9 +227,10 @@ class StudyProject(Base):
                 # v._project=v__
                 v._datas={}
                 # v._cv={}
-                ddd=list(v._cv.values())
-                # for k2,v2 in v._cv.items():
-                v._cv=ddd
+                if cvOpti:
+                    ddd=list(v._cv.keys())
+                    # for k2,v2 in v._cv.items():
+                    v._cv=ddd
                 # v.setDataTrainTest(id_="_ZERO")
                 # v.setIdData(li)
                 v.setProject(v.ID)
@@ -310,6 +315,8 @@ class StudyProject(Base):
 
     def export(self,save=True,*args,**xargs):
         obj=self.save(returnOK=True)
+        if not self._cvOpti:
+            obj._cv={}
         return self.__class__.Export(obj,save=save,*args,**xargs)
 
     @staticmethod
@@ -332,7 +339,7 @@ class StudyProject(Base):
         resul2={}
         for i in meresu:
             resul2[i]=resul.resultats[i]
-        resul.resultats=resul2
+        resul.resultats=studyDico(resul2)
         return resul
 
 
@@ -358,6 +365,8 @@ class StudyProject(Base):
                     #print("Error")
                     #print(inst)
                         #print(v.isProcess)
+                if sl._cvOpti:
+                    v._cv  = studyDico({k:cls.import_give_me_cv(sl,k) for k in v._cv})
                 v.check()
             sf[k]=v
         sl._studies=sf

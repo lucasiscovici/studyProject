@@ -2,16 +2,22 @@ from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify
                     getClassName, rangel, SaveLoad, merge_two_dicts, \
                     newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
                     isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj,\
-                    takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts
+                    takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts,\
+                    namesEscape,listl, T, F, StudyClass
 from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
 import copy
 import os
 import warnings
+import pandas as pd
 from interface import implements, Interface
 from abc import ABCMeta, abstractmethod, ABC
 from ..version import __version__
+from studyPipe.pipes import *
+from plotly.subplots import make_subplots
+
+# from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
 try:
@@ -105,6 +111,23 @@ class Base:
     #         super().__setstate__(state)
     #     except AttributeError:
     #         self.__dict__.update(state)
+    # viz=
+
+    @property
+    def viz(self):
+        try:
+            rep=str2Class("Study_"+self.__class__.__name__+"_Viz")(self)
+        except:
+            rep=None
+            if hasattr(self.__class__,"__bases__"):
+                for i in self.__class__.__bases__:
+                    rep=str2Class("Study_"+i.__name__+"_Viz")(self)
+                    if rep is not None:
+                        break
+            elif hasattr(self.__class__,"__base__"):
+                rep=str2Class("Study_"+self.__class__.__base__.__name__+"_Viz")(self)
+        return rep
+    
 
     @classmethod
     def get_repertoire(cls,repertoire,suffix=None,chut=True):
@@ -157,7 +180,7 @@ class Base:
             return me
 
     @classmethod
-    def build_repertoire(cls,repertoire,path=os.getcwd(),dp=None,delim="/",
+    def build_repertoire(cls,repertoire,path=os.getcwd(),returnOK=True,dp=None,delim="/",
         fn=lambda repo:os.makedirs(repo),returnFn=False):
         dp=cls.DEFAULT_PATH if dp is None else dp 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
@@ -248,19 +271,27 @@ class Base:
         if repertoire is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 repertoire =cls.DEFAULT_REP+"_"+suffix
+                if suffix=="":
+                    repertoire=cls.DEFAULT_REP
             else:
                 repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)+"_"+suffix
                 if not chut:
                     warnings.warn("\n[Base load] repertoire est non spécifié, repertoire = {} ".format(repertoire)) 
+                if suffix=="":
+                    repertoire=cls.DEFAULT_REP+convertCamelToSnake(cls.__name__)
         if noDefaults:
             ext=""
         if ext is None:
             if cls.__name__ != Base.__name__ and cls.DEFAULT_REP!= Base.DEFAULT_REP:
                 ext =cls.DEFAULT_EXT+"."+suffix
+                if suffix=="":
+                    ext=cls.DEFAULT_EXT
             else:
                 ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)+"."+suffix
                 if not chut:
                     warnings.warn("\n[Base load] ext est non spécifié, ext = {} ".format(ext))
+                if suffix=="":
+                    ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)
         dp=cls.DEFAULT_PATH if not noDefaults else "" 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
         filo=repo+delim+ID+ext
@@ -323,13 +354,19 @@ class Base:
             annot2=["_"+i for i in f if "_"+i not in annot]
         else:
             annot2=[i for i in f if i not in annot]
+        # print(annot)
+        # print(annot2)
         for k,v in annot.items():
             # print(k)
             # if k in papaExport:
             #     print(papaExport)
             #     continue    
-            # print(cls.__name__)
-            if get_origin(v) is list:
+            # print(k)
+            # print(get_origin(v) is dict and isinstance(loaded[k],dict))
+            if k not in loaded:
+                repo=getattr(ol,k)
+                setattr(ol,k,repo)
+            if get_origin(v) is list and isinstance(loaded[k],list)  :
                 if k not in loaded:
                     repo=getattr(ol,k)
                 else:
@@ -343,7 +380,7 @@ class Base:
                             cl2=cl
                         repo=[ cl2.import__(cl2(),i,newIDS=newIDS,*args,**xargs) for i in loaded[k] ]
                 # setattr(ol,k,repo)
-            elif get_origin(v) is dict:
+            elif get_origin(v) is dict and isinstance(loaded[k],dict):
                 if k not in loaded:
                     repo=getattr(ol,k)
                 else:
@@ -356,7 +393,7 @@ class Base:
                         # print("bg±")
                         # if k == "cv" or k == "_cv":
                         #     # print(loaded)
-                        #     print(k)
+                        # print(k)
                         #     print(v)
                         #     print(get_origin(v))
                         #     print(cls.__name__)
@@ -367,7 +404,8 @@ class Base:
                         # print(cl2)
                         if isinstance(cl(),cl2):
                             cl2=cl
-                        repo={k2:cl2.import__(cl2(),v2,newIDS=newIDS,*args,**xargs) for k2,v2 in loaded[k].items()}
+                        # print(cl2) 
+                        repo=studyDico({k2:cl2.import__(cl2(),v2,newIDS=newIDS,*args,**xargs) for k2,v2 in loaded[k].items()})
                     # print("FINbg")
 
                 # print(k)
@@ -409,6 +447,9 @@ class Base:
             # if cls.__name__=="BaseSuperviseProject":
             #     print(k)
             #     print(repo)
+            if k =="_studies":
+                print(k)
+                print(object.__repr__(repo))
             setattr(ol,k,repo)
         for k in annot2:
             if k in papaExport:
@@ -566,42 +607,78 @@ class Base:
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
         else: raise AttributeError(a)
 # factoryCls.register_class(Base)
+
+class NamesY(Base):
+
+    def __init__(self,Ynames=None,ID=None):
+        super().__init__(ID)
+        self.namesY=Ynames
+        self.init()
+
+    def init(self):
+        if self.namesY is not None:
+            if isinstance(self.namesY,list):
+                pass
+    def check(self,y):
+        if not isinstance(y,pd.Series):
+            y=pd.Series(y)
+        val=y.value_counts().index.tolist()
+        return val
+
+    def fromSeries(self,s,index=False):
+        if not index:
+            if isinstance(self.namesY,list):
+
+            s.replace(self.namesY)
+            # {False:"Pas5",True:"5"}
+
 class Datas(Base):
-    EXPORTABLE=["X","y","namesY"]
-    def __init__(self,X=None,y=None,namesY=None,ID=None):
+    EXPORTABLE=["X","y"]
+    # y must be a series or a dataframe
+
+    def __init__(self,X=None,y=None,ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
-        self.namesY=namesY
-    
-    @property
-    def isMultiLabel(self):
-        return np.ndim(self.y) > 1
 
-    def get(self,withNamesY=True):
-        return [self.X,self.y,self.namesY] if withNamesY else [self.X,self.y]
+    def get(self,withNamesY=False):
+        return [self.X,self.y,self.namesY] if False else [self.X,self.y]
 
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
         t="\t"*ind
         nt="\n"+t
-        stri=txt[:-1]+nt+"X : {},"+nt+"y : {},"+nt+"namesY : {}]"
-        return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None,self.namesY)
+        stri=txt[:-1]+nt+"X : {},"+nt+"y : {}]"
+        return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None)
+
+class DatasClassif(Datas):
+    # EXPORTABLE=["X","y"]
+    # y must be a series or a dataframe
+
+    def __init__(self,X=None,y=None,ID=None):
+        super().__init__(X,y,ID)
+
+    def class_balance(self,normalize=True):
+        df=self.namesY.fromSeries(pd.Series(self.y,name="class_balance").value_counts(normalize=normalize),index=T)
+        return df
+
+factoryCls.register_class(DatasClassif)
 
 factoryCls.register_class(Datas)
 
 
 class DatasSupervise(Base):
     EXPORTABLE=["dataTrain","dataTest"]
+    D=Datas
     def __init__(self,dataTrain:Datas=None,dataTest:Datas=None,ID=None):
         super().__init__(ID)
         self.dataTrain=dataTrain
         self.dataTest=dataTest
 
-    @staticmethod
-    def from_XY_Train_Test(X_train,y_train,X_test,y_test,namesY,ID=None):
-        return DatasSupervise(Datas(X_train,y_train,namesY),
-                              Datas(X_test,y_test,namesY),ID)
+    @classmethod
+    def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,namesY=None,ID=None):
+        return cls(D(X_train,y_train),
+                              D(X_test,y_test),ID)
     def get(self,deep=False,optsTrain={},optsTest={}):
         if deep:
             return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
@@ -613,6 +690,28 @@ class DatasSupervise(Base):
         stri=txt[:-1]+nt+"dataTrain : {},"+nt+"dataTest : {}]"
         return stri.format(securerRepr(self.dataTrain,ind+2),
                             securerRepr(self.dataTest,ind+2))
+
+
+class DatasSuperviseClassif(DatasSupervise):
+    EXPORTABLE=["dataTrain","dataTest"]
+    D=DatasClassif
+    def __init__(self,dataTrain:DatasClassif=None,dataTest:DatasClassif=None,ID=None):
+        super().__init__(ID=ID)
+        self.dataTrain=dataTrain
+        self.dataTest=dataTest
+
+
+    def class_balance(self,normalize=False):
+        rep=(
+            self 
+            | ((__.dataTrain,__.dataTest) |_funs_| listl )
+            | ((__,["dataTrain","dataTest"]) |_funs_| zipl )
+            | _ftools_.mapl(__[0].class_balance(normalize=normalize).to_frame(__[1]))
+            | (pd.concat |_funsInv_| dict(objs=__,axis=1))
+        )
+        return rep
+factoryCls.register_class(DatasSuperviseClassif)
+
 factoryCls.register_class(DatasSupervise)
 class Models(Base):
     EXPORTABLE=["models","namesModels","mappingNamesModelsInd","indNamesModels"]
@@ -677,27 +776,27 @@ factoryCls.register_class(Metric)
 class CvOrigSorted(Base):
     EXPORTABLE=["original","sorted"]
     """docstring for CvOrigSorted"""
-    def __init__(self, original=None, sorted_=None, ID=None):
+    def __init__(self, original=None, sorted=None, ID=None):
         super().__init__(ID)
         self.original = original
-        self.sorted = sorted_
+        self.sorted = sorted
         
 factoryCls.register_class(CvOrigSorted)
 class CvResultatsTrValOrigSorted(Base):
     """docstring for CvResultatsPreds"""
     EXPORTABLE=["Tr","Val"]
-    def __init__(self,tr:CvOrigSorted=None,val:CvOrigSorted=None, ID=None):
+    def __init__(self,Tr:CvOrigSorted=None,Val:CvOrigSorted=None, ID=None):
         super().__init__(ID)
-        self.Tr=tr
-        self.Val=val
+        self.Tr=Tr
+        self.Val=Val
 factoryCls.register_class(CvResultatsTrValOrigSorted)
 class CvResultatsTrVal(Base):
     """docstring for CvResultatsPreds"""
     EXPORTABLE=["Tr","Val"]
-    def __init__(self,tr=None,val=None, ID=None):
+    def __init__(self,Tr=None,Val=None, ID=None):
         super().__init__(ID)
-        self.Tr=tr
-        self.Val=val
+        self.Tr=Tr
+        self.Val=Val
 factoryCls.register_class(CvResultatsTrVal)
 class CvSplit(Base):
     """docstring for CvSplit"""
@@ -720,8 +819,8 @@ class CvResultatsPreds(CvResultatsTrValOrigSorted): pass
 factoryCls.register_class(CvResultatsPreds)
 class CvResultatsDecFn(CvResultatsTrValOrigSorted): pass
 factoryCls.register_class(CvResultatsDecFn)
+from sklearn.metrics import classification_report, confusion_matrix
 class CvResultats(Base):
-    """docstring for CvResultats"""
     EXPORTABLE=["preds","scores","cv_validate","decFn"]
     def __init__(self, preds:CvResultatsPreds=None, scores=None, cv_validate=None, decFn=None, ID=None):
         super().__init__(ID)
@@ -729,7 +828,20 @@ class CvResultats(Base):
         self.scores=scores
         self.cv_validate=cv_validate
         self.decFn=decFn
-factoryCls.register_class(CvResultatsPreds)
+
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,axis=1,round_=2,returnNamesY=False):
+        ff2=confusion_matrix(y_true,self.preds.Val.sorted)
+        if normalize:
+            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis))[::-1],round_)*100
+        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
+        p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
+        if returnNamesY:
+            return StudyClass(confusion_matrix=p,namesY=namesY)
+        else:
+            return p
+
+factoryCls.register_class(CvResultats)
+# factoryCls.register_class(CvResultatsPreds)
 from typing import Iterable
 from typing import Dict, Tuple, Sequence, List
 
@@ -770,6 +882,16 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         if rep.args["metric"] is not None and not isStr(rep.args["metric"]) and not isinstance(rep.args["metric"],Metric):
             rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
         return rep
+
+
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[]):
+        modsN=list(self.resultats.keys())
+        models=self.resultats
+        if len(mods)>0:
+            mods_ = [i if isStr(i) else modsN[i] for i in mods]
+            models= {i:self.resultats[i] for i in mods_}
+        r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in models.items()}) 
+        return r
 
 factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
@@ -879,6 +1001,24 @@ class BaseSupervise(Base):
         self._nameCvCurr=nameCvCurr
         self.init()
     
+    def confusion_matrix(self,normalize=True,cvs=None):
+        cvs_=[] if cvs is None else (list(cvs.keys()) if isinstance(cvs,dict) else cvs)
+        cvKeys=list(self._cv.keys())
+        cv_=self._cv
+        y_true=self.y_train
+        namesY=self.namesY
+        if len(cvs_)>0:
+            cv_names = [i if isStr(i) else cvKeys[i] for i in cvs_]
+            cv_res= {i:cv_[i] for i in cv_names}
+        else:
+            cv_res=cv_
+        if isinstance(cvs,dict):
+            cvD={i:cvs[cvs_[i_]] for i_, i in enumerate(cv_names)}
+            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize,mods=cvD[k]) for k,v in cv_res.items()}) 
+        else:
+            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in cv_res.items()}) 
+
+        return r
     def init(self):
         # self._cv={}
         pass

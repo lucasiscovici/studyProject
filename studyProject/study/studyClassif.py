@@ -1,4 +1,4 @@
-from ..base import  BaseSupervise, Metric, DatasSupervise, Models
+from ..base import  BaseSupervise, Metric, DatasSupervise, Models, DatasSuperviseClassif
 import os
 from ..project import BaseSuperviseProject
 from ..utils import getStaticMethodFromObj, getsourceP, getStaticMethodFromCls
@@ -10,46 +10,15 @@ class StudyClassif_:
     def computeCV(self,cv=3,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=Metric("accuracy"),
                  models=None,**xargs):
-        # print("la")
         return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models,**xargs)
-
-    # def save(self,repertoire=None,ext=None,ID=None,path=os.getcwd(),
-    #          delim="/",recreate=False,**xargs):
-    #     # print(recreate)
-    #     return super().save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
-    #                     ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),
-    #                     ID,path,delim,recreate,**xargs)
-
-    # @staticmethod
-    # def Save(self,
-    #          ID=None,
-    #          repertoire=None,
-    #          ext=None,
-    #          path=os.getcwd(),
-    #          delim="/",
-    #          recreate=False,
-    #          **xargs):
-    #     # print("ici")
-    #     return self.save(repertoire if repertoire is not None else getStaticMethodFromObj(self,"DEFAULT_REP"),
-    #                     ext if ext is not None else getStaticMethodFromObj(self,"DEFAULT_EXT"),ID,path,delim,recreate,**xargs)
-
-    # @classmethod
-    # def Load(cls,ID,
-    #          repertoire=None,
-    #          ext=None,
-    #          path=os.getcwd(),
-    #          delim="/",
-    #         **xargs):
-
-    #     return cls.__bases__[-1].Load(ID,repertoire if repertoire is not None else getStaticMethodFromCls(cls,"DEFAULT_REP"),
-    #                                 ext if ext is not None else getStaticMethodFromCls(cls,"DEFAULT_EXT"),
-    #                                 path,delim,**xargs)
 
 
 class StudyClassif(StudyClassif_,BaseSupervise):
+    EXPORTABLE=["datas"]
+    EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,
                  ID=None,
-                 datas:DatasSupervise=None,
+                 datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy")):
         super().__init__(
@@ -58,12 +27,15 @@ class StudyClassif(StudyClassif_,BaseSupervise):
             models=models,
             metric=metric
         )
+        self._datas=datas
     
 
 class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
+    EXPORTABLE=["datas"]
+    EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,
                  ID=None,
-                 datas:DatasSupervise=None,
+                 datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
                  project=None): 
@@ -74,3 +46,4 @@ class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
             metric=metric,
             project=project
         )
+        self._datas=datas
