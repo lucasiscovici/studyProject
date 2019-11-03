@@ -5,7 +5,8 @@ from .util2 import getPrivateAttr,flatArray, getClassName, has_method, merge, \
 					hideWarningsTmp, showWarningsTmp, newStringUniqueInDico, removeNone, \
 					getStaticMethod, getStaticMethodFromObj, getStaticMethodFromCls, merge_two_dicts, ifNotNone,\
 					T, F, getsourceP, takeInObjIfInArr, convertCamelToSnake, securerRepr, getAnnotationInit,\
-					 merge_dicts, iterable, to_camel_case, check_names, namesEscape, listl, isPossible, isNotPossible
+					 merge_dicts, iterable, to_camel_case, check_names, namesEscape, listl,\
+					 isPossible, isNotPossible, numpyToCatPdSeries, changeTmpObj
 from .is_ import isInt, isStr, isNumpyArr
 from .struct import StudyList, StudyDict, StudyNpArray,dicoAuto, studyDico, studyList, Obj, BeautifulDico, BeautifulList, StudyClass
 from .sklearn_utils import get_metric, check_cv2

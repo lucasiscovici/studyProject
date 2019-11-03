@@ -193,6 +193,7 @@ def compress_pickle_dump(
     fix_imports=True,
     unhandled_extensions="raise",
     set_default_extension=True,
+    deep=False,
     **kwargs
 ):
     r"""Dump the contents of an object to disk, to the supplied path, using a
@@ -271,6 +272,11 @@ def compress_pickle_dump(
             arch.write(path, arcname=arcname)
         else:
             file = arch.open(path, mode=mode)
+    if deep:
+        last=dill.settings['recurse']
+        dill.settings['recurse'] = True
+    else:
+        dill.settings['recurse']=False
     if arch is not None:
         with arch:
             if sys.version_info < (3, 6):
@@ -282,6 +288,8 @@ def compress_pickle_dump(
     else:
         with file:
             dill.dump(obj, file, protocol=protocol)
+    if deep:
+        dill.settings['recurse'] = last
 
 
 def compress_pickle_load(

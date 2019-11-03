@@ -1,10 +1,12 @@
 from ..base import Base, DatasSupervise, BaseSupervise, factoryCls
-from ..base.base import CrossValidItem, CvSplit, CvResultats
-from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico
+from ..base.base import CrossValidItem, CvSplit, CvResultats, str2Class
+from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico, getClassName
 import os
 from . import IProject
 from typing import *
 from interface import implements
+
+# from ..study import DatasSuperviseClassif
 
 class CrossValidItemProject(CrossValidItem):
     EXPORTABLE=["_based"]
@@ -57,7 +59,6 @@ class basedCv:
         
 from collections import defaultdict
 class StudyProject(Base):
-
     # DEFAULT_REP="study_project"
     # DEFAULT_EXT=".studyProject"
     EXPORTABLE=["studies","curr","data","cv","cvOpti"]
@@ -185,8 +186,9 @@ class StudyProject(Base):
                 #print(v.idData)
                 v.setDataTrainTest(id_=v.getIdData())
                 try:
-                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn())
-                except:
+                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
+                except Exception as e:
+                    raise e
                     warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
                     pass
                     #print("Error")
@@ -266,8 +268,10 @@ class StudyProject(Base):
     def fromStudyProject(self,studyG):
         return studyG.clone(studyG.name)
     
-    def saveDatasWithId(self,id_,X_train,y_train,X_test,y_test,namesY=None):
-        self._data[id_]=DatasSupervise.from_XY_Train_Test(*[X_train,y_train,X_test,y_test,namesY,id_])
+    def saveDatasWithId(self,id_,X_train,y_train,X_test,y_test,namesY=None,classif=False):
+        D=str2Class("DatasSuperviseClassif") if classif else DatasSupervise
+
+        self._data[id_]=D.from_XY_Train_Test(*[X_train,y_train,X_test,y_test,namesY,id_])
 
     def saveDataSupervise(self,dataSup):
         id_= dataSup.ID
@@ -326,6 +330,7 @@ class StudyProject(Base):
         meb=me.based
         meresu=me.resu
         if meb is None:
+            meresu.resultats=studyDico(meresu.resultats)
             return meresu
 
         i=0
@@ -359,17 +364,18 @@ class StudyProject(Base):
                 # print(v.getIdData())
                 v.setDataTrainTest(id_=v.getIdData())
                 try:
-                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn())
-                except:
+                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
+                except Exception as e:
+                    raise e
                     warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
                     #print("Error")
                     #print(inst)
-                        #print(v.isProcess)
+                        #print(v.isProcess)preproces_binary
                 if sl._cvOpti:
                     v._cv  = studyDico({k:cls.import_give_me_cv(sl,k) for k in v._cv})
                 v.check()
             sf[k]=v
-        sl._studies=sf
+        sl._studies=studyDico(sf)
         return sl
 
     # @classmethod
@@ -394,11 +400,11 @@ from abc import abstractmethod
 from interface import implements, Interface
 from ..utils import securerRepr, mapl , isStr, randomString
 from typing import List, Dict
-
+from studyPipe.pipes import *
     
 class BaseSuperviseProject(BaseSupervise,implements(IProject)):
     EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn",
-    "isProcessedDataFromProject","cv"]
+    "proprocessDataFromProjectFnOpts","isProcessedDataFromProject","cv"]
     EXPORTABLE_ARGS=dict(underscore=True)
 
     
@@ -415,6 +421,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         # self._idCvBased=None
         self._cv={}
         self._proprocessDataFromProjectFn=None
+        self._proprocessDataFromProjectFnOpts={}
         self.begin()
 
     def begin(self):
@@ -450,12 +457,14 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         else:
             super().setDataTrainTest(X_train,y_train,X_test,y_test,namesY)
 
-    def proprocessDataFromProject(self,fn=None,force=False):
+    def proprocessDataFromProject(self,fn=None,force=False, classif=False):
         if self.isProcessedDataFromProject and not force:
-            warnings.warn("[BaseSuperviseProject proprocessDataFromProject] processing deja fait pour les données du projet (et force est à False)")
+            raise Exception("[BaseSuperviseProject proprocessDataFromProject] processing deja fait pour les données du projet (et force est à False)")
+            
         if fn is not None:
             self._proprocessDataFromProjectFn = fn
-            super().setDataTrainTest(*fn(*self._datas.get(deep=True,optsTrain=dict(withNamesY=False))))
+            self._proprocessDataFromProjectFnOpts=dict(classif=classif)
+            super().setDataTrainTest(*fn(*self._datas.get(deep=True,optsTrain=dict(withNamesY=False))),classif=classif)
             self._isProcessedDataFromProject = True
 
     def check(self):

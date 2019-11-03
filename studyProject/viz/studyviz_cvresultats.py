@@ -6,9 +6,14 @@ from . import Viz
 class Study_CvResultats_Viz(Viz):
 	def plot_confusion_matrix(self,y_true,namesY=None,normalize=True,addDiagonale=True,colorscale="RdBu",
 								showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",
-								line_width=6,border=True,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",title="Confusion matrix",plots_kwargs={}):
+								line_width=6,border=True,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",title=None,plots_kwargs={},me=None):
 		obj=self.obj
 		# print(y_true)
+		if me is not None:
+			if isinstance(y_true,str):
+				y_true=getattr(me,y_true)
+			if isinstance(namesY,str):
+				namesY=getattr(me,namesY).cat
 		confMatCls=obj.confusion_matrix(y_true,namesY=namesY,normalize=normalize,returnNamesY=True)
 		confMat=confMatCls.confusion_matrix
 		confMatNamesY=confMatCls.namesY
@@ -37,9 +42,11 @@ class Study_CvResultats_Viz(Viz):
 										dash=line_dash, 
 										width=line_width),name=name
 									)
-		conf=conf.update_layout(yaxis_title=ylabel).add_annotation(text=ylabel,x=0.49,y=-0.15,font=dict(size=size),showarrow=F)
-		if title is not None:
+		conf=conf.update_layout(yaxis_title=ylabel,xaxis_title=xlabel).update_xaxes(side="bottom")#.add_annotation(text=xlabel,x=0.49,y=-0.15,font=dict(size=size),showarrow=F)
+		if title is None:
 			# print(title)
+			conf=conf.update_layout(title_text="Confusion matrix {}".format('' if obj.name is None else obj.name))
+		else:
 			conf=conf.update_layout(title_text=title)
 
 		# if border:

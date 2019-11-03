@@ -4,26 +4,39 @@ from ..utils import StudyClass,namesEscape
 from . import Viz
 from plotly.subplots import make_subplots
 import cufflinks as cf
+from cufflinks.tools import get_len
 from plotly.offline import iplot
 import plotly.graph_objs as go
 from functools import reduce
 import operator
 from ..utils import isStr
 class Study_CrossValidItem_Viz(Viz):
-	def plot_confusion_matrix(self,y_true,namesY=None,mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,nbCols=3,colFixed=None,shared_xaxes=True,
-								shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={}):
+	def plot_confusion_matrix(self,y_true,namesY=None,mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
+		nbCols=3,colFixed=None,shared_xaxes=True,
+								shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
+								modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None):
+		# print(y_true)
+		if me is not None:
+			if isinstance(y_true,str):
+				y_true=getattr(me,y_true)
+			if isinstance(namesY,str):
+				namesY=getattr(me,namesY).cat
 		obj=self.obj
 		modsN=list(obj.resultats.keys())
 		models=obj.resultats
+		if modelsNames is not None:
+			models=dict(zip(modelsNames,models.values()))
 		if len(mods)>0:
 			mods_ = [i if isStr(i) else modsN[i] for i in mods]
-			models= {i:obj.resultats[i] for i in mods_}
+			models= [obj.resultats[i] for i in mods_]
+			modelsNames_=[i for i in mods_]
+			models=dict(zip(modelsNames_,models)) if modelsNames is None else dict(zip(modelsNames,models))
 
 		namesY= namesEscape(namesY) if namesY is not None else namesY
 		confMatCls={k:v.viz.plot_confusion_matrix(y_true,
 				namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,colorscale=colorscale,
 				showscale=showscale,reversescale=reversescale,size=size,width=width,
-				line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title="Confusion Matrix of {}".format(k),name="Diag {}".format(i_+1)) 
+				line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1)) 
 		for i_,(k,v) in enumerate(models.items())}
 		nbCols=min(len(confMatCls),nbCols)
 		images_per_row=nbCols
@@ -33,9 +46,11 @@ class Study_CrossValidItem_Viz(Viz):
 		rowsCol=(len(confMatCls) if colFixed is not None else n_rows,colFixed if colFixed is not None else nbCols)
 		titles=[]
 		tiplesS=[i.layout.title.text  for i in confMatCls.values()]
+		tiplesSAxis=[(i.layout.xaxis.title.text,i.layout.yaxis.title.text)  for i in confMatCls.values()]
 		subpl=cf.subplots(list(confMatCls.values()),shape=rowsCol,shared_xaxes=shared_xaxes,shared_yaxes=shared_yaxes,
                            horizontal_spacing=horizontal_spacing,
-                           vertical_spacing=vertical_spacing,subplot_titles=tiplesS)
+                           vertical_spacing=vertical_spacing,subplot_titles=tiplesS,x_title=tiplesSAxis[0][0],
+                           y_title=tiplesSAxis[0][1])
 		
 		annot=[i.layout.annotations for i in confMatCls.values()]
 	
@@ -53,10 +68,24 @@ class Study_CrossValidItem_Viz(Viz):
 		subpl["layout"]["annotations"]=subpl["layout"]["annotations"]+annot2
 		subpl["layout"]["font"]=dict(size=size)
 
-		subpl["layout"]
+		# subpl["layout"]
 
 		fig= go.Figure(subpl)
-		fig.update_layout(legend=dict(x=0, y=-0.1),legend_orientation="h")
 		if title is None:
-			fig.update_layout(title_text="Confusion Matrix : cv '{}'".format(obj.ID))
+			fig.update_layout(title_text="Confusion Matrix : cv '{}'".format(obj.ID if cvName is None else cvName))
+		
+		# for axis, n in list(get_len(fig).items()):
+		# 	for u in range(1,n+1):
+		# 		_='' if u==1 else u
+		# 		o=0 if axis == "x" else 1
+		# 		if shared_xaxes and axis=="x" and u > 1:
+		# 			continue
+		# 		fig['layout']['{0}axis{1}'.format(axis,_)]["title"]=dict(text=tiplesSAxis[u-1][o])
+		
+		fig.update_layout(legend=dict(x=0, y=-0.1),
+			legend_orientation="h")
+
+		# fig.update_xaxis(title_text=tiplesSAxis[0])
+		# fig.update_yaxis(title_text=tiplesSAxis[1])
+
 		return fig

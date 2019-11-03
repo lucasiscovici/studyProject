@@ -27,7 +27,8 @@ class SaveLoad:
                                     set_default_extension=set_default_extension,**xargs)
         return rep
     @staticmethod
-    def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,addExtension=False,set_default_extension=False,chut=True,preventError=True,**xargs):
+    def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,addExtension=False,
+        set_default_extension=False,chut=True,preventError=True,**xargs):
         #return dill.dump(selfo,open(name,n),)
         if addExtension:
             name=name+(".{}").format(compression)

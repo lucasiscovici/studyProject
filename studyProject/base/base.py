@@ -86,6 +86,8 @@ class Base:
     EXPORTABLE_ARGS={}
 
 
+    def __getstate__(self): return self.__dict__.copy()
+    def __setstate__(self, d): self.__dict__.update(d)
     # def __getstate__(self):
     #     try:
     #         state = super().__getstate__()
@@ -346,11 +348,11 @@ class Base:
         f=cls.EXPORTABLE
         ff=cls.EXPORTABLE_ARGS
         annot=getAnnotationInit(cls())
-        if "underscore" in ff:
+        if "underscore" in ff and ff["underscore"]:
             annot={("_"+k):v for k,v in annot.items() if k in f}
         else:
             annot={k:v for k,v in annot.items() if k in f}
-        if "underscore" in ff:
+        if "underscore" in ff and ff["underscore"]:
             annot2=["_"+i for i in f if "_"+i not in annot]
         else:
             annot2=[i for i in f if i not in annot]
@@ -446,10 +448,7 @@ class Base:
             # print(cls.__name__)
             # if cls.__name__=="BaseSuperviseProject":
             #     print(k)
-            #     print(repo)
-            if k =="_studies":
-                print(k)
-                print(object.__repr__(repo))
+
             setattr(ol,k,repo)
         for k in annot2:
             if k in papaExport:
@@ -527,7 +526,7 @@ class Base:
     def _export(cls,obj,papaExport=[],*args,**xargs):
         try:
             rpi=cls.EXPORTABLE
-            if "underscore" in cls.EXPORTABLE_ARGS:
+            if "underscore" in cls.EXPORTABLE_ARGS and cls.EXPORTABLE_ARGS["underscore"]:
                 rpi=["_"+i for i in rpi]
             rep=takeInObjIfInArr(rpi,obj)
         except Exception as e:
@@ -604,6 +603,9 @@ class Base:
         return stri.format(getClassName(self),self.ID)
 
     def __getattr__(self,a):
+        key=a
+        if key.startswith('__') and key.endswith('__'):
+            return super().__getattr__(key)
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
         else: raise AttributeError(a)
 # factoryCls.register_class(Base)
@@ -625,11 +627,11 @@ class NamesY(Base):
         val=y.value_counts().index.tolist()
         return val
 
-    def fromSeries(self,s,index=False):
-        if not index:
-            if isinstance(self.namesY,list):
+    # def fromSeries(self,s,index=False):
+    #     if not index:
+    #         if isinstance(self.namesY,list):
 
-            s.replace(self.namesY)
+    #         s.replace(self.namesY)
             # {False:"Pas5",True:"5"}
 
 class Datas(Base):
@@ -642,7 +644,7 @@ class Datas(Base):
         self.y=y
 
     def get(self,withNamesY=False):
-        return [self.X,self.y,self.namesY] if False else [self.X,self.y]
+        return [self.X,self.y]
 
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
@@ -651,18 +653,6 @@ class Datas(Base):
         stri=txt[:-1]+nt+"X : {},"+nt+"y : {}]"
         return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None)
 
-class DatasClassif(Datas):
-    # EXPORTABLE=["X","y"]
-    # y must be a series or a dataframe
-
-    def __init__(self,X=None,y=None,ID=None):
-        super().__init__(X,y,ID)
-
-    def class_balance(self,normalize=True):
-        df=self.namesY.fromSeries(pd.Series(self.y,name="class_balance").value_counts(normalize=normalize),index=T)
-        return df
-
-factoryCls.register_class(DatasClassif)
 
 factoryCls.register_class(Datas)
 
@@ -677,8 +667,8 @@ class DatasSupervise(Base):
 
     @classmethod
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,namesY=None,ID=None):
-        return cls(D(X_train,y_train),
-                              D(X_test,y_test),ID)
+        return cls(cls.D(X_train,y_train),
+                              cls.D(X_test,y_test),ID)
     def get(self,deep=False,optsTrain={},optsTest={}):
         if deep:
             return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
@@ -692,25 +682,6 @@ class DatasSupervise(Base):
                             securerRepr(self.dataTest,ind+2))
 
 
-class DatasSuperviseClassif(DatasSupervise):
-    EXPORTABLE=["dataTrain","dataTest"]
-    D=DatasClassif
-    def __init__(self,dataTrain:DatasClassif=None,dataTest:DatasClassif=None,ID=None):
-        super().__init__(ID=ID)
-        self.dataTrain=dataTrain
-        self.dataTest=dataTest
-
-
-    def class_balance(self,normalize=False):
-        rep=(
-            self 
-            | ((__.dataTrain,__.dataTest) |_funs_| listl )
-            | ((__,["dataTrain","dataTest"]) |_funs_| zipl )
-            | _ftools_.mapl(__[0].class_balance(normalize=normalize).to_frame(__[1]))
-            | (pd.concat |_funsInv_| dict(objs=__,axis=1))
-        )
-        return rep
-factoryCls.register_class(DatasSuperviseClassif)
 
 factoryCls.register_class(DatasSupervise)
 class Models(Base):
@@ -726,6 +697,10 @@ class Models(Base):
         self.indNamesModels=indNames
         self.mappingNamesModelsInd=mappingNames
 
+    def changeNames(self,x):
+        self.init()
+        self.namesModels=x
+        self.initModelsAndNames()
     def initModelsAndNames(self):
         if self.models is not None:
             self.namesModels=self.namesModels if self.namesModels is not None else np.array(uniquify([getClassName(i) for i in self.models]))
@@ -811,7 +786,7 @@ class CvSplit(Base):
     def fromCvSplitted(cv):
         return CvSplit([i[0] for i in cv],[i[1] for i in cv],cv)
 factoryCls.register_class(CvSplit)
-class CvResultatsCvValidate(Obj): pass
+class CvResultatsCvValidate(Base): pass
 factoryCls.register_class(CvResultatsCvValidate)
 class CvResultatsScores(CvResultatsTrVal): pass
 factoryCls.register_class(CvResultatsScores)
@@ -821,18 +796,25 @@ class CvResultatsDecFn(CvResultatsTrValOrigSorted): pass
 factoryCls.register_class(CvResultatsDecFn)
 from sklearn.metrics import classification_report, confusion_matrix
 class CvResultats(Base):
-    EXPORTABLE=["preds","scores","cv_validate","decFn"]
-    def __init__(self, preds:CvResultatsPreds=None, scores=None, cv_validate=None, decFn=None, ID=None):
+    EXPORTABLE=["preds","scores","cv_validate","decFn","name"]
+    def __init__(self, preds:CvResultatsPreds=None, scores=None, cv_validate=None, decFn=None, ID=None,name=None):
         super().__init__(ID)
         self.preds=preds
         self.scores=scores
+        self.name=name
         self.cv_validate=cv_validate
         self.decFn=decFn
 
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,axis=1,round_=2,returnNamesY=False):
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
+        # print(y_true)
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
         ff2=confusion_matrix(y_true,self.preds.Val.sorted)
         if normalize:
-            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis))[::-1],round_)*100
+            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis,keepdims=True)),round_)*100
         namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
         p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
         if returnNamesY:
@@ -866,6 +848,8 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         self.splitted=cv
         self.resultats=resultats
         self.args=args
+        if self.resultats is not None:
+            self.resultats = studyDico(self.resultats)
 
     def __repr__(self,ind=1):
         # txt="\n"
@@ -884,7 +868,13 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         return rep
 
 
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[]):
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
+        # print(y_true)
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
         modsN=list(self.resultats.keys())
         models=self.resultats
         if len(mods)>0:
@@ -979,9 +969,9 @@ class CrossValid(Base):
             resul[name]=CvResultats(CvResultatsPreds(CvOrigSorted(preduTr[i],preduuTr[i]),
                                                       CvOrigSorted(preduVal[i],preduuVal[i])),
                                      CvResultatsScores(scoreTr[i],scoreVal[i]),
-                                     CvResultatsCvValidate(value=resu2[i]),
+                                     resu2[i],
                                      CvResultatsDecFn(None,
-                                                     CvOrigSorted(decVal[i],decVal2[i])) )
+                                                     CvOrigSorted(decVal[i],decVal2[i])),name=name )
 
         return resul
 factoryCls.register_class(CrossValid)
@@ -1006,7 +996,7 @@ class BaseSupervise(Base):
         cvKeys=list(self._cv.keys())
         cv_=self._cv
         y_true=self.y_train
-        namesY=self.namesY
+        namesY=self.train_datas.cat
         if len(cvs_)>0:
             cv_names = [i if isStr(i) else cvKeys[i] for i in cvs_]
             cv_res= {i:cv_[i] for i in cv_names}
@@ -1025,9 +1015,10 @@ class BaseSupervise(Base):
         # self._nameCvCurr=None
         
 
-    def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,namesY=None):
+    def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,namesY=None,classif=False):
         #self.setDataX(X_train,X_test)
-        self._datas=DatasSupervise.from_XY_Train_Test(X_train,y_train,
+        D= str2Class('DatasSuperviseClassif') if classif else DatasSupervise
+        self._datas=D.from_XY_Train_Test(X_train,y_train,
                                           X_test,y_test,
                                           namesY)
 
@@ -1087,6 +1078,8 @@ class BaseSupervise(Base):
     def getIndexFromNames(self,m):
         return self.models.getIndexFromNames(m)
         
+    def getCurrCvResultats(self,i):
+        return self.currCV.resultats[i]
     @property
     def currCV(self):
         return self._cv[self._nameCvCurr]

@@ -2,7 +2,7 @@ from collections import UserDict,UserList
 import numpy as np
 from . import getPrivateAttr, isInt, isNumpyArr, iterable
 class StudyList(UserList): pass
-
+import copy
 
 class StudyClass:
     def __init__(self,**xargs):
@@ -21,7 +21,11 @@ class StudyClass:
             a+="{}\n".format(v)
             a+="\n"
         return a
+    def __getstate__(self): return self.__dict__.copy()
+    def __setstate__(self, d): self.__dict__.update(d)
 class StudyDict(UserDict,dict):
+    def __init__(self, *args, default=None, **kwargs):
+        super().__init__(*args, **kwargs)
     def __getitem__(self, key):
         key=list(self.keys())[key] if isInt(key) else key
         #key=key if isStr(key) else key
@@ -38,11 +42,25 @@ class StudyDict(UserDict,dict):
         if hasattr(self.__class__, "__missing__"):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
+    def __reduce__(self):
+        return (StudyDict, (), self.__getstate__())
+    def __getstate__(self):
+        return dict(self)
+    def __setstate__(self, state):
+        data = state
+        self.update(data)  # will *not* call __setitem__
     def __getattr__(self, key):
         #key=list(self.keys())[key] if isInt(key) else key
         #key=key if isStr(key) else key
-        if key in self.data:
-            rep = self.data[key]
+        if key.startswith('__') and key.endswith('__'):
+            return super().__getattr__(key)
+        # print(key)
+        if key=="data":
+            d=super(UserDict,self).__getattribute__(key)
+        else:
+            d=self.data
+        if key in d:
+            rep = d[key]
             atty=getPrivateAttr(self)
             if isinstance(rep,list):
                 return studyList(rep,**atty)
@@ -51,9 +69,25 @@ class StudyDict(UserDict,dict):
                 return rep
             else:
                 return rep
-        if hasattr(self.__class__, "__missing__"):
-            return self.__class__.__missing__(self, key)
-        raise KeyError(key)
+        return super(UserDict).__getattr__(key)
+
+
+    def __getstate__(self): return self.__dict__.copy()
+    def __setstate__(self, d): self.__dict__.update(d)
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        return result
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
         
 class StudyNpArray(np.ndarray):
     def __new__(cls, array, **kwargs):
@@ -70,7 +104,8 @@ class StudyNpArray(np.ndarray):
             self.__setattr__(i,j)
     def __hash__(self):
         return hash(tuple(self))
-                           
+    def __getstate__(self): return self.__dict__.copy()
+    def __setstate__(self, d): self.__dict__.update(d)     
 def studyDico(dico,**args):
     dico=StudyDict(dico)
     for i,j in args.items():
@@ -120,6 +155,9 @@ class structClsAuto:
     def __init__(self,arr=[]):
         self.__strucDictAuto__=arr
     def __getattr__(self,x):
+        key=x
+        if key.startswith('__') and key.endswith('__'):
+            return super().__getattr__(key)
         return structClsAuto(self.__strucDictAuto__+[x])
     def __getitem__(self,arrs):
         if isinstance(arrs,list):

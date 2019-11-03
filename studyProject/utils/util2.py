@@ -12,6 +12,7 @@ import re
 from .is_ import isNumpyArr
 T=True
 F=False
+import pandas as pd
 
 from inspect import getfullargspec
 def check_names(l):
@@ -20,6 +21,8 @@ def namesEscape(l):
     return [l[i_] if i else "`"+l[i_]+"`" for i_,i in enumerate(check_names(l))]
 def listl(*args):
     return args
+def numpyToCatPdSeries(l,argsCat={},argsSeries={}):
+    return pd.Series(pd.Categorical(l,**argsCat),**argsSeries)
 def isPossible(fn,*args,**xargs):
     possible=True
     try:
@@ -164,6 +167,18 @@ def offWarnings():
     
 def onWarnings(d="default"):
     setWarnings('default')
+
+class changeTmpObj:
+    def __init__(self,obj,attr):
+        self.obj=obj
+        self.attr=attr
+        self.v=getattr(self.obj,self.attr).clone()
+    def __enter__(self):
+        return self.obj
+    def __exit__(self, type, value, traceback):
+        setattr(self.obj,self.attr,self.v)
+
+
 
 class ShowWarningsTmp:
     def __enter__(self):
