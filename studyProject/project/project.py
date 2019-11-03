@@ -184,7 +184,7 @@ class StudyProject(Base):
                 v.begin()
                 v.setProject(sl)
                 #print(v.idData)
-                v.setDataTrainTest(id_=v.getIdData())
+                v.setDataTrainTest(id_=v.getIdData(),force=True)
                 try:
                     v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
                 except Exception as e:
@@ -362,7 +362,7 @@ class StudyProject(Base):
                 v.begin()
                 v.setProject(sl)
                 # print(v.getIdData())
-                v.setDataTrainTest(id_=v.getIdData())
+                v.setDataTrainTest(id_=v.getIdData(),force=True)
                 try:
                     v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
                 except Exception as e:
@@ -444,7 +444,11 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
 
     def setDataTrainTest(self,X_train=None,y_train=None,
                               X_test=None,y_test=None,
-                              namesY=None,id_=None):
+                              namesY=None,id_=None,force=False):
+
+        if self.isProcessedDataFromProject and not force:
+            raise Exception("[BaseSuperviseProject setDataTrainTest] processing deja fait pour les données du projet (et force est à False)")
+
         if id_ is None and np.any(mapl(lambda a:a is None,[X_train,X_test,y_train,y_test])):
            raise KeyError("if id_ is None, all of [X_train,X_test,y_train,y_test] must be specified  ")
         if id_ is not None and self.project is None:
