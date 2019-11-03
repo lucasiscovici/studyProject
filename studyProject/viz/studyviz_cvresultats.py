@@ -77,3 +77,33 @@ class Study_CvResultats_Viz(Viz):
 		# 	conf.update_layout(
 		# 		yaxis=dict(linecolor = "black"))
 		return conf
+
+
+	def plot_classification_report(self,y_true="y_train",namesY="train_datas",
+		colorscale="Greys",reversescale=True,showscale=True,round_val=2,
+		paper_bgcol="#F5F6F9",plot_bgcolor="black",
+		linecolor="black",linewidth=2,noLabel=False,
+		xgap=1,ygap=1,
+		me=None):
+		obj=self.obj
+		if me is not None:
+			if isinstance(y_true,str):
+				y_true=getattr(me,y_true)
+			if isinstance(namesY,str):
+				namesY=getattr(me,namesY).cat
+		cr=obj.classification_report(y_true,namesY)
+		vlaS=cr.values*100.
+		annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 or not noLabel else "",
+			enumerate(vlaS.flatten())))
+		annotation_text=np.reshape(annotation_text,vlaS)
+		dd=ff.create_annotated_heatmap(vlaS.round(round_val),x=ff.columns.tolist(),y=ff.index.tolist(),
+			annotation_text=annotation_text	,showscale=showscale,colorscale=colorscale,reversescale=reversescale)
+		dd.update_layout(paper_bgcolor= paper_bgcol,
+	                      plot_bgcolor= plot_bgcolor,
+	                        xaxis=dict(side="bottom",linewidth= linewidth,mirror=True,
+	                        	showgrid=F,linecolor = linecolor,zeroline=F,showline=T),
+	                        yaxis=dict(linewidth= linewidth,mirror=True,showgrid=F,linecolor = linecolor,
+	                        	zeroline=F,showline=T))
+		dd.data[0].update(dict(xgap=xgap,ygap =ygap))
+		dd.update_layout(width=560,height=600)
+		return dd

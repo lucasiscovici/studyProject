@@ -806,7 +806,7 @@ class CvResultats(Base):
         self.decFn=decFn
 
 
-    def classification_report(self,y_true="y_train",namesY="train_datas",returnNamesY=False,me=None):
+    def classification_report(self,y_true="y_train",namesY="train_datas",returnNamesY=False,transpose=True,skip_support=True,me=None):
         if me is not None:
             if isinstance(y_true,str):
                 y_true=getattr(me,y_true)
@@ -814,10 +814,13 @@ class CvResultats(Base):
                 namesY=lambda:getattr(me,namesY).cat
                 namesY= namesY() if isPossible(namesY) else None
 
-        ff2=classification_report(y_true,self.preds.Val.sorted)
+        ff2=classification_report(y_true,self.preds.Val.sorted,output_dict=True)
         namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
-
-        p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
+        p=pd.DataFrame(ff2)
+        if skip_support:
+            ff2=ff2[:-1]
+        if transpose:
+            ff2=ff2.T
         if returnNamesY:
             return StudyClass(classification_report=p,namesY=namesY)
         else:
