@@ -11,7 +11,7 @@ from functools import reduce
 import operator
 from ..utils import isStr
 class Study_CrossValidItem_Viz(Viz):
-	def plot_confusion_matrix(self,y_true,namesY=None,mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
+	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
 		nbCols=3,colFixed=None,shared_xaxes=True,
 								shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
 								modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None):
@@ -56,7 +56,8 @@ class Study_CrossValidItem_Viz(Viz):
 	
 		size=list(confMatCls.values())[0]["layout"]["font"]["size"]
 
-		X=[("x{}".format(j+1),"y{}".format(i+1)) for i in range(rowsCol[0]) for j in range(rowsCol[1])]
+		X=[("x{}".format(j+1),"y{}".format(i+1)) for i in range(rowsCol[0]) for j in range(rowsCol[1])][:len(confMatCls)]
+		X=[("x{}".format(i+1),"y{}".format(i+1)) for i in range(len(confMatCls))]
 		def modifAnnotRef(annot,xn,yn):
 			k=[]
 			for i in annot:
@@ -64,6 +65,7 @@ class Study_CrossValidItem_Viz(Viz):
 				i.yref=yn
 				k.append(i)
 			return k
+		# print(X)
 		annot2=reduce(operator.add,[modifAnnotRef(annot[i],x,y) for i,(x,y) in enumerate(X)])
 		subpl["layout"]["annotations"]=subpl["layout"]["annotations"]+annot2
 		subpl["layout"]["font"]=dict(size=size)
@@ -84,6 +86,14 @@ class Study_CrossValidItem_Viz(Viz):
 		
 		fig.update_layout(legend=dict(x=0, y=-0.1),
 			legend_orientation="h")
+
+		# print(list(confMatCls.values())[0]["data"])
+		for i in fig.data:
+			if i.__class__.__name__=="Heatmap":
+				i.update(hovertemplate = "<b>%{text}%</b><br>" +
+				tiplesSAxis[0][1]+" : %{y}<br>" +
+				tiplesSAxis[0][0]+" : %{x}<br>" + "<extra></extra>")
+
 
 		# fig.update_xaxis(title_text=tiplesSAxis[0])
 		# fig.update_yaxis(title_text=tiplesSAxis[1])

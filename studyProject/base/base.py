@@ -3,7 +3,7 @@ from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify
                     newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
                     isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj,\
                     takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts,\
-                    namesEscape,listl, T, F, StudyClass
+                    namesEscape,listl, T, F, StudyClass, isPossible
 from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
@@ -797,7 +797,7 @@ factoryCls.register_class(CvResultatsDecFn)
 from sklearn.metrics import classification_report, confusion_matrix
 class CvResultats(Base):
     EXPORTABLE=["preds","scores","cv_validate","decFn","name"]
-    def __init__(self, preds:CvResultatsPreds=None, scores=None, cv_validate=None, decFn=None, ID=None,name=None):
+    def __init__(self, preds:CvResultatsPreds=None, scores:CvResultatsScores=None, cv_validate=None, decFn=None, ID=None,name=None):
         super().__init__(ID)
         self.preds=preds
         self.scores=scores
@@ -805,7 +805,24 @@ class CvResultats(Base):
         self.cv_validate=cv_validate
         self.decFn=decFn
 
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
+
+    def classification_report(self,y_true="y_train",namesY="train_datas",returnNamesY=False,me=None):
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=lambda:getattr(me,namesY).cat
+                namesY= namesY() if isPossible(namesY) else None
+
+        ff2=classification_report(y_true,self.preds.Val.sorted)
+        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
+
+        p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
+        if returnNamesY:
+            return StudyClass(classification_report=p,namesY=namesY)
+        else:
+            return p
+    def confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
         # print(y_true)
         if me is not None:
             if isinstance(y_true,str):
@@ -867,7 +884,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
             rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
         return rep
 
-
+#put in CrossValidItemClassif
     def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
         # print(y_true)
         if me is not None:
@@ -882,7 +899,15 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
             models= {i:self.resultats[i] for i in mods_}
         r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in models.items()}) 
         return r
-
+    def resultatsSummary(self):
+        u=lambda i:(
+            {k:getattr(v.scores,i) for k,v in self.resultats.items()}
+            | (pd.DataFrame |_funsInv_| dict(data=__.values(),
+                                    index=__.keys(),
+                                    columns=(1,len(self.cv.all_)+1) |_funs_| range | _ftools_.mapl ("CV {}"))).T \
+                | (np.round |_funsInv_| dict(a=__,decimals=2)) \
+                | __.mean(axis=0).to_frame().T | __.rename(index={0:i}))
+        return u("Tr").append(u("Val"))
 factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu","namesMod"]

@@ -18,7 +18,7 @@ from inspect import getfullargspec
 def check_names(l):
     return [isNotPossible(lambda:int(i)) for i in l]
 def namesEscape(l):
-    return [l[i_] if i else "`"+l[i_]+"`" for i_,i in enumerate(check_names(l))]
+    return [l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l))]
 def listl(*args):
     return args
 def numpyToCatPdSeries(l,argsCat={},argsSeries={}):
