@@ -1,13 +1,13 @@
 import plotly.figure_factory as ff
 import numpy as np
-from ..utils import StudyClass, F, T
+from ..utils import StudyClass, F, T, merge
 from . import Viz
 
 class Study_CvResultats_Viz(Viz):
 	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,addDiagonale=True,colorscale="RdBu",
-								showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",
+								showscale=True,reversescale=True,size=18,width=500,zmax=None,zmin=None,zmid=None,line_color="red",line_dash="longdash",
 								line_width=6,border=True,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",
-								title=None,plots_kwargs={},chutDiag=True,dontRescale=False,noLabel=False,me=None):
+								title=None,plots_kwargs={},chutDiag=True,dontRescale=False,onlyConfMat=False,noLabel=False,me=None):
 		obj=self.obj
 		# print(y_true)                               "train_datas"
 		if me is not None:
@@ -18,15 +18,16 @@ class Study_CvResultats_Viz(Viz):
 		confMatCls=obj.confusion_matrix(y_true,namesY=namesY,normalize=normalize,returnNamesY=True)
 		confMat=confMatCls.confusion_matrix
 		confMatNamesY=confMatCls.namesY
-		zmax=np.max(confMat.values)
-		zmin=np.min(confMat.values)
+		zmax=np.max(confMat.values) if zmax is None else zmax
+		zmin=np.min(confMat.values) if zmin is None else zmin
 		vla=confMat.values
+		vlaS=vla.shape
 		# print(vla)
 		vlaae=np.copy(vla)
-		annotation_text=None
-		zmid=(zmax-zmin)/2.
+		annotation_text=list(map(lambda a: "{}%".format(np.round(a) if np.round(a,2)>0.0 or not noLabel else ""),vla.flatten()))
+		annotation_text=np.reshape(annotation_text,vlaS)
+		zmid=(zmax-zmin)/2. if zmid is None else zmid
 		if addCount and normalize:
-			vlaS=vla.shape
 			confMat2=obj.confusion_matrix(y_true,namesY=namesY,normalize=False,returnNamesY=False)
 			fe=np.repeat(np.sum(confMat2.values,axis=1),vlaS[0])
 			# print(fe)
@@ -36,18 +37,24 @@ class Study_CvResultats_Viz(Viz):
 			vlo=vla
 			np.fill_diagonal(vlo,0)
 			vla=vlo
+			zmid=None
 			if not dontRescale:
-				zama=np.max(vla)
-				zmina=np.min(vla)
-				zmid=None
-		conf=ff.create_annotated_heatmap(vla,annotation_text=annotation_text,
+				zmax=np.max(vla)
+				zmin=np.min(vla)
+
+		if onlyConfMat:
+			return [zmin,zmax]
+		# print(zmin,zmax,zmid)
+		argus=dict(annotation_text=annotation_text,
 									zmid=zmid,
-									zmax=zama,
+									zmax=zmax,
 									text=vlaae,
-									zmin=zmina,
+									zmin=zmin,
                             x=confMatNamesY,y=confMatNamesY,
-                            colorscale=colorscale,showscale=showscale,reversescale=reversescale,**plots_kwargs).update_layout(
-                                                                                                font=dict(size=size),
+                            colorscale=colorscale,showscale=showscale,reversescale=reversescale)
+		
+		argus2=merge(argus,plots_kwargs,add=False)
+		conf=ff.create_annotated_heatmap(vla,**argus2).update_layout(font=dict(size=size),
                                                                          width=width)
 		if addDiagonale:
 			conf=conf.add_scatter(x=confMatNamesY,

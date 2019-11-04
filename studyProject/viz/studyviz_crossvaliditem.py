@@ -10,11 +10,13 @@ import plotly.graph_objs as go
 from functools import reduce
 import operator
 from ..utils import isStr
+from operator import itemgetter
+
 class Study_CrossValidItem_Viz(Viz):
 	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
 		nbCols=3,colFixed=None,shared_xaxes=True,
 								shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
-								modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None):
+								modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None,**plotConfMat_kwargs):
 		# print(y_true)
 		if me is not None:
 			if isinstance(y_true,str):
@@ -33,10 +35,22 @@ class Study_CrossValidItem_Viz(Viz):
 			models=dict(zip(modelsNames_,models)) if modelsNames is None else dict(zip(modelsNames,models))
 
 		namesY= namesEscape(namesY) if namesY is not None else namesY
+		if len(models) > 1:
+			confMatM=[v.viz.plot_confusion_matrix(y_true,
+				namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,onlyConfMat=True) for v in models.values()]
+			# print(confMatM)
+			zmin=min(map(itemgetter(0),confMatM))
+			zmax=max(map(itemgetter(1),confMatM))
+			zmid=None
+			plotConfMat_kwargs["zmin"]=zmin
+			plotConfMat_kwargs["zmax"]=zmax
+			plotConfMat_kwargs["zmid"]=zmid
+			plotConfMat_kwargs["dontRescale"]=True
+			# print(zmin,zmax,zmid)
 		confMatCls={k:v.viz.plot_confusion_matrix(y_true,
 				namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,colorscale=colorscale,
 				showscale=showscale,reversescale=reversescale,size=size,width=width,
-				line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1)) 
+				line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1),**plotConfMat_kwargs) 
 		for i_,(k,v) in enumerate(models.items())}
 		nbCols=min(len(confMatCls),nbCols)
 		images_per_row=nbCols

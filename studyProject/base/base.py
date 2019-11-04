@@ -3,7 +3,7 @@ from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify
                     newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
                     isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj,\
                     takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts,\
-                    namesEscape,listl, T, F, StudyClass, isPossible
+                    namesEscape,listl, T, F, StudyClass, isPossible, get_default_args
 from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
@@ -16,7 +16,10 @@ from abc import ABCMeta, abstractmethod, ABC
 from ..version import __version__
 from studyPipe.pipes import *
 from plotly.subplots import make_subplots
-
+from ..viz.viz import vizHelper
+import inspect
+from typing import Dict
+from ..utils import isinstanceBase, isinstance
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -27,15 +30,7 @@ except:
     class TypeVar:
         def __init__(self,*args,**xargs):pass
 import sys
-import inspect
 
-def get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
 class BaseSupFactory:
 
     def __init__(self):
@@ -115,20 +110,65 @@ class Base:
     #         self.__dict__.update(state)
     # viz=
 
-    @property
-    def viz(self):
+    @staticmethod
+    def __viz_viz__(self,selfo):
+        # print(self.__name__)
         try:
-            rep=str2Class("Study_"+self.__class__.__name__+"_Viz")(self)
+            n=self.__name__
+            # print("Study_"+n+"_Viz")
+            # print("Study_"+n+"_Viz")
+            rep=str2Class("Study_"+n+"_Viz")(selfo)
+            # print("ok")
         except:
             rep=None
-            if hasattr(self.__class__,"__bases__"):
-                for i in self.__class__.__bases__:
-                    rep=str2Class("Study_"+i.__name__+"_Viz")(self)
+            # n2=self
+            if hasattr(self,"__bases__"):
+                # print(self.__bases__)
+                for i in self.__bases__:
+                    rep=Base.__viz_viz__(i,selfo)
                     if rep is not None:
                         break
-            elif hasattr(self.__class__,"__base__"):
-                rep=str2Class("Study_"+self.__class__.__base__.__name__+"_Viz")(self)
+            elif hasattr(self,"__base__"):
+                # print(self.__base__)
+                rep= Base.__viz_viz__(self.__base__,selfo)
+        # print(rep)
         return rep
+
+    @property
+    def viz(self):
+        # print(self.__class__.__name__)
+        return Base.__viz_viz__(self.__class__,self)
+
+
+    # @property
+    # def viz(self):
+    #     try:
+    #         # print("Study_"+self.__class__.__name__+"_Viz")
+    #         rep=str2Class("Study_"+self.__class__.__name__+"_Viz")(self)
+    #     except:
+    #         rep=None
+    #         # # # # 
+    #         # # # # # # #####  
+    #         # # # # # # #####   
+    #         # # # #     # # #  
+    #         if hasattr(self.__class__,"__bases__"):
+    #             for i in self.__class__.__bases__:
+    #                 # print("ici")
+    #                 # print(i)
+    #                 g=super(i,self)
+    #                 # print(g)
+    #                 # print(dir(g))
+    #                 # print("viz" in dir(g) or "viz" in dir(i))
+    #                 rep=getattr(g,"viz") if "viz" in dir(g) or "viz" in dir(i) else None
+    #                 # rep=str2Class("Study_"+i.__name__+"_Viz")(self)
+    #                 if rep is not None:
+    #                     break
+    #         elif hasattr(self.__class__,"__base__"):
+    #             # print("ici2")
+    #             # print(self.__class__)
+    #             # print("Study_"+self.__class__.__base__.__name__+"_Viz")
+    #             rep=str2Class("Study_"+self.__class__.__base__.__name__+"_Viz")(self)
+    #     return rep
     
 
     @classmethod
@@ -162,12 +202,16 @@ class Base:
         return self.__class__.Clone(self,ID,newIDS=newIDS,deep=deep)
         
     @staticmethod
-    def Clone(self,ID=None,deep=True,newIDS=False):
+    def Clone(self,ID=None,deep=True,newIDS=False,normalNEW=True):
         ID = ifelse(ID is not None,ID,self.ID)
         #print( name)
         if deep:
             exported=self.export(save=False)
-            l=self.__class__.import__(self.__class__(),exported,newIDS=newIDS)
+            if normalNEW:
+                l=self.__class__.import__(self.__class__(),exported,newIDS=newIDS)
+            else:
+                l=self.__class__.import__(self.__class__(),exported,newIDS=newIDS,normalNEW=False)
+
             l.ID=ID
 
             # l=self.__class__(ID)
@@ -303,7 +347,7 @@ class Base:
         try:
             resu=SaveLoad.load(filo,addExtension=addExtension,chut=chut,**xargs)
         except Exception as e:
-            raise e
+            # raise e
             resu=None
         return resu
 
@@ -463,8 +507,10 @@ class Base:
         return ol
 
     @classmethod 
-    def import__(cls,ol,loaded,newIDS=False,*args,**xargs):
-       return cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
+    def import__(cls,ol,loaded,newIDS=False,normalNEW=True,*args,**xargs):
+        if normalNEW:
+            return cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
+        return cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,*args,**xargs)
 
     @classmethod 
     def _import(cls,loaded):
@@ -962,6 +1008,9 @@ class CrossValid(Base):
     def crossV(self,X,y,verbose=0,n_jobs=-1,**xargs):
         cv=self.cv
         cvv=cv
+        X=X
+        if isinstance(X,pd.DataFrame):
+            X=X.values
         metric=self.metric.scorer
         parallel=self.parallel
         models=self.models
@@ -977,19 +1026,19 @@ class CrossValid(Base):
         resu2=[cross_validate(mod ,X,y,return_train_score=True,
                             return_estimator=True,cv=cvv.all_,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
 
-        preduVal=[[i.predict(X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
+        preduVal=[[i.predict(X[k,:]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
                            
         preduuVal=[np.concatenate(preduI)[cvvValCon] for preduI in preduVal]
         
         scoreVal = [resuI["test_score"] for resuI in resu2]
         
-        preduTr=[[i.predict(X[k]) for i,k in zipl(resuI["estimator"],cvvTr) ] for resuI in resu2]
+        preduTr=[[i.predict(X[k,:]) for i,k in zipl(resuI["estimator"],cvvTr) ] for resuI in resu2]
                            
         preduuTr=[np.concatenate(preduI)[cvvTrCon] for preduI in preduTr]
         
         scoreTr = [resuI["train_score"] for resuI in resu2]
         
-        decVal=[[getDecFn(i,X[k]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
+        decVal=[[getDecFn(i,X[k,:]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
         decVal2=[concatenateDecFn(preduI,cvvValCon) for preduI in decVal]
 
         resul={}
@@ -1019,6 +1068,16 @@ class BaseSupervise(Base):
         self._nameCvCurr=nameCvCurr
         self.init()
     
+    # def __new__(cls,normal=True,*args,**xargs):
+    #      return vizHelper(super(BaseSupervise,cls).__new__(cls,*args,**xargs))
+    @property
+    def vh(self):
+        return vizHelper(self)
+    
+    @property
+    def viz_(self):
+        return self.vh.viz
+
     def confusion_matrix(self,normalize=True,cvs=None):
         cvs_=[] if cvs is None else (list(cvs.keys()) if isinstance(cvs,dict) else cvs)
         cvKeys=list(self._cv.keys())
@@ -1173,12 +1232,12 @@ class BaseSupervise(Base):
         return self.train_datas.namesY
 
     @classmethod
-    def addOrGet(cls,id_,recreate=False,clone=False,deep=True,*args,**xargs):
+    def getOrCreate(cls,id_,recreate=False,clone=False,deep=True,cls_xargs=dict(),*args,**xargs):
         # cls=self.__class__
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
         def recreatee():
-            rrt=cls(ID=id_)
+            rrt=cls(ID=id_,**cls_xargs)
             if clone :
                 rrt=clonee(rrt)
             # res =self.add(rrt)
@@ -1192,7 +1251,7 @@ class BaseSupervise(Base):
             res=recreatee()
         else:
             res=cls.Load(id_,*args,**xargs)
-            if resu is None:
+            if res is None:
                 res=recreatee()
             else:
                 if clone:

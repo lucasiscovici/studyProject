@@ -10,11 +10,31 @@ from functools import wraps
 from inspect import getsource
 import re
 from .is_ import isNumpyArr
+from .struct import StudyClass
+import pandas as pd
+from inspect import getfullargspec
+import inspect
+
 T=True
 F=False
-import pandas as pd
+from .struct import isinstanceBase, isinstance
 
-from inspect import getfullargspec
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+def get_args(func):
+    signature = inspect.signature(func)
+    return StudyClass(names=list(signature.parameters.keys()),defaults={
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    },alone=[k for k, v in signature.parameters.items()
+        if v.default is inspect.Parameter.empty],signature=signature)
+
 def check_names(l):
     return [isNotPossible(lambda:int(i)) for i in l]
 def namesEscape(l):

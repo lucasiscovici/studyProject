@@ -8,7 +8,7 @@ import numpy as np
 # from ..utils import T,F
 class Study_BaseSupervise_Viz(Viz):
     # @staticmethod
-    def plot_confusion_matrix(self,y_true,namesY=None,mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
+    def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
             nbCols=3,colFixed=None,shared_xaxes=True,
                                     shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
                                     modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None):

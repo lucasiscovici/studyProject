@@ -5,7 +5,7 @@ import os
 from . import IProject
 from typing import *
 from interface import implements
-
+from ..utils import isinstanceBase, isinstance
 # from ..study import DatasSuperviseClassif
 
 class CrossValidItemProject(CrossValidItem):

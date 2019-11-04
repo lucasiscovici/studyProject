@@ -1,4 +1,4 @@
-from ..base import  BaseSupervise, Metric, DatasSupervise, Models
+from ..base import  BaseSupervise, Metric, DatasSupervise, Models, CrossValidItem
 import os
 from ..project import BaseSuperviseProject
 from ..utils import getStaticMethodFromObj, getsourceP, getStaticMethodFromCls, isNumpyArr, listl, zipl
@@ -11,7 +11,9 @@ import warnings as warning
 import pandas as pd
 import numpy as np
 from studyPipe.pipes import * 
-
+from ..viz.viz import vizHelper
+from ..utils import isinstanceBase, isinstance
+from typing import Dict
 class DatasClassif(Datas):
     EXPORTABLE=["cat"]
     EXPORTABLE_ARGS=dict(underscore=False)
@@ -93,15 +95,36 @@ class StudyClassif(StudyClassif_,BaseSupervise):
                  ID=None,
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
-                 metric:Metric=Metric("accuracy")):
-        super().__init__(
+                 metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItem]={},
+                 nameCvCurr=None):
+        super(StudyClassif,self).__init__(
             ID=ID,
             datas=datas,
             models=models,
-            metric=metric
+            metric=metric,
+            cv=cv,
+            nameCvCurr=nameCvCurr
         )
         self._datas=datas
-    
+        # print('cv',self.cv)
+    def __new__(cls,
+                 ID=None,
+                 datas:DatasSuperviseClassif=None,
+                 models:Models=None,
+                 metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItem]={},
+                 nameCvCurr=None,
+                 normal=True):
+        instance= super(StudyClassif,cls).__new__(cls)
+        # print('cv',instance.cv)
+        instance.__init__(ID=ID,
+                                datas=datas,
+                                models=models,
+                                metric=metric,
+                                cv=cv,
+                                nameCvCurr=nameCvCurr)
+        return vizHelper(instance) if not normal else instance
 
 class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
     EXPORTABLE=["datas"]
@@ -120,3 +143,23 @@ class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
             project=project
         )
         self._datas=datas
+        # print('cv',self.cv)
+
+    def __new__(cls,
+                 ID=None,
+                 datas:DatasSuperviseClassif=None,
+                 models:Models=None,
+                 metric:Metric=Metric("accuracy"),
+                 project=None,normal=True):
+        instance= super(StudyClassifProject,cls).__new__(cls)
+        instance.__init__(ID=ID,
+                                datas=datas,
+                                models=models,
+                                metric=metric,
+                                project=project)
+        # print('cv',instance.cv)
+        # instance2=instance
+        # if not normal:
+        #     instance2=vizHelper(instance)
+        return vizHelper(instance) if not normal else instance
+

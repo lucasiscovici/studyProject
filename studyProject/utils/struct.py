@@ -1,8 +1,13 @@
 from collections import UserDict,UserList
 import numpy as np
-from . import getPrivateAttr, isInt, isNumpyArr, iterable
+from .is_ import isInt, isNumpyArr
+# from . import getPrivateAttr, isInt, isNumpyArr, iterable
 class StudyList(UserList): pass
 import copy
+import builtins
+isinstanceBase=builtins.isinstance
+def isinstance(obj,typ):
+    return isinstanceBase(obj,instanceOfType(typ))
 
 class StudyClass:
     def __init__(self,**xargs):
@@ -27,6 +32,7 @@ class StudyDict(UserDict,dict):
     def __init__(self, *args, default=None, **kwargs):
         super().__init__(*args, **kwargs)
     def __getitem__(self, key):
+        from .util2 import getPrivateAttr
         key=list(self.keys())[key] if isInt(key) else key
         #key=key if isStr(key) else key
         if key in self.data:
@@ -50,6 +56,7 @@ class StudyDict(UserDict,dict):
         data = state
         self.update(data)  # will *not* call __setitem__
     def __getattr__(self, key):
+        from .util2 import getPrivateAttr
         #key=list(self.keys())[key] if isInt(key) else key
         #key=key if isStr(key) else key
         if key.startswith('__') and key.endswith('__'):
@@ -98,6 +105,7 @@ class StudyNpArray(np.ndarray):
         return obj
 
     def __array_finalize__(self, obj):
+        from .util2 import getPrivateAttr
         if obj is None: return
         kwargs=getPrivateAttr(obj)
         for i,j in kwargs.items():
@@ -138,6 +146,7 @@ class BeautifulDico(dict):
         return stri[:-1]
 class BeautifulList(list):
     def __repr__(self,ind=1):
+        from .util2 import iterable
         stri=""
         if not iterable(self):
             return self
@@ -177,4 +186,9 @@ class structClsAuto:
                 u[k]=s
             s=u
         return s
+class isinstance2Meta(type):
+    def __instancecheck__(self, other):
+        return other._instancecheck(self.CLS) if hasattr(other,"_instancecheck") else isinstanceBase(other,self.CLS)
+def instanceOfType(typ):
+    return isinstance2Meta('SubClass', (), {'CLS': typ})
 dicoAuto=structClsAuto()
