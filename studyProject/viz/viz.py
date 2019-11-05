@@ -34,7 +34,12 @@ def catch_exception_viz2(f,obj,names,kw="me"):
         try:
             if kw in names:
                 kwargs[kw]=obj
-            return vizHelper(obj,f(*args, **kwargs))
+            if "_obj" in kwargs and kwargs["_obj"]:
+                del kwargs["_obj"]
+                return f(*args, **kwargs)
+            # if "vh" in args and args["vh"]:
+            return vizHelper(obj,f(*args, **kwargs),realNone=True)
+            # return f(*args, **kwargs)
         except Exception as e:
             try:
                 return f(*args, **kwargs)
@@ -48,9 +53,9 @@ def catch_exception_viz2(f,obj,names,kw="me"):
 #         return isinstance(self.__curr,typ)
 
 class vizHelper(object):
-    def __init__(self, arg, curr=None):
+    def __init__(self, arg, curr=None, realNone=False):
         self.__obj = arg
-        self.__curr = arg if curr is None else curr 
+        self.__curr = (None if realNone else arg) if curr is None else curr 
 
     def __meme(self,rep):
         # print(callable(rep))
@@ -90,6 +95,8 @@ class vizHelper(object):
         return self.__curr.__dir__()
     
     def __repr__(self):
+        if self.__curr is None:
+            return ""
         try:
             return self.__curr.__repr__()
         except:

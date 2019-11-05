@@ -72,7 +72,7 @@ def get_args(l):
     if rep is None:
         rep=[TypeVar("blabla"),TypeVar("blabla")]
     return rep
-class Base:
+class Base(object):
     DEFAULT_PATH="__studyFiles"
     DEFAULT_REP="study_"
     DEFAULT_EXT=".study_"

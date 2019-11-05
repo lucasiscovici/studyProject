@@ -96,35 +96,44 @@ class StudyClassif(StudyClassif_,BaseSupervise):
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItem]={},
-                 nameCvCurr=None):
-        super(StudyClassif,self).__init__(
-            ID=ID,
-            datas=datas,
-            models=models,
-            metric=metric,
-            cv=cv,
-            nameCvCurr=nameCvCurr
-        )
-        self._datas=datas
-        # print('cv',self.cv)
+                 cv:Dict[str,CrossValidItem]=None,
+                 nameCvCurr=None,dejaINIT=False,normal=True):
+        if not dejaINIT:
+            if cv is None:
+                cv={}
+            super(StudyClassif,self).__init__(
+                ID=ID,
+                datas=datas,
+                models=models,
+                metric=metric,
+                cv=cv,
+                nameCvCurr=nameCvCurr
+            )
+            self._datas=datas
+        # print('cv',self._cv)
     def __new__(cls,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItem]={},
+                 cv:Dict[str,CrossValidItem]=None,
                  nameCvCurr=None,
                  normal=True):
+        # print(cv) 
         instance= super(StudyClassif,cls).__new__(cls)
-        # print('cv',instance.cv)
-        instance.__init__(ID=ID,
-                                datas=datas,
-                                models=models,
-                                metric=metric,
-                                cv=cv,
-                                nameCvCurr=nameCvCurr)
-        return vizHelper(instance) if not normal else instance
+        # print(instance)
+        if not normal:
+            # print(cv)
+            instance.__init__(ID=ID,
+                                    datas=datas,
+                                    models=models,
+                                    metric=metric,
+                                    cv=cv,
+                                    nameCvCurr=nameCvCurr)
+            # print(instance)
+        # print(instance)
+        # print('cv',instance._cv)
+        return instance.vh if not normal else instance
 
 class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
     EXPORTABLE=["datas"]

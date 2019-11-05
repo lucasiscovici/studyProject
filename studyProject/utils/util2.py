@@ -18,6 +18,23 @@ import inspect
 T=True
 F=False
 from .struct import isinstanceBase, isinstance
+import sys, os
+
+# Disable
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
+    
+from contextlib import contextmanager
+
+@contextmanager
+def hidePrint():
+    blockPrint()
+    yield
+    enablePrint()
 
 def get_default_args(func):
     signature = inspect.signature(func)
