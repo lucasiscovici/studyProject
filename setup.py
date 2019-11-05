@@ -35,7 +35,7 @@ setup(
         'numpy==1.16.2',
         'python-interface==1.5.1',
         'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
-        'snakeviz @ git+git://github.com/lucasiscovici/snakeviz#egg=snakeviz',
+        'snakeviz @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz',
 
     ]
 )
