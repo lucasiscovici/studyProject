@@ -20,6 +20,9 @@ F=False
 from .struct import isinstanceBase, isinstance
 import sys, os
 
+def setattrAndReturnSelf(obj,k,v):
+  setattr(obj,k,v)
+  return obj
 # Disable
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')

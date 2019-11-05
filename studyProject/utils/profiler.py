@@ -2,6 +2,7 @@ import profile
 import pstats 
 from . import TMP_FILE
 from . import hidePrint
+from . import StudyClass
 def profile_that(blabla,gl=lambda : globals(),l=lambda:locals()):
     f=TMP_FILE()
     filename=f.get_filename("txt")
@@ -22,7 +23,7 @@ def profile_that_snake(balblabla,hidePrint_=True,tg=False,pkg="snakeviz2",port="
     except Exception as e:
         if not tg:
             raise e
-config = dict(pkg="snakeviz2",port="6006",magicName="snakeviz2")
+config = StudyClass(pkg="snakeviz",port="6006",magicName="snakeviz")
 try:
     from IPython.core.magic import Magics, magics_class, line_cell_magic
     from IPython.display import display, HTML
