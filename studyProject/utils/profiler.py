@@ -39,13 +39,19 @@ try:
         def profile_that(self, lineX, cell=None):
             global config
             ip=get_ipython()
-            opts, line = self.parse_options(lineX, "tqp:H:f:","new-tab", posix=False)
+            opts, line = self.parse_options(lineX, "tqp:H:f:a","new-tab","auto", posix=False)
             port = config.port if "p" not in opts else opts["p"]
             line = "-p "+port+" "+line
+            if "a" in opts or "auto" in opts:
+                if "f" in opts :
+                    del opts["f"]
+                f=TMP_FILE()
+                line= "-f "+(f.get_filename("html"))+" "
             line=addToPath(line,opts,"t")
             line=addToPath(line,opts,"q")
             line=addToPath(line,opts,"H",True)
             line=addToPath(line,opts,"f",True)
+
             pkg=config.pkg
             with hidePrint():
                 ip.run_line_magic("load_ext",pkg)
@@ -53,6 +59,9 @@ try:
                 ip.run_cell_magic(config.magicName, line, cell)
             else:
                 ip.run_line_magic(config.magicName, line)
+            if "a" in opts or "auto" in opts:
+                f.delete()
+
 except ImportError:
     pass
 
