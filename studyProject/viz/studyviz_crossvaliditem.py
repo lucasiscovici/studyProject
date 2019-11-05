@@ -13,7 +13,8 @@ from ..utils import isStr
 from operator import itemgetter
 
 class Study_CrossValidItem_Viz(Viz):
-	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
+	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",
+		showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
 		nbCols=3,colFixed=None,shared_xaxes=True,
 								shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
 								modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None,**plotConfMat_kwargs):
@@ -99,14 +100,14 @@ class Study_CrossValidItem_Viz(Viz):
 		# 		fig['layout']['{0}axis{1}'.format(axis,_)]["title"]=dict(text=tiplesSAxis[u-1][o])
 		
 		fig.update_layout(legend=dict(x=0, y=-0.1),
-			legend_orientation="h")
+						  legend_orientation="h")
 
 		# print(list(confMatCls.values())[0]["data"])
 		for i in fig.data:
 			if i.__class__.__name__=="Heatmap":
 				i.update(hovertemplate = "<b>%{text}%</b><br>" +
 				tiplesSAxis[0][1]+" : %{y}<br>" +
-				tiplesSAxis[0][0]+" : %{x}<br>" + "<extra></extra>")
+				tiplesSAxis[0][0]+" : %{x}<br>" + "<extra></extra>",xaxis_title="",yaxis_title="")
 
 
 		# fig.update_xaxis(title_text=tiplesSAxis[0])
