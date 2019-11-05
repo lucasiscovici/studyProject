@@ -1,5 +1,5 @@
 # from ..base import factoryCls
-from .viz import Viz, plotly_google_colab
+from .viz import Viz, plotly_google_colab, enable_plotly_in_cell, disable_plotly_in_cell
 from .pandasNewMethodsPlots import *
 
 from .studyviz_datas import Study_Datas_Viz

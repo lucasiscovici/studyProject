@@ -110,11 +110,14 @@ class vizHelper(object):
     def _instancecheck(self, typ):
         return isinstanceBase(self.__curr,typ)
 
+def disable_plotly_in_cell():
+    import IPython
+    get_ipython().events.unregister('pre_run_cell', enable_plotly_in_cell)
 
-def plotly_google_colab():
-  def enable_plotly_in_cell():
+def enable_plotly_in_cell():
     import IPython
     from plotly.offline import init_notebook_mode
     display(IPython.core.display.HTML('''<script src="/static/components/requirejs/require.js"></script>'''))
     init_notebook_mode(connected=False)
-  get_ipython().events.register('pre_run_cell', enable_plotly_in_cell)
+def plotly_google_colab():
+    get_ipython().events.register('pre_run_cell', enable_plotly_in_cell)
