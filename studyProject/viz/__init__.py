@@ -1,5 +1,5 @@
 # from ..base import factoryCls
-from .viz import Viz
+from .viz import Viz, plotly_google_colab
 from .pandasNewMethodsPlots import *
 
 from .studyviz_datas import Study_Datas_Viz

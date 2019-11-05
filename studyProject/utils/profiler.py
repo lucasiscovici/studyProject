@@ -22,7 +22,7 @@ def profile_that_snake(balblabla,hidePrint_=True,tg=False,pkg="snakeviz2",port="
     except Exception as e:
         if not tg:
             raise e
-
+config = dict(pkg="snakeviz2",port="6006",magicName="snakeviz2")
 try:
     from IPython.core.magic import Magics, magics_class, line_cell_magic
     from IPython.display import display, HTML
@@ -31,17 +31,18 @@ try:
     class profile_that_Magic(Magics):
         @line_cell_magic
         def profile_that(self, line, cell=None):
+            global config
             ip=get_ipython()
             opts, line = self.parse_options(line, "p:", posix=False)
-            port = "6006" if "p" not in opts else opts["p"]
+            port = config.port if "p" not in opts else opts["p"]
             line = "-p "+port+" "+line
-            pkg="snakeviz2"
+            pkg=config.pkg
             with hidePrint():
                 ip.run_line_magic("load_ext",pkg)
             if cell:
-                ip.run_cell_magic("snakeviz2", line, cell)
+                ip.run_cell_magic(magicName, line, cell)
             else:
-                ip.run_line_magic("snakeviz2", line)
+                ip.run_line_magic(magicName, line)
 except ImportError:
     pass
 
