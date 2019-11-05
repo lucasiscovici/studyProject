@@ -13,7 +13,5 @@ from .sklearn_utils import get_metric, check_cv2
 from .compress_pickle import compress_pickle
 from .save_load import SaveLoad
 from .tempfile import TMP_FILE
-from .profiler import profile_that, profile_that_snake, load_ipython_extension
+from .profiler import profile_that, profile_that_snake
 from .pandasNewMethods import *
-p=get_ipython()
-load_ipython_extension(p.extension_manager.shell)

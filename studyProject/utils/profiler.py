@@ -67,3 +67,6 @@ except ImportError:
 
 def load_ipython_extension(ipython):
         ipython.register_magics(profile_that_Magic)
+
+p=get_ipython()
+load_ipython_extension(p.extension_manager.shell)
