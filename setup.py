@@ -34,13 +34,8 @@ setup(
         'scikit-learn==0.20.3',
         'numpy==1.16.2',
         'python-interface==1.5.1',
-        'studyPipe',
-        'snakeviz'
-    ],
-    dependency_links=[
-        # Make sure to include the `#egg` portion so the `install_requires` recognizes the package
-        'http://github.com/lucasiscovici/studyPipe/tarball/master#egg=studyPipe-0.1.0',
-        'http://github.com/lucasiscovici/snakeviz/tarball/master#egg=snakeviz'
+        'studyPipe @ git+ssh://git@github.com/lucasiscovici/studyPipe#egg=studyPipe',
+        'snakeviz @ git+ssh://git@github.com/lucasiscovici/snakeviz#egg=snakeviz',
 
     ]
 )
