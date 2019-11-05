@@ -1,2 +1,2 @@
-from .studyReg import StudyReg
-from .studyClassif import StudyClassif, StudyClassifProject
+# from .studyReg import StudyReg
+from .studyClassif import StudyClassif, StudyClassif_

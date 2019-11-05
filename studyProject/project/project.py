@@ -569,7 +569,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         return rep
 
 from ..study.studyClassif import CvResultatsClassif
-from ..study.studyClassif import CrossValidItemClassifProject
+# from ..study.studyClassif import CrossValidItemClassifProject
 from ..study.studyClassif import DatasSuperviseClassif
 
 class CrossValidItemClassifProject(CrossValidItemProject):

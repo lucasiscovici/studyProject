@@ -1,7 +1,7 @@
 from .base import *
 from .utils import *
-from .project import *
 from .study import *
+from .project import *
 from .helpers import *
 from .viz import *
 factoryCls.register_class(StudyProject)
@@ -20,3 +20,44 @@ factoryCls.register_class(Study_StudyClassif__Viz)
 # factoryCls.register_class(Study_StudyClassifProject_Viz)
 # print(factoryCls._classes)
  # BaseSuperviseProject
+
+class StudyClassifProject(StudyClassif_,BaseSuperviseClassifProject):
+    def __init__(self,
+                 ID=None,
+                 datas:DatasSuperviseClassif=None,
+                 models:Models=None,
+                 metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItemClassif]=None,
+                 nameCvCurr=None,
+                 dejaINIT=False,
+                 project=None): 
+        if not dejaINIT:
+            if cv is None:
+                cv={}
+            super().__init__(
+                ID=ID,
+                datas=datas,
+                models=models,
+                metric=metric,
+                cv=cv,
+                nameCvCurr=nameCvCurr,
+                project=project
+            )
+    def __new__(cls,
+                 ID=None,
+                 datas:DatasSuperviseClassif=None,
+                 models:Models=None,
+                 metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItemClassif]=None,
+                 nameCvCurr=None,
+                 project=None,normal=True):
+        instance= super(StudyClassifProject,cls).__new__(cls)
+        if not normal:
+            instance.__init__(ID=ID,
+                                    datas=datas,
+                                    models=models,
+                                    metric=metric,
+                                    cv=cv,
+                                    nameCvCurr=nameCvCurr,
+                                    project=project)
+        return vizHelper(instance) if not normal else instance

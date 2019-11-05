@@ -6,9 +6,9 @@ import numpy as np
 
 
 # from ..utils import T,F
-class Study_DatasSupervise_Viz(Viz):
+class Study_DatasClassif_Viz(Viz):
     # @staticmethod
-    def plot_class_balance(selfo,title="Répartition des labels Train et Test",percent=False,
+    def plot_class_balance(selfo,title="Répartition des labels",percent=False,
                             allsize=16,
                             titlesizeplus=2,
                             addLabels=True,
@@ -17,7 +17,7 @@ class Study_DatasSupervise_Viz(Viz):
                             returnData=False,
                             asImg=False,
                             showFig=True,
-                            outside=False,
+                            outside=True,
                             filename="class_balance",
                             addLabels_kwargs=dict(),
                             class_balance_kwargs=dict(),
@@ -48,24 +48,19 @@ class Study_DatasSupervise_Viz(Viz):
                 class_balance_kwargs2=merge(class_balance_kwargs,dict(normalize=True),add=F)
                 cb2=self.class_balance(**class_balance_kwargs2)
                 #print(zipl(cb.values,cb2.values) | _ftools_.mapl(  [__[0],__[1]] %_fun_% list))
-                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb.values[:,0],cb2.values[:,0]))) 
-                fig.data[1].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb.values[:,1],cb2.values[:,1]))) 
-
+                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb.values,cb2.values))) 
                 setattr(data,"class_balance_percent",cb2)
             elif addLabelsBrut and percent:
                 class_balance_kwargs2=merge(class_balance_kwargs,dict(normalize=False),add=F)
                 cb2=self.class_balance(**class_balance_kwargs2)
                 # print(cb)
                 #print(zipl(cb.values,cb2.values) | _ftools_.mapl(  [__[0],__[1]] %_fun_% list))
-                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb2.values[:,0],cb.values[:,0]))) 
-                fig.data[1].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb2.values[:,1],cb.values[:,1]))) 
-
+                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb2.values,cb.values))) 
                 setattr(data,"class_balance",cb2)
             else:
                 fig.data[0].text=cb
             for k,v in addLabels_kwargs.items():
                 setattr(fig.data[0],k,v)
-                setattr(fig.data[1],k,v)
         if asImg:
             fig=cb.iplot(data=fig,filename=filename,asImage=True)
             return fig
@@ -73,5 +68,6 @@ class Study_DatasSupervise_Viz(Viz):
             if showFig:
                 fig.show()
             return StudyClass(data=data,fig=fig)
+
         return fig if showFig else StudyClass(fig=fig)
 

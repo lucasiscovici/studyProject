@@ -3,7 +3,7 @@ import numpy as np
 from ..utils import StudyClass, F, T, merge
 from . import Viz
 
-class Study_CvResultats_Viz(Viz):
+class Study_CvResultatsClassif_Viz(Viz):
 	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,addDiagonale=True,colorscale="RdBu",
 								showscale=True,reversescale=True,size=18,width=500,zmax=None,zmin=None,zmid=None,line_color="red",line_dash="longdash",
 								line_width=6,border=True,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",

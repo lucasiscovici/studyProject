@@ -1,6 +1,5 @@
 from ..base import  BaseSupervise, Metric, DatasSupervise, Models, CrossValidItem
 import os
-from ..project import BaseSuperviseProject
 from ..utils import getStaticMethodFromObj, getsourceP, getStaticMethodFromCls, isNumpyArr, listl, zipl
 from abc import ABC, abstractmethod
 from interface import implements, Interface
@@ -14,6 +13,7 @@ from studyPipe.pipes import *
 from ..viz.viz import vizHelper
 from ..utils import isinstanceBase, isinstance
 from typing import Dict
+
 class DatasClassif(Datas):
     EXPORTABLE=["cat"]
     EXPORTABLE_ARGS=dict(underscore=False)
@@ -87,6 +87,7 @@ class StudyClassif_:
                  models=None,**xargs):
         return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models,**xargs)
 
+from ..base.base import CvResultats, CvSplit
 class CvResultatsClassif(CvResultats):pass
 factoryCls.register_class(CvResultatsClassif)
         
@@ -154,45 +155,5 @@ class StudyClassif(StudyClassif_,BaseSuperviseClassif):
                                     cv=cv,
                                     nameCvCurr=nameCvCurr)
         return instance.vh if not normal else instance
-
-class StudyClassifProject(StudyClassif_,BaseSuperviseClassifProject):
-    def __init__(self,
-                 ID=None,
-                 datas:DatasSuperviseClassif=None,
-                 models:Models=None,
-                 metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItemClassif]=None,
-                 nameCvCurr=None,
-                 dejaINIT=False,
-                 project=None): 
-        if not dejaINIT:
-            if cv is None:
-                cv={}
-            super().__init__(
-                ID=ID,
-                datas=datas,
-                models=models,
-                metric=metric,
-                cv=cv,
-                nameCvCurr=nameCvCurr,
-                project=project
-            )
-    def __new__(cls,
-                 ID=None,
-                 datas:DatasSuperviseClassif=None,
-                 models:Models=None,
-                 metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItemClassif]=None,
-                 nameCvCurr=None,
-                 project=None,normal=True):
-        instance= super(StudyClassifProject,cls).__new__(cls)
-        if not normal:
-            instance.__init__(ID=ID,
-                                    datas=datas,
-                                    models=models,
-                                    metric=metric,
-                                    cv=cv,
-                                    nameCvCurr=nameCvCurr,
-                                    project=project)
-        return vizHelper(instance) if not normal else instance
+# from ..project.project import BaseSuperviseClassifProject
 
