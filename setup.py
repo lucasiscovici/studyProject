@@ -34,8 +34,8 @@ setup(
         'scikit-learn==0.20.3',
         'numpy==1.16.2',
         'python-interface==1.5.1',
-        'studyPipe @ git+ssh://git@github.com/lucasiscovici/studyPipe#egg=studyPipe',
-        'snakeviz @ git+ssh://git@github.com/lucasiscovici/snakeviz#egg=snakeviz',
+        'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
+        'snakeviz @ git+git://github.com/lucasiscovici/snakeviz#egg=snakeviz',
 
     ]
 )
