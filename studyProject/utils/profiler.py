@@ -41,9 +41,9 @@ try:
             with hidePrint():
                 ip.run_line_magic("load_ext",pkg)
             if cell:
-                ip.run_cell_magic(magicName, line, cell)
+                ip.run_cell_magic(config.magicName, line, cell)
             else:
-                ip.run_line_magic(magicName, line)
+                ip.run_line_magic(config.magicName, line)
 except ImportError:
     pass
 
