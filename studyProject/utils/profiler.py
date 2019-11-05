@@ -23,6 +23,11 @@ def profile_that_snake(balblabla,hidePrint_=True,tg=False,pkg="snakeviz2",port="
     except Exception as e:
         if not tg:
             raise e
+
+def addToPath(path,opts,o,rep=False):
+    if o in opts:
+        return "-"+o+" "+("" if not rep else opts[o]+" ")+path
+    return path
 config = StudyClass(pkg="snakeviz",port="6006",magicName="snakeviz")
 try:
     from IPython.core.magic import Magics, magics_class, line_cell_magic
@@ -31,12 +36,16 @@ try:
     @magics_class
     class profile_that_Magic(Magics):
         @line_cell_magic
-        def profile_that(self, line, cell=None):
+        def profile_that(self, lineX, cell=None):
             global config
             ip=get_ipython()
-            opts, line = self.parse_options(line, "p:", posix=False)
+            opts, line = self.parse_options(lineX, "tqp:H:f:","new-tab", posix=False)
             port = config.port if "p" not in opts else opts["p"]
             line = "-p "+port+" "+line
+            line=addToPath(line,opts,"t")
+            line=addToPath(line,opts,"q")
+            line=addToPath(line,opts,"H",True)
+            line=addToPath(line,opts,"f",True)
             pkg=config.pkg
             with hidePrint():
                 ip.run_line_magic("load_ext",pkg)
