@@ -25,19 +25,21 @@ def setattrAndReturnSelf(obj,k,v):
   return obj
 # Disable
 def blockPrint():
+    olq=sys.stdout
     sys.stdout = open(os.devnull, 'w')
+    return olq
 
 # Restore
-def enablePrint():
-    sys.stdout = sys.__stdout__
+def enablePrint(d=None):
+    sys.stdout = sys.__stdout__ if d is None else d
     
 from contextlib import contextmanager
 
 @contextmanager
 def hidePrint():
-    blockPrint()
+    oldq=blockPrint()
     yield
-    enablePrint()
+    enablePrint(oldq)
 
 def get_default_args(func):
     signature = inspect.signature(func)
