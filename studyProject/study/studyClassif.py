@@ -87,16 +87,44 @@ class StudyClassif_:
                  models=None,**xargs):
         return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models,**xargs)
 
+class CvResultatsClassif(CvResultats):pass
+factoryCls.register_class(CvResultatsClassif)
+        
+class CrossValidItemClassif(CrossValidItem):
+    EXPORTABLE=["resultats"]
+    def __init__(self,ID:str=None,cv:CvSplit=None,resultats:Dict[str,CvResultatsClassif]={},
+                args:Dict=None):
+        super().__init__(
+                ID=ID,
+                resultats=resultats,
+                args=args,
+                cv=cv
+            )
+        self.resultats=resultats
 
-class StudyClassif(StudyClassif_,BaseSupervise):
-    EXPORTABLE=["datas"]
+factoryCls.register_class(CrossValidItemClassif)
+
+class BaseSuperviseClassif(BaseSupervise):
+    # @abstractmethod
+    EXPORTABLE=["datas","cv"]
     EXPORTABLE_ARGS=dict(underscore=True)
+    def __init__(self,ID=None,datas:DatasSuperviseClassif=None,
+                    models:Models=None,metric:Metric=None,
+                    cv:Dict[str,CrossValidItemClassif]={},nameCvCurr=None,
+                    *args,**xargs):
+        super().__init__(ID,datas,models,metric,cv,nameCvCurr,*args,**xargs)
+        self._datas=datas
+        self._cv=cv
+   
+factoryCls.register_class(BaseSuperviseClassif)
+
+class StudyClassif(StudyClassif_,BaseSuperviseClassif):
     def __init__(self,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItem]=None,
+                 cv:Dict[str,CrossValidItemClassif]=None,
                  nameCvCurr=None,dejaINIT=False,normal=True):
         if not dejaINIT:
             if cv is None:
@@ -109,8 +137,6 @@ class StudyClassif(StudyClassif_,BaseSupervise):
                 cv=cv,
                 nameCvCurr=nameCvCurr
             )
-            self._datas=datas
-        # print('cv',self._cv)
     def __new__(cls,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
@@ -119,56 +145,54 @@ class StudyClassif(StudyClassif_,BaseSupervise):
                  cv:Dict[str,CrossValidItem]=None,
                  nameCvCurr=None,
                  normal=True):
-        # print(cv) 
         instance= super(StudyClassif,cls).__new__(cls)
-        # print(instance)
         if not normal:
-            # print(cv)
             instance.__init__(ID=ID,
                                     datas=datas,
                                     models=models,
                                     metric=metric,
                                     cv=cv,
                                     nameCvCurr=nameCvCurr)
-            # print(instance)
-        # print(instance)
-        # print('cv',instance._cv)
         return instance.vh if not normal else instance
 
-class StudyClassifProject(StudyClassif_,BaseSuperviseProject):
-    EXPORTABLE=["datas"]
-    EXPORTABLE_ARGS=dict(underscore=True)
+class StudyClassifProject(StudyClassif_,BaseSuperviseClassifProject):
     def __init__(self,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItemClassif]=None,
+                 nameCvCurr=None,
+                 dejaINIT=False,
                  project=None): 
-        super().__init__(
-            ID=ID,
-            datas=datas,
-            models=models,
-            metric=metric,
-            project=project
-        )
-        self._datas=datas
-        # print('cv',self.cv)
-
+        if not dejaINIT:
+            if cv is None:
+                cv={}
+            super().__init__(
+                ID=ID,
+                datas=datas,
+                models=models,
+                metric=metric,
+                cv=cv,
+                nameCvCurr=nameCvCurr,
+                project=project
+            )
     def __new__(cls,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
+                 cv:Dict[str,CrossValidItemClassif]=None,
+                 nameCvCurr=None,
                  project=None,normal=True):
         instance= super(StudyClassifProject,cls).__new__(cls)
-        instance.__init__(ID=ID,
-                                datas=datas,
-                                models=models,
-                                metric=metric,
-                                project=project)
-        # print('cv',instance.cv)
-        # instance2=instance
-        # if not normal:
-        #     instance2=vizHelper(instance)
+        if not normal:
+            instance.__init__(ID=ID,
+                                    datas=datas,
+                                    models=models,
+                                    metric=metric,
+                                    cv=cv,
+                                    nameCvCurr=nameCvCurr,
+                                    project=project)
         return vizHelper(instance) if not normal else instance
 

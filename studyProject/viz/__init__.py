@@ -5,7 +5,7 @@ from .plotlyNewMethodsPlots import *
 from .studyviz_datas import Study_Datas_Viz
 from .studyviz_datasupervise import Study_DatasSupervise_Viz
 from .studyviz_cvresultats import Study_CvResultats_Viz
-from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
+from .studyviz_crossvaliditemclassif import Study_CrossValidItemClassif_Viz
 from .studyviz_basesupervise import Study_BaseSupervise_Viz
 # from .studyviz_basesuperviseproject import Study_BaseSuperviseProject_Viz
 from .studyviz_studyclassif_ import Study_StudyClassif__Viz
