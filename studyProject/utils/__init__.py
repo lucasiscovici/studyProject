@@ -15,3 +15,5 @@ from .save_load import SaveLoad
 from .tempfile import TMP_FILE
 from .profiler import profile_that, profile_that_snake
 from .pandasNewMethods import *
+
+from .completer import config_completer, createSubClassFromIPCompleter, returnCom
