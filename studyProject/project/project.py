@@ -568,25 +568,6 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
 
         return rep
 
-from ..study.studyClassif import CvResultatsClassif
+# from ..study.studyClassif import CvResultatsClassif
 # from ..study.studyClassif import CrossValidItemClassifProject
-from ..study.studyClassif import DatasSuperviseClassif
-
-class CrossValidItemClassifProject(CrossValidItemProject):
-    EXPORTABLE=["resultats"]
-    def __init__(self,ID:str=None,cv:CvSplit=None,resultats:Dict[str,CvResultatsClassif]={},args:Dict=None,*args_,**xargs):
-        super().__init__(ID=ID,cv=cv,resultats=resultats,args=args,*args_,**xargs)
-        self.resultats=resultats
-factoryCls.register_class(CrossValidItemClassifProject)
-
-class BaseSuperviseClassifProject(BaseSuperviseProject):
-    EXPORTABLE=["datas","cv"]
-    EXPORTABLE_ARGS=dict(underscore=True)
-
-    def __init__(self,ID=None,datas:DatasSuperviseClassif=None,
-                        models:Models=None,metric:Metric=None,cv:Dict[str,CrossValidItemClassifProject]={},
-                        project:StudyProject=None,*args,**xargs):
-        super().__init__(ID,datas,models,metric,cv,project,*args,**xargs)
-        self._datas=datas
-        self._cv=cv
-factoryCls.register_class(BaseSuperviseClassifProject)
+# from ..study.studyClassif import DatasSuperviseClassif
