@@ -507,12 +507,100 @@ def upConf(self,
 	};
 
 	"""
-	return setattrAndReturnSelf(self,"_config",merge(self._config,kwargs,F))
+	return setattrAndReturnSelf(self,"_config",merge(self._config,dict(staticPlot=staticPlot,
+plotlyServerURL=plotlyServerURL,
+editable=editable,
+edits=edits,
+autosizable=autosizable,
+responsive=responsive,
+fillFrame=fillFrame,
+frameMargins=frameMargins,
+scrollZoom=scrollZoom,
+doubleClick=doubleClick,
+# doubleClickDelay=doubleClickDelay,
+showAxisDragHandles=showAxisDragHandles,
+showAxisRangeEntryBoxes=showAxisRangeEntryBoxes,
+showTips=showTips,
+showLink=showLink,
+linkText=linkText,
+sendData=sendData,
+showSources=showSources,
+displayModeBar=displayModeBar,
+showSendToCloud=showSendToCloud,
+# showEditInChartStudio=showEditInChartStudio,
+modeBarButtonsToRemove=modeBarButtonsToRemove,
+modeBarButtonsToAdd=modeBarButtonsToAdd,
+modeBarButtons=modeBarButtons,
+toImageButtonOptions=toImageButtonOptions,
+displaylogo=displaylogo,
+watermark=watermark,
+plotGlPixelRatio=plotGlPixelRatio,
+setBackground=setBackground,
+topojsonURL=topojsonURL,
+mapboxAccessToken=mapboxAccessToken,
+logging=logging,
+queueLength=queueLength,
+globalTransforms=globalTransforms,
+locale=locale,
+locales=locales),defaults=dict(
+staticPlot=False,
+			plotlyServerURL="https://plot.ly",
+			editable=False,
+			edits=dict(
+				annotationPosition=False,
+				annotationTail=False,
+				annotationText=False,
+				axisTitleText=False,
+				colorbarPosition=False,
+				colorbarTitleText=False,
+				legendPosition=False,
+				legendText=False,
+				shapePosition=False,
+				titleText=False
+				
+			),
+			autosizable=False,
+			responsive=False,
+			fillFrame=False,
+			frameMargins=0,
+			scrollZoom="gl3d+geo+mapbox",
+			doubleClick="reset+autosize",
+			doubleClickDelay=300,
+			showAxisDragHandles=True,
+			showAxisRangeEntryBoxes=True,
+			showTips=True,
+			showLink=False,
+			linkText="Edit chart",
+			sendData=True,
+			showSources=False,
+			displayModeBar="hover",
+			showSendToCloud=False,
+			showEditInChartStudio=False,
+			modeBarButtonsToRemove=[],
+			modeBarButtonsToAdd=[],
+			modeBarButtons=False,
+			toImageButtonOptions=dict(filename=None,
+									  width=None,
+									  height=None,
+									  scale=None),
+			displaylogo=True,
+			watermark=False,
+			plotGlPixelRatio=2,
+			setBackground="transparent",
+			topojsonURL="https://cdn.plot.ly/",
+			mapboxAccessToken="https://cdn.plot.ly/",
+			logging=1,
+			queueLength=0,
+			globalTransforms=[],
+			locale="en-US",
+			locales=dict()
+),add=F))
 
 plotly.graph_objs._figure.Figure.update_config=upConf
 def showshow(self,*args,**kwargs):
-  meme=merge(dict(config=self._config),kwargs,F)
-  return self.show(*args,**meme) if hasattr(self,"_config") else self.show(*args,**kwargs)
+	kwargs= {} if kwargs is None else kwargs
+	meme=merge(dict(config=self._config),kwargs,add=F)
+	return self.show(*args,**meme) if hasattr(self,"_config") else self.show(*args,**kwargs)
 plotly.graph_objs._figure.Figure.showWithConfig=showshow
 
 

@@ -129,12 +129,21 @@ def merge_dicts(*dict_args,deep=True):
         result.update(dictionary)
     return result
 
-def merge(source, destination_,add=True):
+def merge(source, destination_,*,defaults={},add=True):
+    if defaults is None:
+        defaults={}
     destination=copy.deepcopy(destination_)
     for key, value in source.items():
         if isinstance(value, dict):
             node = copy.deepcopy(destination.setdefault(key, {}))
-            destination[key]=merge(value, node,add=add)
+            try:
+                oi=defaults.get(key)
+            except Exception as e:
+                print(key)
+                print(value)
+                print(defaults)
+                raise e
+            destination[key]=merge(value, node,defaults=oi,add=add)
         else:
             if key in destination.keys():
                 if isinstance(value,list):
@@ -146,8 +155,24 @@ def merge(source, destination_,add=True):
                     destination[key]=[value,destination[key]] if add else destination[key]
             else:
                 destination[key] = value
+    destination2=removeDefaults(destination,defaults)
 
-    return destination
+    return destination2
+
+def removeDefaults(obj,defaults):
+    if defaults is None or len(defaults)==0 :
+        return obj
+    destination2=copy.deepcopy(destination)
+    for key, value in destination.items():
+        if not isinstance(value, dict):
+            if defaults.get(key) is not None:
+                if defaults.get(key) == value:
+                    del destination2[key]
+        else:
+            f=removeDefaults(value,defaults.get(key))
+            if len(f)==0:
+                del destination2[key]
+    return destination2
 def randomString(stringLength=10):
     """Generate a random string of fixed length """
     letters = string.ascii_lowercase
