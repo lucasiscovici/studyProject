@@ -474,7 +474,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             
         if fn is not None:
             self._proprocessDataFromProjectFn = fn
-            self._proprocessDataFromProjectFnOpts=dict(classif=classif)
+            # self._proprocessDataFromProjectFnOpts=dict(classif=classif)
             super().setDataTrainTest(*fn(*self._datas.get(deep=True,optsTrain=dict(withNamesY=False))),classif=classif)
             self._isProcessedDataFromProject = True
 
