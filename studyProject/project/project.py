@@ -25,9 +25,10 @@ class CrossValidItemProject(CrossValidItem):
 
 factoryCls.register_class(CrossValidItemProject)
 
-class basedCv:
+class basedCv(Base):
     EXPORTABLE=["based","resu"]
-    def __init__(self,based=None ,resu=None):
+    def __init__(self,based=None ,resu=None, ID=None):
+        super().__init__(ID)
         self.based = based
         self.resu = resu
 
