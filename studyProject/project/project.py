@@ -1,6 +1,6 @@
 from ..base import Base, DatasSupervise, BaseSupervise, factoryCls
-from ..base.base import CrossValidItem, CvSplit, CvResultats, str2Class
-from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico, getClassName
+from ..base.base import CrossValidItem, CvSplit, CvResultats, str2Class, getAnnotationInit, get_args_typing
+from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico, getClassName, F
 import os
 from . import IProject
 from typing import *
@@ -19,9 +19,9 @@ class CrossValidItemProject(CrossValidItem):
         rep=super().__repr__(ind=ind,*args,**xargs)
         return rep+nt+"_based: "+(self._based if self._based is not None else "None")
 
-    @classmethod
-    def fromCVItem(cls,cvItem):
-        return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
+    # @classmethod
+    # def fromCVItem(cls,cvItem):
+    #     return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
 
 factoryCls.register_class(CrossValidItemProject)
 
@@ -100,7 +100,7 @@ class StudyProject(Base):
         self._curr=id_
         return self.get(od_)
         
-    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,imported=False):
+    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,import_kwargs=dict(),imported=False):
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
         def recreatee():
@@ -118,7 +118,7 @@ class StudyProject(Base):
             res=recreatee()
         else:
             if imported:
-                res= cls.Import(id_)
+                res= cls.Import(id_,**import_kwargs)
                 res = clonee(res) if clone else res
                 self.add(res)
             else:
@@ -137,7 +137,7 @@ class StudyProject(Base):
     @classmethod
     def getOrCreate(cls,ID,repertoire=None,ext=None,
                     path=os.getcwd(),delim="/",imported=True,noDefaults=False,
-                    recreate=False,clone=False,deep=True,chut=True,save_load_load={},save_load_get_path={},import_xargs={}):
+                    recreate=False,clone=False,deep=True,chut=True,save_load_load={},save_load_get_path={},import_kwargs={}):
         from . import IProject
         # repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
         # ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
@@ -174,7 +174,7 @@ class StudyProject(Base):
             return StudyProject(ID)
 
         if imported:
-            return cls.Import(filo,addExtension=False,chut=chut,noDefaults=True,path="",**import_xargs)
+            return cls.Import(filo,addExtension=False,chut=chut,noDefaults=True,path="",**import_kwargs)
         
         sl=SaveLoad.load(filo,addExtension=False,chut=chut,**save_load_load)
         # sl=cls.Load(filo,noDefaults=True,addExtension=False,path="",**xargs)
@@ -325,7 +325,7 @@ class StudyProject(Base):
         return self.__class__.Export(obj,save=save,*args,**xargs)
 
     @staticmethod
-    def import_give_me_cv(proj,cvID,maxou=50):
+    def import_give_me_cv(proj,cvID,clsStudy=None,maxou=50):
         dd=proj.cv
         me=dd[cvID]
         meb=me.based
@@ -342,6 +342,9 @@ class StudyProject(Base):
             if i==maxou:
                 raise Exception("PB import_give_me_cv")
         resul=me2.resu.clone()
+        if clsStudy is not None and  ( clsStudy.__name__ != resul.__class__.__name__):
+            resul=clsStudy.import__(clsStudy(),
+                                      resul.export(save=F))
         resul2={}
         for i in meresu:
             resul2[i]=resul.resultats[i]
@@ -373,7 +376,9 @@ class StudyProject(Base):
                     #print(inst)
                         #print(v.isProcess)preproces_binary
                 if sl._cvOpti:
-                    v._cv  = studyDico({k:cls.import_give_me_cv(sl,k) for k in v._cv})
+                    clsCV= getAnnotationInit(v)
+                    clsCV= get_args_typing(clsCV["cv"])[1] if "cv" in clsCV else None
+                    v._cv  = studyDico({k:cls.import_give_me_cv(sl,k,clsStudy=clsCV) for k in v._cv})
                 v.check()
             sf[k]=v
         sl._studies=studyDico(sf)
@@ -462,7 +467,8 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         else:
             super().setDataTrainTest(X_train,y_train,X_test,y_test,namesY)
 
-    def proprocessDataFromProject(self,fn=None,force=False, classif=False):
+    def proprocessDataFromProject(self,fn=None,force=False):
+        classif = self.isClassif
         if self.isProcessedDataFromProject and not force:
             raise Exception("[BaseSuperviseProject proprocessDataFromProject] processing deja fait pour les données du projet (et force est à False)")
             

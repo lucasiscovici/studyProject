@@ -81,7 +81,7 @@ class DatasSuperviseClassif(DatasSupervise):
         return rep
 factoryCls.register_class(DatasSuperviseClassif)
 class StudyClassif_:
-
+    isClassif=True
     def computeCV(self,cv=3,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=Metric("accuracy"),
                  models=None,**xargs):
@@ -116,6 +116,7 @@ class BaseSuperviseClassif(BaseSupervise):
         super().__init__(ID,datas,models,metric,cv,nameCvCurr,*args,**xargs)
         self._datas=datas
         self._cv=cv
+        self._isClassif=True
    
 factoryCls.register_class(BaseSuperviseClassif)
 
@@ -138,6 +139,7 @@ class StudyClassif(StudyClassif_,BaseSuperviseClassif):
                 cv=cv,
                 nameCvCurr=nameCvCurr
             )
+            self.init()
     def __new__(cls,
                  ID=None,
                  datas:DatasSuperviseClassif=None,

@@ -64,7 +64,7 @@ def get_origin(l):
         except:
             rep=l
     return rep
-def get_args(l):
+def get_args_typing(l):
     try:
         rep=l.__args__
     except:
@@ -353,7 +353,8 @@ class Base(object):
 
  
     @staticmethod
-    def import___(cls,ol,loaded,newIDS=False,papaExport=[],*args,**xargs):
+    def import___(cls,ol,loaded,newIDS=False,
+                    papaExport=[],forceInfer=False,*args,**xargs):
         if loaded is None:
             return None
         if isinstance(loaded,dict) and len(loaded)==0:
@@ -400,13 +401,27 @@ class Base(object):
             annot2=["_"+i for i in f if "_"+i not in annot]
         else:
             annot2=[i for i in f if i not in annot]
-        # print(annot)
-        # print(annot2)
+        # if cls.__name__ in ["BaseSuperviseClassifProject",
+        #                     "StudyClassifProject"]:
+        #     print(cls)
+        #     print(annot)
+        #     print(annot2)
+        #     print(papaExport)
         for k,v in annot.items():
             # print(k)
-            # if k in papaExport:
-            #     print(papaExport)
-            #     continue    
+            if k in papaExport:
+                # print(papaExport)
+                continue    
+            # if (k == "cv" or k == "_cv") and cls.__name__ in ["BaseSuperviseClassifProject",
+            #                 "StudyClassifProject"]:
+            #     print("ici2")
+            #     print(k)
+            #     print(v)
+            #     print(cls.__name__)
+            #     print(get_origin(v))
+            #     print(type(loaded[k]))
+            #     print(loaded[k])
+            #     print(loaded)
             # print(k)
             # print(get_origin(v) is dict and isinstance(loaded[k],dict))
             if k not in loaded:
@@ -416,39 +431,35 @@ class Base(object):
                 if k not in loaded:
                     repo=getattr(ol,k)
                 else:
-                    cl=get_args(v)[0] if isinstance(v,_GenericAlias) else v
+                    cl=get_args_typing(v)[0] if isinstance(v,_GenericAlias) else v
                     if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
                         repo=loaded[k]
                     else:
                         kk=loaded[k][0] if len(loaded[k])>0 else None
                         cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                        if isinstance(cl(),cl2):
+                        if isinstance(cl(),cl2) and not forceInfer:
                             cl2=cl
                         repo=[ cl2.import__(cl2(),i,newIDS=newIDS,*args,**xargs) for i in loaded[k] ]
                 # setattr(ol,k,repo)
             elif get_origin(v) is dict and isinstance(loaded[k],dict):
+                # if k == "cv" or k == "_cv":
+                #     print("ici")
+                #     print(k)
+                #     print(v)
+                #     print(cls.__name__)
                 if k not in loaded:
                     repo=getattr(ol,k)
                 else:
-                    cl=get_args(v)[1] if isinstance(v,_GenericAlias) else v
+                    cl=get_args_typing(v)[1] if isinstance(v,_GenericAlias) else v
                     if isinstance(cl,TypeVar) or not isinstance(cl(),Base):
                         repo=loaded[k]
                     else:
                         kk=list(loaded[k].items())[0][1] if len(loaded[k])>0 else None
                         cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
                         # print("bg±")
-                        # if k == "cv" or k == "_cv":
-                        #     # print(loaded)
-                        # print(k)
-                        #     print(v)
-                        #     print(get_origin(v))
-                        #     print(cls.__name__)
-                        #     print(cl2)
-                        #     print(ol)
-                        #     print(kk)
                         # print(len(loaded[k].items()))
                         # print(cl2)
-                        if isinstance(cl(),cl2):
+                        if isinstance(cl(),cl2) and not forceInfer:
                             cl2=cl
                         # print(cl2) 
                         repo=studyDico({k2:cl2.import__(cl2(),v2,newIDS=newIDS,*args,**xargs) for k2,v2 in loaded[k].items()})
@@ -465,7 +476,7 @@ class Base(object):
                         cl=get_origin(v)
                         kk=loaded[k]
                         cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
-                        if isinstance(cl(),cl2):
+                        if isinstance(cl(),cl2) and not forceInfer :
                             cl2=cl
                         repo=cl2.import__(cl2(),loaded[k],newIDS=newIDS,*args,**xargs)
                 else:
@@ -507,10 +518,10 @@ class Base(object):
         return ol
 
     @classmethod 
-    def import__(cls,ol,loaded,newIDS=False,normalNEW=True,*args,**xargs):
+    def import__(cls,ol,loaded,newIDS=False,normalNEW=True,forceInfer=False,*args,**xargs):
         if normalNEW:
-            return cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
-        return cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,*args,**xargs)
+            return cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        return cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
 
     @classmethod 
     def _import(cls,loaded):
@@ -523,6 +534,7 @@ class Base(object):
              path=os.getcwd(),
              delim="/",
              loadArgs={},
+             forceInfer=False,
             **xargs):
         loaded=cls.Load(ID,repertoire,
                                     ext,
@@ -537,7 +549,7 @@ class Base(object):
                         cls.__name__, loaded["__version__"], __version__),
                     UserWarning)
         ol=cls()
-        ol=cls.import__(ol,loaded)
+        ol=cls.import__(ol,loaded,forceInfer=forceInfer)
 
         # if cls.__name__ == Base.__name__: 
         #     pass
@@ -586,6 +598,11 @@ class Base(object):
         rep["____cls"]=cls.__name__
         return rep
 
+    def __dir__(self):
+        rep=super().__dir__()
+        if len(self.__class__.EXPORTABLE)>0 and "underscore" in self.__class__.EXPORTABLE_ARGS and self.__class__.EXPORTABLE_ARGS["underscore"]:
+            rep=self.__class__.EXPORTABLE+rep
+        return rep
     @staticmethod
     def Export___(cls,obj,save=True,version=None,papaExport=[]):
         kk=False
@@ -656,22 +673,22 @@ class Base(object):
         else: raise AttributeError(a)
 # factoryCls.register_class(Base)
 
-class NamesY(Base):
+# class NamesY(Base):
 
-    def __init__(self,Ynames=None,ID=None):
-        super().__init__(ID)
-        self.namesY=Ynames
-        self.init()
+#     def __init__(self,Ynames=None,ID=None):
+#         super().__init__(ID)
+#         self.namesY=Ynames
+#         self.init()
 
-    def init(self):
-        if self.namesY is not None:
-            if isinstance(self.namesY,list):
-                pass
-    def check(self,y):
-        if not isinstance(y,pd.Series):
-            y=pd.Series(y)
-        val=y.value_counts().index.tolist()
-        return val
+#     def init(self):
+#         if self.namesY is not None:
+#             if isinstance(self.namesY,list):
+#                 pass
+#     def check(self,y):
+#         if not isinstance(y,pd.Series):
+#             y=pd.Series(y)
+#         val=y.value_counts().index.tolist()
+#         return val
 
     # def fromSeries(self,s,index=False):
     #     if not index:
@@ -933,6 +950,10 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
             rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
         return rep
 
+    @classmethod
+    def fromCVItem(cls,cvItem):
+        return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
+
 #put in CrossValidItemClassif
     def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
         # print(y_true)
@@ -1054,6 +1075,7 @@ class CrossValid(Base):
 factoryCls.register_class(CrossValid)
 class BaseSupervise(Base):
     # @abstractmethod
+    isClassif=False
     EXPORTABLE=["datas","models","metric","cv","nameCvCurr"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,datas:DatasSupervise=None,
@@ -1066,7 +1088,12 @@ class BaseSupervise(Base):
         self._metric=metric
         self._cv=cv
         self._nameCvCurr=nameCvCurr
+        # self._isClassif=False
         self.init()
+    
+    # @property
+    # def isClassif(self):
+    #     return self._isClassif
     
     # def __new__(cls,normal=True,*args,**xargs):
     #      return vizHelper(super(BaseSupervise,cls).__new__(cls,*args,**xargs))

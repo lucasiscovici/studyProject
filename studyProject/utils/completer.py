@@ -1,5 +1,5 @@
 from IPython.core.completer import IPCompleter
-
+import os
 class CompleterStudy2(IPCompleter):
     use_jedi=False
     def _complete(self, *, cursor_line, cursor_pos, line_buffer=None, text=None,
@@ -17,7 +17,7 @@ from IPython.core.completer import IPCompleter
 from IPython.core.completer import DELIMS
 import re
 class CompleterStudy(IPCompleter):
-    use_jedi=False
+    use_jedi=True
     def allez(self,text):
         s=self.text_until_cursor
         def ooo(s,k=2):
@@ -63,15 +63,16 @@ class CompleterStudy(IPCompleter):
         argMatches = []
         try:
             oo=ooi(s)
+            #print("fa",s,oo,file=open("/home/devel/work/oo3.txt","a"))
             if oo == False:
                 raise Exception("pb o")
             
             callableObj,usedNamedArgs=oo
-            #print(oo,file=open("/home/devel/work/oo3.txt","a"))
             
             namedArgs = self._default_arguments(eval(callableObj,
                                                     self.namespace))
-
+            
+            #print("iid",text,s,namedArgs,usedNamedArgs,set(namedArgs) - set(usedNamedArgs),file=open("/home/devel/work/oo3.txt","a"))
             # Remove used named arguments from the list, no need to show twice
             for namedArg in set(namedArgs) - set(usedNamedArgs):
                 if namedArg.startswith(text):
@@ -103,35 +104,105 @@ class CompleterStudy(IPCompleter):
     
     def _complete(self, *, cursor_line, cursor_pos, line_buffer=None, text=None,
                       full_text=None):
+        baseDELIM=DELIMS
+        attru=full_text[-1:]=="."
+        #'`!@#$^&*()=+[{]}\|;:\'",<>?'
         #print(dict(cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
         #             full_text=full_text),file=open("/home/devel/work/oo3.txt","a"))
         #return super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
         #      full_text=full_text)
         #print("FAKE_DELIM",file=open("/home/devel/work/oo.txt","a"))
-        self.use_jedi=True
-        self.splitter.delims = ' \t\n!@#$\\|;:\<>?'
-        rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
-          full_text=full_text)
-        #print(rep,file=open("/home/devel/work/oo3.txt","a"))
-        self.splitter.delims = DELIMS
-        #print(rep,file=open("/home/devel/work/oo3.txt","a"))
-        if len(rep[1])==0:
-            self.use_jedi=False
+        try:
+            future=None
+            #print("jediTrue","delimFake",file=open("/home/devel/work/oo3.txt","a"))
+            self.use_jedi=True
+            self.splitter.delims = ' \t\n!@#$\\|;:\<>?'
             rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
-                                  full_text=full_text)
-            if len(rep[1])==0:
-                self.use_jedi=True
-                #print("TRUE_DELIM",file=open("/home/devel/work/oo3.txt","a"))
-                rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
-                  full_text=full_text)
-                #print(rep,file=open("/home/devel/work/oo3.txt","a"))
-                if len(rep[1])==0:
-                    self.splitter.delims = ' \t\n!@#$\\|;:\<>?'
-                    rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
-                                      full_text=full_text)
-                    self.splitter.delims = DELIMS
-                #self.use_jedi=False
+              full_text=full_text)
             #print(rep,file=open("/home/devel/work/oo3.txt","a"))
+            #self.splitter.delims = DELIMS
+            kp=list(rep[3])
+            rep=list(rep)
+            rep[3]=kp
+            rep=tuple(rep)
+            #print("opd",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+            passo=False
+            pf=(len(rep[1])==0 and len(list(rep[3]))>0)
+            pf2=len(rep[1])==0 and len(list(rep[3]))==0
+            if pf:
+                future=rep
+            if pf2 or len(rep[1])==0 or (attru and rep[0]!=full_text) :
+                self.use_jedi=False
+                self.splitter.delims = baseDELIM
+                passo=False
+                #print("jediTrue","delimTrue",file=open("/home/devel/work/oo3.txt","a"))
+                rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
+                                      full_text=full_text)
+                #print("rei",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+                #if rep[0]=="" and len(rep[1])>0:
+                #    future=rep
+                #    passo=True
+                #if full_text!=rep[0]:
+                #    passo=True
+                kp=list(rep[3])
+                rep=list(rep)
+                rep[3]=kp
+                rep=tuple(rep)
+                #print("rei",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+                pf=(len(rep[1])==0 and len(list(rep[3]))>0)
+                pf2=len(rep[1])==0 and len(list(rep[3]))==0
+                if pf:
+                    future=rep
+                if pf2 or len(rep[1])==0 or (attru and rep[0]!=full_text):
+                    passo=False
+                    self.use_jedi=False
+                    self.splitter.delims = ' \t\n!@#$\\|;:\<>?'
+                    #self.splitter.delims = ' \t\n!@#$\\|;:\<>?'
+                    #print("TRUE_DELIM",file=open("/home/devel/work/oo3.txt","a"))
+                    #print("jediFalse","delimFake",file=open("/home/devel/work/oo3.txt","a"))
+                    rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
+                      full_text=full_text)
+                    #print("kk",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+                    #if rep[0]=="" and len(rep[1])>0:
+                    #    future=rep
+                    #    passo=True
+                    #if full_text!=rep[0]:
+                    #    passo=True
+                    kp=list(rep[3])
+                    rep=list(rep)
+                    rep[3]=kp
+                    rep=tuple(rep)
+                    #print("kk",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+                    pf=(len(rep[1])==0 and len(list(rep[3]))>0)
+                    pf2=len(rep[1])==0 and len(list(rep[3]))==0
+                    if pf:
+                        future=rep
+                    if pf2 or len(rep[1])==0 or (attru and rep[0]!=full_text):
+                        passo=False
+                        self.use_jedi=True
+                        self.splitter.delims =  baseDELIM
+                        #print("jediTrue","delimTrue",file=open("/home/devel/work/oo3.txt","a"))
+                        rep=super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
+                                          full_text=full_text)
+                        self.splitter.delims = baseDELIM
+                        #self.use_jedi=False
+                        kp=list(rep[3])
+                        rep=list(rep)
+                        rep[3]=kp
+                        rep=tuple(rep)
+            #if rep[0] == "":
+            #    rep=future
+            #print("srz",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+            if len(rep[1])==0 and len(rep[3])==0 and future is not None:
+                rep =future
+            #print("srz2",rep,list(rep[3]),file=open("/home/devel/work/oo3.txt","a"))
+            self.use_jedi=True
+            self.splitter.delims = baseDELIM
+        except Exception as e:
+            raise e
+            self.use_jedi=True
+            self.splitter.delims = baseDELIM
+            rep=(full_text, [], [], ())
         return rep
     
     def python_func_kw_matches(self,text):
@@ -143,23 +214,78 @@ class CompleterStudy(IPCompleter):
         return rep
 
     def attr_matches(self, text):
-        #print(dict(p=text),file=open("/home/devel/work/oo3.txt","a"))
+        #print("fi",file=open("/home/devel/work/oo3.txt","a"))
         d=self.ooo(self.text_until_cursor,1)
-        
+        #print(dict(p6=text,d=d,text=text,text_u=self.text_until_cursor),file=open("/home/devel/work/oo3.txt","a"))
         m = re.match(r"(\S+(\.\w+)*)\.(\w*)$", d)
-        if m:
+        #print("m",m,file=open("/home/devel/work/oo3.txt","a"))
+        if m is None:
+            m=re.match(r"(\S+(\.\w+)*)\.(\w*)$", text)
+        #print("mB",m,m.group(1, 3),file=open("/home/devel/work/oo3.txt","a"))
+        expr=None
+        if m is not None:
             expr, attr = m.group(1, 3)
+            #print("ex",dict(expr=expr,attr=attr,d=eval(expr,self.namespace)),file=open("/home/devel/work/oo3.txt","a"))
+        
         elif self.greedy:
             m2 = re.match(r"(.+)\.(\w*)$", self.line_buffer)
+            #print("m2",m2,file=open("/home/devel/work/oo3.txt","a"))
             if not m2:
                 return super().attr_matches(text)
             expr, attr = m2.group(1,2)
-        
+        if expr is None:
+            #print("la",file=open("/home/devel/work/oo3.txt","a"))
+            repu=super().attr_matches(text)
+            #print("repu",repu,file=open("/home/devel/work/oo3.txt","a"))
+            return repu
         rep=super().attr_matches(d)
-        #print(rep,text,self.text_until_cursor,expr,rep[0],file=open("/home/devel/work/oo3.txt","a"))
-        rep= [i[(len(expr)):] for i in rep] if self.text_until_cursor!=text else rep
+        #print("d",rep,text,self.text_until_cursor,expr,rep[0],file=open("/home/devel/work/oo3.txt","a"))
+        if text[0]==".":
+            rep = [i[(len(self.text_until_cursor)-len(text)):] for i in rep]
+        else:
+            if  len(text) < len(expr):
+                rep= [i[(len(expr)):] for i in rep]
+                #print()
+                #if text[0]!=".":
+                rep=[i[len(text):]  for i in rep]
+                #rep = [i if len(i)> for i in rep]
+            #print("o,",rep,file=open("/home/devel/work/oo3.txt","a"))
+            #rep=[u"%s%s" % ("", w) for w in rep ]
         if len(rep)==0:
             rep=super().attr_matches(text)
+        #print("uu",rep,file=open("/home/devel/work/oo3.txt","a"))
+        return rep
+   
+class CompleterStudyX(IPCompleter):
+    use_jedi=True
+    def _complete(self, *, cursor_line, cursor_pos, line_buffer=None, text=None,
+                      full_text=None):
+        pat=os.getcwd()
+        print(dict(cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
+                     full_text=full_text),file=open(pat+"/oo3.txt","a"))
+        rep = super()._complete( cursor_line=cursor_line, cursor_pos=cursor_pos, line_buffer=line_buffer, text=text,
+                                      full_text=full_text)
+        kp=list(rep[3])
+        rep=list(rep)
+        rep[3]=kp
+        rep=tuple(rep)
+        print("rep",rep,file=open(pat+"/oo3.txt","a"))
+        self.use_jedi=True
+        print(self.splitter.delims,file=open(pat+"/oo3.txt","a"))
+        return rep
+    
+    def python_func_kw_matches(self,text):
+        print(dict(p=text,tex=self.text_until_cursor),file=open("/home/devel/work/oo3.txt","a"))
+        rep=super().python_func_kw_matches(text)
+        pat=os.getcwd()
+        print("p",rep,file=open(pat+"/oo3.txt","a"))
+        return rep
+
+    def attr_matches(self, text):
+        print(dict(p6=text,text=text,text_u=self.text_until_cursor),file=open("/home/devel/work/oo3.txt","a"))
+        rep=super().attr_matches(text)
+        pat=os.getcwd()
+        print("a",rep,file=open(pat+"/oo3.txt","a"))
         return rep
    
    

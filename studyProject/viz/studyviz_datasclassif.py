@@ -61,6 +61,10 @@ class Study_DatasClassif_Viz(Viz):
                 fig.data[0].text=cb
             for k,v in addLabels_kwargs.items():
                 setattr(fig.data[0],k,v)
+        fig.update_config(editable=T,
+                       displayModeBar=T,
+                       displaylogo=F,
+                       filename=filename)
         if asImg:
             fig=cb.iplot(data=fig,filename=filename,asImage=True)
             return fig

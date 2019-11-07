@@ -31,7 +31,7 @@ class StudyClassifProject(StudyClassif_,BaseSuperviseClassifProject):
                  datas:DatasSuperviseClassif=None,
                  models:Models=None,
                  metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItemClassif]=None,
+                 cv:Dict[str,CrossValidItemClassifProject]=None,
                  nameCvCurr=None,
                  dejaINIT=False,
                  project=None): 
@@ -47,6 +47,7 @@ class StudyClassifProject(StudyClassif_,BaseSuperviseClassifProject):
                 nameCvCurr=nameCvCurr,
                 project=project
             )
+            self.init()
     def __new__(cls,
                  ID=None,
                  datas:DatasSuperviseClassif=None,

@@ -130,9 +130,14 @@ def merge_dicts(*dict_args,deep=True):
     return result
 
 def merge(source, destination_,*,defaults={},add=True):
+    # print(source)
+    # print(destination_)
+    # print(defaults)
+    # print(add)
     if defaults is None:
         defaults={}
     destination=copy.deepcopy(destination_)
+    destination=removeDefaults(destination,defaults)
     for key, value in source.items():
         if isinstance(value, dict):
             node = copy.deepcopy(destination.setdefault(key, {}))
@@ -155,18 +160,20 @@ def merge(source, destination_,*,defaults={},add=True):
                     destination[key]=[value,destination[key]] if add else destination[key]
             else:
                 destination[key] = value
-    destination2=removeDefaults(destination,defaults)
 
-    return destination2
+    return destination
 
-def removeDefaults(obj,defaults):
+def removeDefaults(destination,defaults):
     if defaults is None or len(defaults)==0 :
-        return obj
+        return destination
     destination2=copy.deepcopy(destination)
     for key, value in destination.items():
         if not isinstance(value, dict):
             if defaults.get(key) is not None:
-                if defaults.get(key) == value:
+                if defaults.get(key) == value :
+                    del destination2[key]
+            else:
+                if defaults.get(key) is None and value is None:
                     del destination2[key]
         else:
             f=removeDefaults(value,defaults.get(key))
