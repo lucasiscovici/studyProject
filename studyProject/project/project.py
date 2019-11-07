@@ -48,15 +48,24 @@ class basedCv(Base):
     @classmethod 
     def import__(cls,ol,loaded,me="basedCv",*args,**xargs):
         # print("ici")# TODO: TWO LOOP ON wHY ?
+        # print( cls.__name__ )
+        # print( ol.__dict__ )
         # print(loaded)
-        bas=ol["based"]
-        resu=ol["resu"]
-        if ol["based"] == "None":
-            cl2o=ol["resu"].____cls
+        # if not isinstance(ol,cls):
+        bas=loaded["based"]
+        resu=loaded["resu"]
+        if bas == "None" or bas is None:
+            # print("ici")
+            cl2o=resu["____cls"]
             cl2=str2Class(cl2o)
-            resu=cl2.import__(cl2(),ol["resu"])
+            resu=cl2.import__(cl2(),resu)
             bas=None
-        return cls(bas,resu)
+
+        rep=cls(bas,resu)
+        # print(rep)
+        # print(rep.__dict__)
+        return rep
+        # return ol
 
 factoryCls.register_class(basedCv)
 from collections import defaultdict

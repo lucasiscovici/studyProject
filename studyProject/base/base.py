@@ -549,7 +549,7 @@ class Base(object):
                         cls.__name__, loaded["__version__"], __version__),
                     UserWarning)
         ol=cls()
-        ol=cls.import__(ol,loaded,forceInfer=forceInfer)
+        ol=cls.import__( ol, loaded, forceInfer=forceInfer )
 
         # if cls.__name__ == Base.__name__: 
         #     pass
