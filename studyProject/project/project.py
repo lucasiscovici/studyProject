@@ -58,7 +58,7 @@ class basedCv(Base):
             bas=None
         return cls(bas,resu)
 
-        
+factoryCls.register_class(basedCv)
 from collections import defaultdict
 class StudyProject(Base):
     # DEFAULT_REP="study_project"
