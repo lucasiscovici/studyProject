@@ -90,8 +90,9 @@ class StudyClassif_:
 from ..base.base import CvResultats, CvSplit
 class CvResultatsClassif(CvResultats):pass
 factoryCls.register_class(CvResultatsClassif)
-        
-class CrossValidItemClassif(CrossValidItem):
+class CVIClassif:pass
+
+class CrossValidItemClassif(CrossValidItem,CVIClassif):
     EXPORTABLE=["resultats"]
     def __init__(self,ID:str=None,cv:CvSplit=None,resultats:Dict[str,CvResultatsClassif]={},
                 args:Dict=None):

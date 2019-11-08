@@ -10,5 +10,5 @@ from .studyviz_basesuperviseclassif import Study_BaseSuperviseClassif_Viz
 from .studyviz_studyclassif_ import Study_StudyClassif__Viz
 from .studyviz_studyclassif import Study_StudyClassif_Viz
 from .studyviz_studyclassifproject import Study_StudyClassifProject_Viz
-from .studyviz_crossvaliditemclassif import Study_CrossValidItemClassif_Viz
+from .studyviz_cviclassif import Study_CVIClassif_Viz
 

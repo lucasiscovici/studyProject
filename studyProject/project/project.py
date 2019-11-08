@@ -110,7 +110,7 @@ class StudyProject(Base):
         self._curr=id_
         return self.get(od_)
         
-    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,import_kwargs=dict(),imported=False):
+    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,vh=True,import_kwargs=dict(),imported=False):
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
         def recreatee():
@@ -137,6 +137,8 @@ class StudyProject(Base):
                           lambda:recreatee())()
         if isinstance(res,implements(IProject)):res.check() 
         self._curr=id_
+        if vh:
+            res=res.vh
         return res
     
     @property
@@ -340,8 +342,16 @@ class StudyProject(Base):
         me=dd[cvID]
         meb=me.based
         meresu=me.resu
+        # print("ddd",me,",",meb,",",meresu)
         if meb is None:
-            meresu.resultats=studyDico(meresu.resultats)
+            if clsStudy is not None and  ( clsStudy.__name__ != meresu.__class__.__name__):
+                resul=clsStudy.import__(clsStudy(),
+                                          meresu.export(save=F))
+                resul2=resul.resultats
+                resul.resultats=studyDico(resul2)
+                meresu=resul
+            else:
+                meresu.resultats=studyDico(meresu.resultats)
             return meresu
 
         i=0
@@ -352,6 +362,7 @@ class StudyProject(Base):
             if i==maxou:
                 raise Exception("PB import_give_me_cv")
         resul=me2.resu.clone()
+        # print(clsStudy,resul.__class__.__name__)
         if clsStudy is not None and  ( clsStudy.__name__ != resul.__class__.__name__):
             resul=clsStudy.import__(clsStudy(),
                                       resul.export(save=F))

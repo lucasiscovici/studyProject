@@ -1,10 +1,10 @@
 from .base import factoryCls, Models, Metric, CvSplit
-from .study.studyClassif import CvResultatsClassif, DatasSuperviseClassif, CrossValidItemClassif, StudyClassif_
+from .study.studyClassif import CvResultatsClassif, DatasSuperviseClassif, CrossValidItemClassif, StudyClassif_, CVIClassif
 from .project.project import CrossValidItemProject, StudyProject,BaseSuperviseProject
 from typing import Dict
 from .viz.viz import vizHelper
 
-class CrossValidItemClassifProject(CrossValidItemProject):
+class CrossValidItemClassifProject(CrossValidItemProject,CVIClassif):
     EXPORTABLE=["resultats"]
     def __init__(self,ID:str=None,cv:CvSplit=None,resultats:Dict[str,CvResultatsClassif]={},args:Dict=None,*args_,**xargs):
         super().__init__(ID=ID,cv=cv,resultats=resultats,args=args,*args_,**xargs)

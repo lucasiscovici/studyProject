@@ -12,7 +12,7 @@ import operator
 from ..utils import isStr
 from operator import itemgetter
 
-class Study_CrossValidItemClassif_Viz(Viz):
+class Study_CVIClassif_Viz(Viz):
 	def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",
 		showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
 		nbCols=3,colFixed=None,shared_xaxes=True,
@@ -63,7 +63,7 @@ class Study_CrossValidItemClassif_Viz(Viz):
 		tiplesS=[i.layout.title.text  for i in confMatCls.values()]
 		tiplesSAxis=[(i.layout.xaxis.title.text,i.layout.yaxis.title.text)  for i in confMatCls.values()]
 		for i in confMatCls.values():
-			i.update(xaxis_title="",yaxis_title="")
+			i.update_layout(xaxis_title="",yaxis_title="")
 		subpl=cf.subplots(list(confMatCls.values()),shape=rowsCol,shared_xaxes=shared_xaxes,shared_yaxes=shared_yaxes,
                            horizontal_spacing=horizontal_spacing,
                            vertical_spacing=vertical_spacing,subplot_titles=tiplesS,x_title=tiplesSAxis[0][0],
@@ -110,7 +110,7 @@ class Study_CrossValidItemClassif_Viz(Viz):
 				i.update(hovertemplate = "<b>%{text}%</b><br>" +
 				tiplesSAxis[0][1]+" : %{y}<br>" +
 				tiplesSAxis[0][0]+" : %{x}<br>" + "<extra></extra>")
-		fig.update_layout(xaxis_title=tiplesSAxis[0][0],yaxis_title=tiplesSAxis[0][1])
+		# fig.update_layout(xaxis_title=tiplesSAxis[0][0],yaxis_title=tiplesSAxis[0][1])
 
 		# fig.update_xaxis(title_text=tiplesSAxis[0])
 		# fig.update_yaxis(title_text=tiplesSAxis[1])

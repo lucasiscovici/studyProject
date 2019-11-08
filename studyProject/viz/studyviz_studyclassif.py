@@ -13,7 +13,7 @@ class Study_StudyClassif_Viz(Viz):
                                     shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
                                     modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None):
         obj=self.obj
-        return obj.currCV.plot_confusion_matrix(y_true,
+        return obj.currCV.viz.plot_confusion_matrix(y_true,
                                     namesY,
                                     mods,
                                     normalize,
