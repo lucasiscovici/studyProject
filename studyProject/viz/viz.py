@@ -27,6 +27,9 @@ def catch_exception_viz(f,obj,names,kw="me"):
                 print(str(e2))
                 raise e
     return func
+
+def vizGet(o):
+    return o.__curr if o.__class__.__name__ == "vizHelper"  else o
 def catch_exception_viz2(f,obj,names,kw="me"):
     @functools.wraps(f)
     def func(*args, **kwargs):
@@ -109,6 +112,9 @@ class vizHelper(object):
 
     def _instancecheck(self, typ):
         return isinstanceBase(self.__curr,typ)
+
+    def __len__(self):
+        return len(self.__curr)
 
 def disable_plotly_in_cell():
     import IPython

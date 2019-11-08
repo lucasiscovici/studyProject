@@ -858,6 +858,7 @@ factoryCls.register_class(CvResultatsPreds)
 class CvResultatsDecFn(CvResultatsTrValOrigSorted): pass
 factoryCls.register_class(CvResultatsDecFn)
 from sklearn.metrics import classification_report, confusion_matrix
+from ..viz import vizGet
 class CvResultats(Base):
     EXPORTABLE=["preds","scores","cv_validate","decFn","name"]
     def __init__(self, preds:CvResultatsPreds=None, scores:CvResultatsScores=None, cv_validate=None, decFn=None, ID=None,name=None):
@@ -877,17 +878,17 @@ class CvResultats(Base):
                 namesY=lambda:getattr(me,namesY).cat
                 namesY= namesY() if isPossible(namesY) else None
 
-        ff2=classification_report(y_true,self.preds.Val.sorted,output_dict=True)
+        ff2=classification_report(vizGet(y_true),vizGet(self.preds.Val.sorted),output_dict=True)
         namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
-        p=pd.DataFrame(ff2)
+        ff2=pd.DataFrame(ff2)
         if skip_support:
             ff2=ff2[:-1]
         if transpose:
             ff2=ff2.T
         if returnNamesY:
-            return StudyClass(classification_report=p,namesY=namesY)
+            return StudyClass(classification_report=ff2,namesY=namesY)
         else:
-            return p
+            return ff2
     def confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
         # print(y_true)
         if me is not None:

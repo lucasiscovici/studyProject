@@ -98,12 +98,15 @@ class Study_CvResultatsClassif_Viz(Viz):
 				y_true=getattr(me,y_true)
 			if isinstance(namesY,str):
 				namesY=getattr(me,namesY).cat
-		cr=obj.classification_report(y_true,namesY)
+		cr=obj.classification_report(y_true,namesY)[::-1]
 		vlaS=cr.values*100.
 		annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 or not noLabel else "",
 			enumerate(vlaS.flatten())))
-		annotation_text=np.reshape(annotation_text,vlaS)
-		dd=ff.create_annotated_heatmap(vlaS.round(round_val),x=ff.columns.tolist(),y=ff.index.tolist(),
+		vlaSe=vlaS.shape
+		# print(annotation_text)
+		# print(vlaS)
+		annotation_text=np.reshape(annotation_text,vlaSe)
+		dd=ff.create_annotated_heatmap(vlaS.round(round_val),x=cr.columns.tolist(),y=cr.index.tolist(),
 			annotation_text=annotation_text	,showscale=showscale,colorscale=colorscale,reversescale=reversescale)
 		dd.update_layout(paper_bgcolor= paper_bgcol,
 	                      plot_bgcolor= plot_bgcolor,
