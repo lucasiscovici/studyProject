@@ -272,24 +272,23 @@ def compress_pickle_dump(
             arch.write(path, arcname=arcname)
         else:
             file = arch.open(path, mode=mode)
-    if deep:
-        last=dill.settings['recurse']
-        dill.settings['recurse'] = True
-    else:
-        dill.settings['recurse']=False
+    # print(deep)
+    # if deep:
+    #     last=dill.settings['recurse']
+    #     dill.settings['recurse'] = True
+    # else:
+    #     dill.settings['recurse']=False
     if arch is not None:
         with arch:
             if sys.version_info < (3, 6):
-                buff = dill.dumps(obj, protocol=protocol)
+                buff = dill.dumps(obj, protocol=protocol,recurse=deep)
                 arch.writestr(arcname, buff)
             else:
                 with file:
-                    dill.dump(obj, file, protocol=protocol)
+                    dill.dump(obj, file, protocol=protocol,recurse=deep)
     else:
         with file:
-            dill.dump(obj, file, protocol=protocol)
-    if deep:
-        dill.settings['recurse'] = last
+            dill.dump(obj, file, protocol=protocol,recurse=deep)
 
 
 def compress_pickle_load(

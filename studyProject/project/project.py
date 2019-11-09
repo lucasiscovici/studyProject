@@ -76,17 +76,18 @@ from collections import defaultdict
 class StudyProject(Base):
     # DEFAULT_REP="study_project"
     # DEFAULT_EXT=".studyProject"
-    EXPORTABLE=["studies","curr","data","cv","cvOpti"]
+    EXPORTABLE=["studies","curr","data","cv","cvOpti","dataOpti"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,studies:Dict[str,BaseSupervise]=None,
                     curr=None,data:Dict[str,DatasSupervise]=None,cv:Dict[str,basedCv]={},
-                    cvOpti=True):
+                    cvOpti=True,dataOpti=True):
         super().__init__(ID)
         self._studies={} if studies is None else studies
         self._curr=curr
         self._data=data if data is not None else {} #BeautifulDico({"_ZERO":DatasSupervise.from_XY_Train_Test(None,None,None,None,None,ID="_ZERO")})
         self._cv={}
         self._cvOpti=cvOpti
+        self._dataOpti=dataOpti
         # self._cvK=defaultdict(list);
 
     @property
@@ -205,16 +206,17 @@ class StudyProject(Base):
                 v.begin()
                 v.setProject(sl)
                 #print(v.idData)
-                v.setDataTrainTest(id_=v.getIdData(),force=True)
-                try:
-                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
-                except Exception as e:
-                    raise e
-                    warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
-                    pass
-                    #print("Error")
-                    #print(inst)
-                        #print(v.isProcess)
+                if sl.dataOpti and v.getProprocessDataFromProjectFn() is not None:
+                    v.setDataTrainTest(id_=v.getIdData(),force=True)
+                    try:
+                        v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
+                    except Exception as e:
+                        raise e
+                        warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
+                        pass
+                        #print("Error")
+                        #print(inst)
+                            #print(v.isProcess)
                 v.check()
             sf[k]=v
         sl._studies=sf
@@ -230,6 +232,7 @@ class StudyProject(Base):
              delim="/",returnOK=False,**xargs):
         ID=self.ID
         cvOpti=self._cvOpti
+        dataOpti=self._dataOpti
         # repertoire = ifelse(repertoire is None,StudyProject.DEFAULT_REP,repertoire)
         # ext=ifelse(ext is None,StudyProject.DEFAULT_EXT,ext)
         # repo=path+delim+repertoire
@@ -248,8 +251,10 @@ class StudyProject(Base):
                 # li2=v._idCvBased
                 li=v.getIdData()
                 # v._project=v__
-                v._datas={}
-                # v._cv={}
+                if dataOpti and v.getProprocessDataFromProjectFn() is not None:
+                    v._datas={}
+                #v._cv={}#
+                #\____/=\____/#
                 if cvOpti:
                     ddd=list(vizGet(v._cv.keys())) if isinstance(v._cv,dict) else v._cv
                     # for k2,v2 in v._cv.items():
@@ -394,16 +399,17 @@ class StudyProject(Base):
                 # print(v_)
                 v.begin()
                 v.setProject(sl)
-                # print(v.getIdData())
-                v.setDataTrainTest(id_=v.getIdData(),force=True)
-                try:
-                    v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
-                except Exception as e:
-                    raise e
-                    warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
-                    #print("Error")
-                    #print(inst)
-                        #print(v.isProcess)preproces_binary
+                if sl.dataOpti and v.getProprocessDataFromProjectFn() is not None: #TODO: save function getProprocessDataFromProjectFn when different python version
+                    # print(v.getIdData())
+                    v.setDataTrainTest(id_=v.getIdData(),force=True)
+                    try:
+                        v.proprocessDataFromProject(v.getProprocessDataFromProjectFn(),**v._proprocessDataFromProjectFnOpts)
+                    except Exception as e:
+                        raise e
+                        warnings.warn("[StudyProject getOrCreate] pb with {} when proprocessDataFromProject".format(k))
+                        #print("Error")
+                        #print(inst)
+                            #print(v.isProcess)preproces_binary
                 if sl._cvOpti:
                     clsCV= getAnnotationInit(v)
                     clsCV= get_args_typing(clsCV["cv"])[1] if "cv" in clsCV else None

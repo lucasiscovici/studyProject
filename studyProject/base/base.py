@@ -1260,7 +1260,11 @@ class BaseSupervise(Base):
         return self.train_datas.namesY
 
     @classmethod
-    def getOrCreate(cls,id_,recreate=False,clone=False,deep=True,cls_xargs=dict(),*args,**xargs):
+    def getOrCreate(cls,id_,recreate=False,
+                            clone=False,
+                            deep=True,
+                            cls_xargs=dict(),
+                            *args,**xargs):
         # cls=self.__class__
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
