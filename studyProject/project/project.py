@@ -251,7 +251,7 @@ class StudyProject(Base):
                 v._datas={}
                 # v._cv={}
                 if cvOpti:
-                    ddd=list(vizGet(v._cv.keys()))
+                    ddd=list(vizGet(v._cv.keys())) if isinstance(v._cv,dict) else v._cv
                     # for k2,v2 in v._cv.items():
                     v._cv=ddd
                 # v.setDataTrainTest(id_="_ZERO")
@@ -324,14 +324,14 @@ class StudyProject(Base):
         if onlyID:
             return ("[[StudyProject]"+nt+"ID : {}]").format(self.ID)
         if len(ff)>0:
-            ntt=nt+"\t"+t.join(mapl(lambda a:"ID : "+a,ff))
+            ntt=nt+"\t"+t.join(mapl(lambda a:"ID : "+str(a),ff))
             # print(ntt)
             rep= ("[[StudyProject]"+nt+"ID : {}"+nt+"Studies : {}]").format(self.ID,ntt)
         else:
             ntt="0"
             rep =("[[StudyProject]"+nt+"ID : {}"+nt+"Studies : {}]").format(self.ID,ntt)
         if len(self._data)>0:
-            ntt=nt+"\t"+(nt+"\t").join(mapl(lambda a:"ID : "+a,self._data))
+            ntt=nt+"\t"+(nt+"\t").join(mapl(lambda a:"ID : "+str(a),self._data))
             rep= (rep[:-1]+nt+"Datas : {}]").format(ntt)
         else:
             ntt="0"
