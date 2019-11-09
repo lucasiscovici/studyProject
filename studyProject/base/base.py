@@ -641,7 +641,7 @@ class Base(object):
 
     @staticmethod
     def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[]):
-        rep=cls.Export___(cls,obj,papaExport=papaExport,save=save)
+        rep=cls.Export___(cls,vizGet(obj),papaExport=papaExport,save=save)
         if version is not None:
             rep["__version__"]=version
         # print(rep.keys())

@@ -54,11 +54,30 @@ def catch_exception_viz2(f,obj,names,kw="me"):
 # class vizHelperMeta(type):
 #     def __instancecheck__(self, other):
 #         return isinstance(self.__curr,typ)
-
+import copy
 class vizHelper(object):
     def __init__(self, arg, curr=None, realNone=False):
         self.__obj = arg
         self.__curr = (None if realNone else arg) if curr is None else curr 
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        # cls = self.__class__
+        # result = cls.__new__(cls)
+        # memo[id(self)] = result
+        # for k, v in self.__dict__.items():
+        #     setattr(result, k, copy.deepcopy(v, memo))
+        return self
+
+    def __getstate__(self):
+        return dict(obj=self.__obj,
+                    curr=self.__curr)
+
+    def __setstate__(self,i):
+        self.__obj=i["__obj"]
+        self.__curr=i["__curr"]
 
     def __meme(self,rep):
         # print(callable(rep))
@@ -79,7 +98,13 @@ class vizHelper(object):
         if k=="_vizHelper__obj" or k=="_vizHelper__curr" or k=="_vizHelper__meme":
             k=k[len("_vizHelper"):]
         # print(k)
-        if k=="__curr" or k=="__obj" or k=="__meme" or k=="_instancecheck":
+        if k.startswith('___') and k.endswith('___'):
+            return self.__meme(getattr(self.__curr,k))
+
+        if k.startswith('__') and k.endswith('__'):
+            return getattr(self,k)
+
+        if k=="__curr" or k=="__obj" or k=="__meme" or k=="_instancecheck" or k=="__getstate__" or k=="__setstate__":
             return getattr(self,k)
         return self.__meme(getattr(self.__curr,k))
 
@@ -88,7 +113,7 @@ class vizHelper(object):
         # print(k)
         if k=="_vizHelper__obj" or k=="_vizHelper__curr" or k=="_vizHelper__meme":
             k=k[len("_vizHelper"):]
-        if k=="__curr" or k=="__obj" or k=="__meme":
+        if k=="__curr" or k=="__obj" or k=="__meme" or k=="_instancecheck" or k=="__getstate__" or k=="__setstate__":
             object.__setattr__(self,k,v)
         else:
             # print(k)

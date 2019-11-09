@@ -6,6 +6,7 @@ from . import IProject
 from typing import *
 from interface import implements
 from ..utils import isinstanceBase, isinstance
+from ..viz import vizGet
 # from ..study import DatasSuperviseClassif
 
 class CrossValidItemProject(CrossValidItem):
@@ -250,7 +251,7 @@ class StudyProject(Base):
                 v._datas={}
                 # v._cv={}
                 if cvOpti:
-                    ddd=list(v._cv.keys())
+                    ddd=list(vizGet(v._cv.keys()))
                     # for k2,v2 in v._cv.items():
                     v._cv=ddd
                 # v.setDataTrainTest(id_="_ZERO")
@@ -258,7 +259,7 @@ class StudyProject(Base):
                 v.setProject(v.ID)
 
                 # print(v)
-            ff[k]=v
+            ff[k]=vizGet(v)
 
         # print(ff)
         sl._studies=ff
