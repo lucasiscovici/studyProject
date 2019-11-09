@@ -88,10 +88,10 @@ class Study_CvResultatsClassif_Viz(Viz):
 
 	def plot_classification_report(self,y_true="y_train",namesY="train_datas",
 		colorscale="Greys",reversescale=True,showscale=True,round_val=2,
-		paper_bgcol="#F5F6F9",plot_bgcolor="black",
-		linecolor="black",linewidth=2,noLabel=False,
+		paper_bgcol="#F5F6F9",plot_bgcolor="black",zmax=None,zmin=None,
+		linecolor="black",linewidth=2,title=None,noLabel=False,onlyConfMat=False,
 		xgap=1,ygap=1,
-		me=None):
+		me=None,*args,**xargs):
 		obj=self.obj
 		if me is not None:
 			if isinstance(y_true,str):
@@ -100,13 +100,18 @@ class Study_CvResultatsClassif_Viz(Viz):
 				namesY=getattr(me,namesY).cat
 		cr=obj.classification_report(y_true,namesY)[::-1]
 		vlaS=cr.values*100.
+		if onlyConfMat:
+			zmax=np.max(vlaS)
+			zmin=np.min(vlaS)
+			return [zmin,zmax]
+
 		annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 or not noLabel else "",
 			enumerate(vlaS.flatten())))
 		vlaSe=vlaS.shape
 		# print(annotation_text)
 		# print(vlaS)
 		annotation_text=np.reshape(annotation_text,vlaSe)
-		dd=ff.create_annotated_heatmap(vlaS.round(round_val),x=cr.columns.tolist(),y=cr.index.tolist(),
+		dd=ff.create_annotated_heatmap(vlaS.round(round_val),zmax=zmax,zmin=zmin,x=cr.columns.tolist(),y=cr.index.tolist(),
 			annotation_text=annotation_text	,showscale=showscale,colorscale=colorscale,reversescale=reversescale)
 		dd.update_layout(paper_bgcolor= paper_bgcol,
 	                      plot_bgcolor= plot_bgcolor,
@@ -116,4 +121,5 @@ class Study_CvResultatsClassif_Viz(Viz):
 	                        	zeroline=F,showline=T))
 		dd.data[0].update(dict(xgap=xgap,ygap =ygap))
 		dd.update_layout(width=560,height=600)
+		conf=conf.update_layout(title_text="Confusion matrix {}".format('' if obj.name is None else obj.name) if title is None else title)
 		return dd

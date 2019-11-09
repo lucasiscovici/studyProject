@@ -19,6 +19,9 @@ class CrossValidItemProject(CrossValidItem):
         rep=super().__repr__(ind=ind,*args,**xargs)
         return rep+nt+"_based: "+(self._based if self._based is not None else "None")
 
+    #TODO
+    # def changeID(self,id_):
+        # self.ID=id_
     # @classmethod
     # def fromCVItem(cls,cvItem):
     #     return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
@@ -84,6 +87,10 @@ class StudyProject(Base):
         self._cv={}
         self._cvOpti=cvOpti
         # self._cvK=defaultdict(list);
+
+    @property
+    def vh(self):
+        return vizHelper(self)
 
     def addCV(self,name,cv):
         if self._cvOpti:
