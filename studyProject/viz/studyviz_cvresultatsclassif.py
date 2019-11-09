@@ -105,6 +105,7 @@ class Study_CvResultatsClassif_Viz(Viz):
 			zmin=np.min(vlaS)
 			return [zmin,zmax]
 
+
 		annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 or not noLabel else "",
 			enumerate(vlaS.flatten())))
 		vlaSe=vlaS.shape
@@ -121,5 +122,5 @@ class Study_CvResultatsClassif_Viz(Viz):
 	                        	zeroline=F,showline=T))
 		dd.data[0].update(dict(xgap=xgap,ygap =ygap))
 		dd.update_layout(width=560,height=600)
-		conf=conf.update_layout(title_text="Confusion matrix {}".format('' if obj.name is None else obj.name) if title is None else title)
+		dd=dd.update_layout(title_text="Confusion matrix {}".format('' if obj.name is None else obj.name) if title is None else title)
 		return dd
