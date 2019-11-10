@@ -936,8 +936,9 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
 
     @classmethod 
     def _import(cls,loaded):
-        loaded.resultats=studyDico(loaded.resultats,papa=loaded,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
-        return loaded
+        lo=super()._import(loaded)
+        lo.resultats=studyDico(lo.resultats,papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
+        return lo
 
     @classmethod
     def fromCVItem(cls,cvItem):
@@ -1280,6 +1281,10 @@ class BaseSupervise(Base):
             securerRepr(self._metric,ind+2),
             securerRepr(BeautifulDico(self._cv),ind+1,ademas=2),self._nameCvCurr)
 
+    def clone(self,ID=None,newIDS=False,deep=True):
+        cl=super().clone(ID=ID,newIDS=newIDS,deep=deep)
+        cl._cv=studyDico(cl.cv,papa=self,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
+        return cl
 def getDecFn(l,X):
     attrs = ("predict_proba", "decision_function")
 
