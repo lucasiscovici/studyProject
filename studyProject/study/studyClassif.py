@@ -1,6 +1,6 @@
-from ..base import  BaseSupervise, Metric, DatasSupervise, Models, CrossValidItem
+from ..base import  BaseSupervise, Metric, DatasSupervise, Models, CrossValidItem, Base
 import os
-from ..utils import getStaticMethodFromObj, getsourceP, getStaticMethodFromCls, isNumpyArr, listl, zipl
+from ..utils import getStaticMethodFromObj, getsourceP, getStaticMethodFromCls, isNumpyArr, listl, zipl, T, F, StudyClass, isPossible, rangel
 from abc import ABC, abstractmethod
 from interface import implements, Interface
 from ..base import DatasSupervise, Datas, factoryCls
@@ -10,11 +10,38 @@ import warnings as warning
 import pandas as pd
 import numpy as np
 from studyPipe.pipes import * 
+from studyPipe import df_
 from ..viz.viz import vizHelper
-from ..utils import isinstanceBase, isinstance
+from ..utils import isinstanceBase, isinstance, studyDico
 from typing import Dict
 
-class DatasClassif(Datas):
+class DatasClassif_ClassBalance:
+    def class_balance(self,normalize=True,name="Class Balance"):
+        df=self.y.value_counts(normalize=normalize).set_name(name)
+        return df
+
+    def table_class_balance(self,normalize=True,name="Class Balance",attr=None,title="Class Balance of {}"):
+        n=self.attr if attr is None else attr
+        f=self.class_balance(normalize,name).set_name(n).to_frame().T.table_plot().add_title(title.format(n))
+        return f
+
+class DatasSuperviseClassif_ClassBalance:
+    def class_balance(self,normalize=False):
+        rep=(
+            self 
+            | ((__.dataTrain,__.dataTest) |_funs_| listl )
+            | ((__,["dataTrain","dataTest"]) |_funs_| zipl )
+            | _ftools_.mapl(__[0].class_balance(normalize=normalize).to_frame(__[1]))
+            | (pd.concat |_funsInv_| dict(objs=__,axis=1))
+        )
+        return rep
+    def table_class_balance(self,normalize=True,title="Class Balance of {}"):
+        # n=self.attr if attr is None else attr
+        n="datas"
+        f=self.class_balance(normalize).table_plot().add_title(title.format(n))
+        return f
+
+class DatasClassif(Datas,DatasClassif_ClassBalance):
     EXPORTABLE=["cat"]
     EXPORTABLE_ARGS=dict(underscore=False)
     # y must be a series or a dataframe
@@ -55,13 +82,11 @@ class DatasClassif(Datas):
                 self.y=self.y.astype("category")
             self.cat=self.y.cat.categories.tolist()
 
-    def class_balance(self,normalize=True):
-        df=self.y.value_counts(normalize=normalize).set_name("Class Balance")
-        return df
 
 factoryCls.register_class(DatasClassif)
 
-class DatasSuperviseClassif(DatasSupervise):
+
+class DatasSuperviseClassif(DatasSupervise,DatasSuperviseClassif_ClassBalance):
     EXPORTABLE=["dataTrain","dataTest"]
     D=DatasClassif
     def __init__(self,dataTrain:DatasClassif=None,dataTest:DatasClassif=None,ID=None):
@@ -69,16 +94,6 @@ class DatasSuperviseClassif(DatasSupervise):
         self.dataTrain=dataTrain
         self.dataTest=dataTest
 
-
-    def class_balance(self,normalize=False):
-        rep=(
-            self 
-            | ((__.dataTrain,__.dataTest) |_funs_| listl )
-            | ((__,["dataTrain","dataTest"]) |_funs_| zipl )
-            | _ftools_.mapl(__[0].class_balance(normalize=normalize).to_frame(__[1]))
-            | (pd.concat |_funsInv_| dict(objs=__,axis=1))
-        )
-        return rep
 factoryCls.register_class(DatasSuperviseClassif)
 class StudyClassif_:
     isClassif=True
@@ -88,9 +103,147 @@ class StudyClassif_:
         return super().computeCV(cv,random_state,shuffle,classifier,nameCV,recreate,parallel,metric,models,**xargs)
 
 from ..base.base import CvResultats, CvSplit
-class CvResultatsClassif(CvResultats):pass
+class CvResultatsClassif_ClassificationReport:
+
+    def classification_report(self,y_true="y_train",namesY="train_datas",returnNamesY=False,transpose=True,skip_support=True,orderCol=["precision","recall","f1-score"],me=None):
+        obj=self
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=lambda:getattr(me,namesY).cat
+                namesY= namesY() if isPossible(namesY) else None
+        elif isinstance(y_true,str) or isinstance(namesY,str):
+            me=obj.papa.papa
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+
+        ff2=classification_report(vizGet(y_true),vizGet(self.preds.Val.sorted),output_dict=True)
+        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
+        ff2=pd.DataFrame(ff2)
+        if skip_support:
+            ff2=ff2[:-1]
+        if transpose:
+            ff2=ff2.T
+        ff2 = ff2 >> df_.select(*orderCol)
+        if returnNamesY:
+            return StudyClass(classification_report=ff2,namesY=namesY)
+        else:
+            return ff2
+
+    def table_classification_report(self,roundVal=3,y_true="y_train",namesY="train_datas",returnNamesY=False,transpose=True,skip_support=True,orderCol=["precision","recall","f1-score"],me=None):
+        cf=self.classification_report(y_true=y_true,namesY=namesY,returnNamesY=returnNamesY,transpose=transpose,skip_support=skip_support,orderCol=orderCol,me=me)
+        return cf.round(roundVal).table_plot()
+
+
+class CvResultatsClassif_ConfusionMatrix:
+    def confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
+        # print(y_true)
+        obj=self
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+        elif isinstance(y_true,str) or isinstance(namesY,str):
+            me=obj.papa.papa
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+
+        ff2=confusion_matrix(y_true,self.preds.Val.sorted)
+        if normalize:
+            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis,keepdims=True)),round_)*100
+        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
+        p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
+        if returnNamesY:
+            return StudyClass(confusion_matrix=p,namesY=namesY)
+        else:
+            return p
+
+    def table_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,roundVal=2,returnNamesY=False,me=None):
+        s=self.confusion_matrix(y_true=y_true,namesY=namesY,normalize=normalize,axis=axis,round_=roundVal,returnNamesY=returnNamesY,me=me)
+        return p.round(roundVal).table_plot()
+
+class CvResultatsClassif(CvResultats,CvResultatsClassif_ClassificationReport,CvResultatsClassif_ConfusionMatrix):
+
+    def getObsConfused(self,classe,predit,lim=10,y_true="y_train",X_true="X_train",namesY="train_datas",me=None):
+        obj=self
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(X_true,str):
+                X_true=getattr(me,X_true)
+            if isinstance(namesY,str):
+                namesY=lambda:getattr(me,namesY).cat
+                namesY= namesY() if isPossible(namesY) else None
+        elif isinstance(y_true,str) or isinstance(X_true,str) or isinstance(namesY,str):
+            me=self.papa.papa
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(X_true,str):
+                X_true=getattr(me,X_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+        X,y,pred = X_true,y_true,self.preds.Val.sorted
+        return np.array(X)[(y==classe) & (predit==pred)][:lim]
+
+from sklearn.metrics import classification_report, confusion_matrix
+from ..viz import vizGet
 factoryCls.register_class(CvResultatsClassif)
-class CVIClassif:pass
+class CVIClassif_ConfusionMatrix:
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
+        # print(y_true)
+        obj=self
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+        elif isinstance(y_true,str) or isinstance(namesY,str):
+            me=obj.papa
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+        modsN=list(self.resultats.keys())
+        models=self.resultats
+        if len(mods)>0:
+            mods_ = [i if isStr(i) else modsN[i] for i in mods]
+            models= {i:self.resultats[i] for i in mods_}
+        r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in models.items()}) 
+        return r
+
+class CVIClassif(CVIClassif_ConfusionMatrix):
+
+    def getObsConfused(self,classe,predit,mods=[],lim=10,y_true="y_train",X_true="X_train",namesY="train_datas",me=None):
+        obj=self
+        if me is not None:
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(X_true,str):
+                X_true=getattr(me,X_true)
+            if isinstance(namesY,str):
+                namesY=lambda:getattr(me,namesY).cat
+                namesY= namesY() if isPossible(namesY) else None
+        elif isinstance(y_true,str) or isinstance(X_true,str) or isinstance(namesY,str):
+            me=obj.papa
+            if isinstance(y_true,str):
+                y_true=getattr(me,y_true)
+            if isinstance(X_true,str):
+                X_true=getattr(me,X_true)
+            if isinstance(namesY,str):
+                namesY=getattr(me,namesY).cat
+        modsN=list(self.resultats.keys())
+        models=self.resultats
+        if len(mods)>0:
+            mods_ = [i if isStr(i) else modsN[i] for i in mods]
+            models= {i:self.resultats[i] for i in mods_}
+        r=studyDico({k:v.getObsConfused(classe,predit,lim=lim,y_true=y_true,X_true=X_true,namesY=namesY,me=me) for k,v in models.items()}) 
+        return r
 
 class CrossValidItemClassif(CrossValidItem,CVIClassif):
     EXPORTABLE=["resultats"]
@@ -102,26 +255,49 @@ class CrossValidItemClassif(CrossValidItem,CVIClassif):
                 args=args,
                 cv=cv
             )
-        self.resultats=resultats
+        # self.resultats=resultats
 
 factoryCls.register_class(CrossValidItemClassif)
 
-class BaseSuperviseClassif(BaseSupervise):
+class BSClassif:
+    def confusion_matrix(self,normalize=True,cvs=None):
+        cvs_=[] if cvs is None else (list(cvs.keys()) if isinstance(cvs,dict) else cvs)
+        cvKeys=list(self._cv.keys())
+        cv_=self._cv
+        y_true=self.y_train
+        namesY=self.train_datas.cat
+        if len(cvs_)>0:
+            cv_names = [i if isStr(i) else cvKeys[i] for i in cvs_]
+            cv_res= {i:cv_[i] for i in cv_names}
+        else:
+            cv_res=cv_
+        if isinstance(cvs,dict):
+            cvD={i:cvs[cvs_[i_]] for i_, i in enumerate(cv_names)}
+            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize,mods=cvD[k]) for k,v in cv_res.items()}) 
+        else:
+            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in cv_res.items()}) 
+
+        return r
+   
+class BaseSuperviseClassif(StudyClassif_,BaseSupervise,BSClassif):
     # @abstractmethod
     EXPORTABLE=["datas","cv"]
     EXPORTABLE_ARGS=dict(underscore=True)
+
+    cvrCls=CvResultatsClassif
+    cviCls=CrossValidItemClassif
     def __init__(self,ID=None,datas:DatasSuperviseClassif=None,
                     models:Models=None,metric:Metric=None,
-                    cv:Dict[str,CrossValidItemClassif]={},nameCvCurr=None,
+                    cv:Dict[str,CrossValidItemClassif]=studyDico({}),nameCvCurr=None,
                     *args,**xargs):
         super().__init__(ID,datas,models,metric,cv,nameCvCurr,*args,**xargs)
-        self._datas=datas
-        self._cv=cv
-        self._isClassif=True
-   
+        # self._datas=datas
+        # self._cv=cv
+        # self._isClassif=True
+
 factoryCls.register_class(BaseSuperviseClassif)
 
-class StudyClassif(StudyClassif_,BaseSuperviseClassif):
+class StudyClassif(BaseSuperviseClassif):
     def __init__(self,
                  ID=None,
                  datas:DatasSuperviseClassif=None,
@@ -129,34 +305,34 @@ class StudyClassif(StudyClassif_,BaseSuperviseClassif):
                  metric:Metric=Metric("accuracy"),
                  cv:Dict[str,CrossValidItemClassif]=None,
                  nameCvCurr=None,dejaINIT=False,normal=True):
-        if not dejaINIT:
-            if cv is None:
-                cv={}
-            super(StudyClassif,self).__init__(
-                ID=ID,
-                datas=datas,
-                models=models,
-                metric=metric,
-                cv=cv,
-                nameCvCurr=nameCvCurr
-            )
-            self.init()
-    def __new__(cls,
-                 ID=None,
-                 datas:DatasSuperviseClassif=None,
-                 models:Models=None,
-                 metric:Metric=Metric("accuracy"),
-                 cv:Dict[str,CrossValidItem]=None,
-                 nameCvCurr=None,
-                 normal=True):
-        instance= super(StudyClassif,cls).__new__(cls)
-        if not normal:
-            instance.__init__(ID=ID,
-                                    datas=datas,
-                                    models=models,
-                                    metric=metric,
-                                    cv=cv,
-                                    nameCvCurr=nameCvCurr)
-        return instance.vh if not normal else instance
+        # if not dejaINIT:
+        if cv is None:
+            cv=studyDico({},papa=self,addPapaIf=lambda c:instance(c,Base),attr="_cv")
+        super(StudyClassif,self).__init__(
+            ID=ID,
+            datas=datas,
+            models=models,
+            metric=metric,
+            cv=cv,
+            nameCvCurr=nameCvCurr
+        )
+        self.init()
+    # def __new__(cls,
+    #              ID=None,
+    #              datas:DatasSuperviseClassif=None,
+    #              models:Models=None,
+    #              metric:Metric=Metric("accuracy"),
+    #              cv:Dict[str,CrossValidItem]=None,
+    #              nameCvCurr=None,
+    #              normal=True):
+    #     instance= super(StudyClassif,cls).__new__(cls)
+    #     if not normal:
+    #         instance.__init__(ID=ID,
+    #                                 datas=datas,
+    #                                 models=models,
+    #                                 metric=metric,
+    #                                 cv=cv,
+    #                                 nameCvCurr=nameCvCurr)
+    #     return instance.vh if not normal else instance
 # from ..project.project import BaseSuperviseClassifProject
 

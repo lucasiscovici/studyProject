@@ -43,6 +43,14 @@ class StudyDict(UserDict,dict):
             elif isNumpyArr(rep):
                 rep=StudyNpArray(rep,**atty)
                 return rep
+            elif hasattr(self,"papa"):
+                if hasattr(self,"addPapaIf"):
+                    if not self.addPapaIf(rep):
+                        return rep
+                object.__setattr__(rep,"papa",self.papa)
+                if hasattr(self,"attr"):
+                    object.__setattr__(rep,"attr",self.attr)
+                return rep
             else:
                 return rep
         if hasattr(self.__class__, "__missing__"):
@@ -74,9 +82,17 @@ class StudyDict(UserDict,dict):
             elif isNumpyArr(rep):
                 rep=StudyNpArray(rep,**atty)
                 return rep
+            elif hasattr(self,"papa"):
+                if hasattr(self,"addPapaIf"):
+                    if not self.addPapaIf(rep):
+                        return rep
+                object.__setattr__(rep,"papa",self.papa)
+                if hasattr(self,"attr"):
+                    object.__setattr__(rep,"attr",self.attr)
+                return rep
             else:
                 return rep
-        return super(UserDict).__getattr__(key)
+        return super(UserDict,self).__getattribute__(key)
 
 
     def __getstate__(self): return self.__dict__.copy()

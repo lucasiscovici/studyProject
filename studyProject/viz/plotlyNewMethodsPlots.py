@@ -624,6 +624,11 @@ figIdisplay=plotly.graph_objs._figure.Figure._ipython_display_
 plotly.graph_objs._figure.Figure._ipython_display_=ipython_display2
 plotly.graph_objs._figure.Figure._ipython_display2_=figIdisplay
 
+def addT(self,title="Title",marginT=50):
+	return self.update_layout(title=title,
+                       margin=dict(t=marginT))
+
+plotly.graph_objs._figure.Figure.add_title=addT
 # function ttt(l, tab=""){
 # 	var srti=tab
 # 	var val = null;

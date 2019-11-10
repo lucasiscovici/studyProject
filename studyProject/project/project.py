@@ -146,8 +146,8 @@ class StudyProject(Base):
                           lambda:recreatee())()
         if isinstance(res,implements(IProject)):res.check() 
         self._curr=id_
-        if vh:
-            res=res.vh
+        # if vh:
+        # res=res.vh
         return res
     
     @property
@@ -447,20 +447,21 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
     EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn",
     "proprocessDataFromProjectFnOpts","isProcessedDataFromProject","cv"]
     EXPORTABLE_ARGS=dict(underscore=True)
-
-    
+    cvrCls=CvResultats
+    cviCls=CrossValidItemProject
     @abstractmethod
     def __init__(self,ID=None,datas:DatasSupervise=None,
-                        models:Models=None,metric:Metric=None,cv:Dict[str,CrossValidItemProject]={},
+                        models:Models=None,metric:Metric=None,cv:Dict[str,CrossValidItemProject]=studyDico({}),
                         project:StudyProject=None,*args,**xargs):
         super().__init__(ID,datas,models,metric)
         self._project=project
+        self._cv=cv
 
     def init(self):
         super().init()
         self._idDataProject=None
         # self._idCvBased=None
-        self._cv={}
+        # self._cv=StudyDict()
         self._proprocessDataFromProjectFn=None
         self._proprocessDataFromProjectFnOpts={}
         self.begin()
@@ -500,7 +501,8 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             self._datas=self.project.data[id_]
             self._idDataProject=id_
         else:
-            super().setDataTrainTest(X_train,y_train,X_test,y_test,namesY)
+            classif = self.isClassif
+            super().setDataTrainTest(X_train,y_train,X_test,y_test,classif=classif)
 
     def proprocessDataFromProject(self,fn=None,force=False):
         classif = self.isClassif
@@ -602,7 +604,9 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
                  nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
                  models=models)
         # print(rep)
-        self._cv[self._nameCvCurr]=CrossValidItemProject.fromCVItem(self.currCV)
+        classif=self.isClassif
+        D= self.cviCls
+        self._cv[self._nameCvCurr]=D.fromCVItem(self.currCV)
         # self._nameCvCurr=resu[0]
         # rep._based = None
         if not noAddCv:self._project.addCV(self._nameCvCurr,self.currCV)

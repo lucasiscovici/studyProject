@@ -133,8 +133,13 @@ class vizHelper(object):
     def _getMe(self):
         return self.__curr
     def __getitem__(self,k):
+        if isinstance(self.__curr,dict):
+            return self.__meme(self.__curr.get(k))
         return self.__meme(self.__curr[k])
 
+    def __iter__(self):
+        return iter(self.__curr)
+        
     def _instancecheck(self, typ):
         return isinstanceBase(self.__curr,typ)
 

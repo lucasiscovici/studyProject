@@ -197,6 +197,9 @@ class Base(object):
 
     def __init__(self,ID:str=None):
         self.ID=ifelse(ID is None,lambda:randomString(),lambda:ID)() 
+        object.__setattr__(self, "papa", None)
+        object.__setattr__(self, "attr", None)
+        #self.papa=self
 
     def clone(self,ID=None,newIDS=False,deep=True):
         return self.__class__.Clone(self,ID,newIDS=newIDS,deep=deep)
@@ -665,12 +668,27 @@ class Base(object):
         stri="[[{}]"+nt+"ID : {}]"
         return stri.format(getClassName(self),self.ID)
 
+    def __getattribute__(self,a):
+        rep=super().__getattribute__(a)
+        if a != "papa":
+            if isinstance(rep,Base):
+                object.__setattr__(rep, "papa", self)
+                # rep.papa=self
+                object.__setattr__(rep, "attr", a)
+                # rep.attr=a
+        return rep
+
+    def __setattr__(self,a,b):
+        if a in ["papa","attr"] and hasattr(self,a) and getattr(self,a) is None:
+            raise Exception("papa and attr not setting (private of Base)")
+        return object.__setattr__(self, a, b)
+
     def __getattr__(self,a):
         key=a
         if key.startswith('__') and key.endswith('__'):
             return super().__getattr__(key)
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
-        else: raise AttributeError(a)
+        else: raise AttributeError()
 # factoryCls.register_class(Base)
 
 # class NamesY(Base):
@@ -729,7 +747,7 @@ class DatasSupervise(Base):
         self.dataTest=dataTest
 
     @classmethod
-    def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,namesY=None,ID=None):
+    def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,namesY=None,ID=None):
         return cls(cls.D(X_train,y_train),
                               cls.D(X_test,y_test),ID)
     def get(self,deep=False,optsTrain={},optsTest={}):
@@ -870,41 +888,6 @@ class CvResultats(Base):
         self.decFn=decFn
 
 
-    def classification_report(self,y_true="y_train",namesY="train_datas",returnNamesY=False,transpose=True,skip_support=True,me=None):
-        if me is not None:
-            if isinstance(y_true,str):
-                y_true=getattr(me,y_true)
-            if isinstance(namesY,str):
-                namesY=lambda:getattr(me,namesY).cat
-                namesY= namesY() if isPossible(namesY) else None
-
-        ff2=classification_report(vizGet(y_true),vizGet(self.preds.Val.sorted),output_dict=True)
-        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
-        ff2=pd.DataFrame(ff2)
-        if skip_support:
-            ff2=ff2[:-1]
-        if transpose:
-            ff2=ff2.T
-        if returnNamesY:
-            return StudyClass(classification_report=ff2,namesY=namesY)
-        else:
-            return ff2
-    def confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
-        # print(y_true)
-        if me is not None:
-            if isinstance(y_true,str):
-                y_true=getattr(me,y_true)
-            if isinstance(namesY,str):
-                namesY=getattr(me,namesY).cat
-        ff2=confusion_matrix(y_true,self.preds.Val.sorted)
-        if normalize:
-            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis,keepdims=True)),round_)*100
-        namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
-        p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
-        if returnNamesY:
-            return StudyClass(confusion_matrix=p,namesY=namesY)
-        else:
-            return p
 
 factoryCls.register_class(CvResultats)
 # factoryCls.register_class(CvResultatsPreds)
@@ -933,7 +916,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         self.resultats=resultats
         self.args=args
         if self.resultats is not None:
-            self.resultats = studyDico(self.resultats)
+            self.resultats = studyDico(self.resultats,papa=self,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
 
     def __repr__(self,ind=1):
         # txt="\n"
@@ -951,39 +934,40 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
             rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
         return rep
 
+    @classmethod 
+    def _import(cls,loaded):
+        loaded.resultats=studyDico(loaded.resultats,papa=loaded,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
+        return loaded
+
     @classmethod
     def fromCVItem(cls,cvItem):
         return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
 
 #put in CrossValidItemClassif
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
-        # print(y_true)
-        if me is not None:
-            if isinstance(y_true,str):
-                y_true=getattr(me,y_true)
-            if isinstance(namesY,str):
-                namesY=getattr(me,namesY).cat
-        modsN=list(self.resultats.keys())
-        models=self.resultats
-        if len(mods)>0:
-            mods_ = [i if isStr(i) else modsN[i] for i in mods]
-            models= {i:self.resultats[i] for i in mods_}
-        r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in models.items()}) 
-        return r
     def resultatsSummary(self):
         u=lambda i:(
             {k:getattr(v.scores,i) for k,v in self.resultats.items()}
             | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                    index=__.keys(),
-                                    columns=(1,len(self.cv.all_)+1) |_funs_| range | _ftools_.mapl ("CV {}"))).T \
+                                            index=__.keys())).T \
                 | (np.round |_funsInv_| dict(a=__,decimals=2)) \
                 | __.mean(axis=0).to_frame().T | __.rename(index={0:i}))
         return u("Tr").append(u("Val"))
+
+    def table_resultatsSummary(self,roundVal=3,title="Résultats crossValidés d'accuracy",
+                                    marginT=50,width=450):
+        s=self.resultatsSummary()
+        s2=s.round(roundVal)\
+            .table_plot()\
+            .update_layout(title=title,
+                           margin=dict(t=marginT),
+                           width=width)
+        return s2
 factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu","namesMod"]
     def __init__(self,cv=None,classifier=None,metric:Metric=None,nameCV=None,parallel=True,random_state=42,
-                 shuffle=True,recreate=False,models=None,namesMod=None,_models=None,_metric=None):
+                 shuffle=True,recreate=False,models=None,namesMod=None,_models=None,_metric=None,
+                 cviCls=CrossValidItem,cvrCls=CvResultats,papa=None):
         super().__init__(nameCV)
         self.cv=cv
         self.parallel=parallel
@@ -998,6 +982,9 @@ class CrossValid(Base):
         self.argu=dict(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
             nameCV=self.nameCV,recreate=recreate,parallel=parallel,metric=_metric,models=_models)
         self.cv=CrossValid.getCV(self)
+        self.cviCls=cviCls
+        self.cvrCls=cvrCls
+        self.papa_=papa
         
     @staticmethod
     def getCV(self):
@@ -1025,7 +1012,9 @@ class CrossValid(Base):
             self.cv=CvSplit.fromCvSplitted(self.cv)
         cv=self.cv
         cvo=self.crossV(X,y,**xargs)
-        return (self.nameCV,CrossValidItem(self.nameCV,cv,cvo,self.argu))
+        cl=self.cviCls
+        ki=cl(self.nameCV,cv,cvo,self.argu)
+        return (self.nameCV,ki)
 
     def crossV(self,X,y,verbose=0,n_jobs=-1,**xargs):
         cv=self.cv
@@ -1065,7 +1054,7 @@ class CrossValid(Base):
 
         resul={}
         for i,name in enumerate(namesMod):
-            resul[name]=CvResultats(CvResultatsPreds(CvOrigSorted(preduTr[i],preduuTr[i]),
+            resul[name]=self.cvrCls(CvResultatsPreds(CvOrigSorted(preduTr[i],preduuTr[i]),
                                                       CvOrigSorted(preduVal[i],preduuVal[i])),
                                      CvResultatsScores(scoreTr[i],scoreVal[i]),
                                      resu2[i],
@@ -1077,11 +1066,13 @@ factoryCls.register_class(CrossValid)
 class BaseSupervise(Base):
     # @abstractmethod
     isClassif=False
+    cvrCls=CvResultats
+    cviCls=CrossValidItem
     EXPORTABLE=["datas","models","metric","cv","nameCvCurr"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,datas:DatasSupervise=None,
                     models:Models=None,metric:Metric=None,
-                    cv:Dict[str,CrossValidItem]={},nameCvCurr=None,
+                    cv:Dict[str,CrossValidItem]=studyDico({}),nameCvCurr=None,
                     *args,**xargs):
         super().__init__(ID)
         self._datas=datas
@@ -1106,36 +1097,17 @@ class BaseSupervise(Base):
     def viz_(self):
         return self.vh.viz
 
-    def confusion_matrix(self,normalize=True,cvs=None):
-        cvs_=[] if cvs is None else (list(cvs.keys()) if isinstance(cvs,dict) else cvs)
-        cvKeys=list(self._cv.keys())
-        cv_=self._cv
-        y_true=self.y_train
-        namesY=self.train_datas.cat
-        if len(cvs_)>0:
-            cv_names = [i if isStr(i) else cvKeys[i] for i in cvs_]
-            cv_res= {i:cv_[i] for i in cv_names}
-        else:
-            cv_res=cv_
-        if isinstance(cvs,dict):
-            cvD={i:cvs[cvs_[i_]] for i_, i in enumerate(cv_names)}
-            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize,mods=cvD[k]) for k,v in cv_res.items()}) 
-        else:
-            r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in cv_res.items()}) 
-
-        return r
     def init(self):
         # self._cv={}
         pass
         # self._nameCvCurr=None
         
 
-    def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,namesY=None,classif=False):
+    def setDataTrainTest(self,X_train=None,y_train=None,X_test=None,y_test=None,*,namesY=None,classif=False):
         #self.setDataX(X_train,X_test)
         D= str2Class('DatasSuperviseClassif') if classif else DatasSupervise
         self._datas=D.from_XY_Train_Test(X_train,y_train,
-                                          X_test,y_test,
-                                          namesY)
+                                          X_test,y_test)
 
     def setModels(self,models,*args,**xargs):
         self._models=Models(models,*args,**xargs)
@@ -1159,13 +1131,19 @@ class BaseSupervise(Base):
             metric=self.scorer
         cv=CrossValid(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
                  nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
-                 models=models,namesMod=namesMod,_models=_models,_metric=_metric)
+                 models=models,namesMod=namesMod,_models=_models,_metric=_metric,cviCls=self.cviCls,
+                 cvrCls=self.cvrCls,papa=self)
         cv.checkOK(list(self.cv.keys()))
         resu=cv.computeCV(self.X_train,self.y_train)
         self._cv[resu[0]]=resu[1]
         self._nameCvCurr=resu[0]
         
     
+    @classmethod 
+    def _import(cls,loaded):
+        loaded._cv=studyDico(loaded._cv,papa=loaded,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
+        return loaded
+
     @staticmethod
     def plan():
         print("PLAN:")
