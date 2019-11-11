@@ -629,6 +629,8 @@ def addT(self,title="Title",marginT=50):
                        margin=dict(t=marginT))
 
 plotly.graph_objs._figure.Figure.add_title=addT
+
+
 # function ttt(l, tab=""){
 # 	var srti=tab
 # 	var val = null;

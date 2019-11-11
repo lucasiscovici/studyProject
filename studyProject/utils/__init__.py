@@ -6,7 +6,7 @@ from .util2 import getPrivateAttr,flatArray, getClassName, has_method, merge, \
 					getStaticMethod, getStaticMethodFromObj, getStaticMethodFromCls, merge_two_dicts, ifNotNone,\
 					T, F, getsourceP, takeInObjIfInArr, convertCamelToSnake, securerRepr, getAnnotationInit,\
 					 merge_dicts, iterable, to_camel_case, check_names, namesEscape, listl,\
-					 isPossible, isNotPossible, numpyToCatPdSeries, changeTmpObj, get_args, get_default_args,blockPrint, enablePrint, hidePrint, setattrAndReturnSelf
+					 isPossible, isNotPossible, numpyToCatPdSeries, changeTmpObj, get_args, get_default_args,blockPrint, enablePrint, hidePrint, setattrAndReturnSelf, indexOfMinForValueInArray
 from .is_ import isInt, isStr, isNumpyArr
 from .struct import StudyList, StudyDict, StudyNpArray,dicoAuto, studyDico, studyList, Obj, BeautifulDico, BeautifulList, StudyClass, instanceOfType,isinstanceBase, isinstance
 from .sklearn_utils import get_metric, check_cv2
@@ -15,5 +15,5 @@ from .save_load import SaveLoad
 from .tempfile import TMP_FILE
 from .profiler import profile_that, profile_that_snake
 from .pandasNewMethods import *
-
+from .colors import luminence, frontColorFromColorscaleAndValue, flipScale, frontColorFromColorscaleAndValues
 from .completer import config_completer, createSubClassFromIPCompleter, returnCom

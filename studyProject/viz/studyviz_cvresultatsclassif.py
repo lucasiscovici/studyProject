@@ -2,6 +2,7 @@ import plotly.figure_factory as ff
 import numpy as np
 from ..utils import StudyClass, F, T, merge
 from . import Viz
+from ..utils import flipScale, frontColorFromColorscaleAndValues
 
 class Study_CvResultatsClassif_Viz(Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,addDiagonale=True,colorscale="RdBu",
@@ -21,23 +22,25 @@ class Study_CvResultatsClassif_Viz(Viz):
                 y_true=getattr(me,y_true)
             if isinstance(namesY,str):
                 namesY=getattr(me,namesY).cat
-        confMatCls=obj.confusion_matrix(y_true,namesY=namesY,normalize=normalize,returnNamesY=True)
-        confMat=confMatCls.confusion_matrix
+
+        confMatCls=obj.confusion_matrix(y_true,namesY=namesY,normalize=normalize,returnNamesY=True,axis=axis)
+        confMat=np.nan_to_num(confMatCls.confusion_matrix)
         confMatNamesY=confMatCls.namesY
-        zmax=np.max(confMat.values) if zmax is None else zmax
-        zmin=np.min(confMat.values) if zmin is None else zmin
-        vla=confMat.values
+        zmax=np.max(confMat) if zmax is None else zmax
+        zmin=np.min(confMat) if zmin is None else zmin
+        vla=confMat
         vlaS=vla.shape
         # print(vla)
         vlaae=np.copy(vla)
-        annotation_text=list(map(lambda a: "{}%".format(np.round(a) if np.round(a,2)>0.0 or not noLabel else ""),vla.flatten()))
+        annotation_text=list(map(lambda a: "{}".format(np.round(a) if np.round(a,2)>0.0 or not noLabel else ""),vla.flatten()))
         annotation_text=np.reshape(annotation_text,vlaS)
         zmid=(zmax-zmin)/2. if zmid is None else zmid
         if addCount and normalize:
-            confMat2=obj.confusion_matrix(y_true,namesY=namesY,normalize=False,returnNamesY=False)
-            fe=np.repeat(np.sum(confMat2.values,axis=axis),vlaS[0])
+            confMat2=np.nan_to_num(obj.confusion_matrix(y_true,namesY=namesY,normalize=False,returnNamesY=False,axis=axis))
+            fe=np.sum(confMat2,axis=axis,keepdims=True)
+            fe=np.tile(fe,vlaS[0]).flatten()
             # print(fe)
-            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 or not noLabel else "",enumerate(zip(vla.flatten(),confMat2.values.flatten()))))
+            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 or not noLabel else "",enumerate(zip(vla.flatten(),confMat2.flatten()))))
             annotation_text=np.reshape(annotation_text,vlaS)
         if chutDiag:
             vlo=vla
@@ -83,6 +86,17 @@ class Study_CvResultatsClassif_Viz(Viz):
         conf.data[0].update(hovertemplate = "<b>%{text}%</b><br>" +
             xlabel+" : %{y}<br>"+
             ylabel+" : %{x}<br>"+"<extra></extra>")
+
+
+        if normalize:
+            ooo=np.array(vla.flatten())/100.
+            o=[]
+            cl=conf.data[0].colorscale
+            rcl=conf.data[0].reversescale
+            cll=flipScale(cl) if rcl else cl
+            clrs=frontColorFromColorscaleAndValues(ooo,cll,zmin=zmin/100.,zmax=zmax/100.)
+            for c,i in zip(clrs,conf.layout.annotations):
+                i.font.color=c
 
         # if border:
         #   conf.update_layout(
@@ -135,4 +149,13 @@ class Study_CvResultatsClassif_Viz(Viz):
         dd.data[0].update(dict(xgap=xgap,ygap =ygap))
         dd.update_layout(width=560,height=600)
         dd=dd.update_layout(title_text="Classification report {}".format('' if obj.name is None else obj.name) if title is None else title)
+        
+        ooo=np.array(vlaS.flatten())/100.
+        o=[]
+        cl=dd.data[0].colorscale
+        rcl=dd.data[0].reversescale
+        cll=flipScale(cl) if rcl else cl
+        clrs=frontColorFromColorscaleAndValues(ooo,cll,zmin=zmin/100.,zmax=zmax/100.)
+        for c,i in zip(clrs,dd.layout.annotations):
+            i.font.color=c
         return dd

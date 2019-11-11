@@ -29,8 +29,22 @@ class StudyClass:
     def __getstate__(self): return self.__dict__.copy()
     def __setstate__(self, d): self.__dict__.update(d)
 class StudyDict(UserDict,dict):
-    def __init__(self, *args, default=None, **kwargs):
+    def __init__(self, *args, default=None,noInit=False, **kwargs):
+        # print("ici")
+        if hasattr(self,"noInit") and self.noInit:
+            return
         super().__init__(*args, **kwargs)
+
+    def __new__(cls,*args, default=None,force=False, **kwargs):
+        # print(args[0])
+        # print(args[0].__class__)
+        # print(isinstance(args[0],StudyDict))
+        if len(args) >0 and isinstance(args[0],StudyDict) and not force:
+            args[0].noInit=True
+            return args[0]
+        instance= super().__new__(cls)
+        return instance
+
     def __getitem__(self, key):
         from .util2 import getPrivateAttr
         key=list(self.keys())[key] if isInt(key) else key
@@ -99,13 +113,13 @@ class StudyDict(UserDict,dict):
     def __setstate__(self, d): self.__dict__.update(d)
     def __copy__(self):
         cls = self.__class__
-        result = cls.__new__(cls)
+        result = cls.__new__(cls,force=True)
         result.__dict__.update(self.__dict__)
         return result
 
     def __deepcopy__(self, memo):
         cls = self.__class__
-        result = cls.__new__(cls)
+        result = cls.__new__(cls,force=True)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             setattr(result, k, copy.deepcopy(v, memo))
@@ -148,11 +162,11 @@ class Obj(object):
             setattr(self,i,j)
 
 class BeautifulDico(dict):
-    def __repr__(self,ind=1,ademas=1):
+    def __repr__(self,ind=1,ademas=1,nl=""):
         stri="\n"
         for k,v in self.items():
             stri+="\t"*ind
-            stri+=k+" : "
+            stri+=k+" : "+nl
             # stri+="\t"*ind
             try:
                 stri+=v.__repr__(ind=ind+ademas)+"\n"

@@ -20,6 +20,14 @@ F=False
 from .struct import isinstanceBase, isinstance
 import sys, os
 
+def indexOfMinForValueInArray(val,arr):
+    i=0
+    curr=arr[i]
+    while curr < val:
+        i+=1
+        curr=arr[i]
+    return i
+
 def setattrAndReturnSelf(obj,k,v):
   setattr(obj,k,v)
   return obj

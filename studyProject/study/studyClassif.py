@@ -156,7 +156,7 @@ class CvResultatsClassif_ConfusionMatrix:
 
         ff2=confusion_matrix(y_true,self.preds.Val.sorted)
         if normalize:
-            ff2=np.round(np.divide(ff2,ff2.sum(axis=axis,keepdims=True)),round_)*100
+            ff2=np.round(np.divide(ff2,np.sum(ff2,axis=axis,keepdims=True)),round_)*100
         namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
         p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
         if returnNamesY:
@@ -195,7 +195,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from ..viz import vizGet
 factoryCls.register_class(CvResultatsClassif)
 class CVIClassif_ConfusionMatrix:
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None):
+    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None,*args,**xargs):
         # print(y_true)
         obj=self
         if me is not None:
@@ -214,7 +214,7 @@ class CVIClassif_ConfusionMatrix:
         if len(mods)>0:
             mods_ = [i if isStr(i) else modsN[i] for i in mods]
             models= {i:self.resultats[i] for i in mods_}
-        r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in models.items()}) 
+        r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize,*args,**xargs) for k,v in models.items()}) 
         return r
 
 class CVIClassif(CVIClassif_ConfusionMatrix):

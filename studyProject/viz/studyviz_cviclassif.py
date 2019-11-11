@@ -45,7 +45,7 @@ class Study_CVIClassif_Viz(Viz):
         namesY= namesEscape(namesY) if namesY is not None else namesY
         if len(models) > 1:
             confMatM=[v.viz.plot_confusion_matrix(y_true,
-                namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,onlyConfMat=True) for v in models.values()]
+                namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,onlyConfMat=True,**plotConfMat_kwargs) for v in models.values()]
             # print(confMatM)
             zmin=min(map(itemgetter(0),confMatM))
             zmax=max(map(itemgetter(1),confMatM))
@@ -127,7 +127,7 @@ class Study_CVIClassif_Viz(Viz):
 
     def plot_classification_report(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",
         showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
-        nbCols=3,colFixed=None,shared_xaxes=True,
+        nbCols=3,colFixed=None,shared_xaxes=True,updateEachPlot=dict(),
                                 shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
                                 modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None,**plotConfMat_kwargs):
         # print(y_true)
@@ -169,7 +169,7 @@ class Study_CVIClassif_Viz(Viz):
         confMatCls={k:v.viz.plot_classification_report(y_true,
                 namesY=namesY,colorscale=colorscale,
                 showscale=showscale,reversescale=reversescale,size=size,width=width,
-                line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1),**plotConfMat_kwargs) 
+                line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1),**plotConfMat_kwargs).update_layout(updateEachPlot) 
         for i_,(k,v) in enumerate(models.items())}
         nbCols=min(len(confMatCls),nbCols)
         images_per_row=nbCols

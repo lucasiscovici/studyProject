@@ -216,7 +216,6 @@ class Base(object):
                 l=self.__class__.import__(self.__class__(),exported,newIDS=newIDS,normalNEW=False)
 
             l.ID=ID
-
             # l=self.__class__(ID)
             # l.__dict__ = merge_two_dicts(l.__dict__,self.__dict__.copy())
             # #print(l.__dict__)
@@ -380,7 +379,9 @@ class Base(object):
                 # print("hi",i)
                 jj=i.EXPORTABLE==cls.EXPORTABLE
                 sameExport|=jj
-                ol=i.import__(ol,loaded,newIDS=newIDS,papaExport=cls.EXPORTABLE if not jj else [],*args,**xargs)
+                ol=i.import__(ol,loaded,newIDS=newIDS,
+                    papaExport=cls.EXPORTABLE if not jj else [],
+                    *args,**xargs)
         # try:
         #     rrr=cls.__base__.__import
         #     # rep=getAnnotationInit(rep)
@@ -522,9 +523,10 @@ class Base(object):
 
     @classmethod 
     def import__(cls,ol,loaded,newIDS=False,normalNEW=True,forceInfer=False,*args,**xargs):
-        if normalNEW:
-            return cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
-        return cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        # if normalNEW:
+        rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        # rep=cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        return cls._import(rep)
 
     @classmethod 
     def _import(cls,loaded):
@@ -566,7 +568,7 @@ class Base(object):
         # ll=cls._import(loaded)
         # for k,v in ll.items():
         #     setattr(ol,k,v)
-        return cls._import(ol)
+        return ol
 
     @classmethod
     def __export(cls,obj):
@@ -932,12 +934,14 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         rep=cls.import___(cls,ol,loaded,newIDS=newIDS,*args,**xargs)
         if rep.args["metric"] is not None and not isStr(rep.args["metric"]) and not isinstance(rep.args["metric"],Metric):
             rep.args["metric"]=Metric.import__(Metric(),rep.args["metric"])
+        rep.resultats=studyDico(rep.resultats,papa=rep,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
         return rep
 
     @classmethod 
     def _import(cls,loaded):
         lo=super()._import(loaded)
-        lo.resultats=studyDico(lo.resultats,papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
+        if isinstance(lo.resultats,dict):
+            lo.resultats=studyDico(lo.resultats,papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
         return lo
 
     @classmethod
@@ -1142,7 +1146,9 @@ class BaseSupervise(Base):
     
     @classmethod 
     def _import(cls,loaded):
-        loaded._cv=studyDico(loaded._cv,papa=loaded,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
+        # print(loaded._cv)
+        if isinstance(loaded._cv,dict):
+            loaded._cv=studyDico(loaded._cv,papa=loaded,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
         return loaded
 
     @staticmethod
@@ -1285,6 +1291,9 @@ class BaseSupervise(Base):
         cl=super().clone(ID=ID,newIDS=newIDS,deep=deep)
         cl._cv=studyDico(cl.cv,papa=self,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
         return cl
+
+
+
 def getDecFn(l,X):
     attrs = ("predict_proba", "decision_function")
 

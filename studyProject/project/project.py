@@ -365,6 +365,7 @@ class StudyProject(Base):
                 meresu=resul
             else:
                 meresu.resultats=studyDico(meresu.resultats)
+            meresu=meresu._import(meresu)
             return meresu
 
         i=0
@@ -383,6 +384,7 @@ class StudyProject(Base):
         for i in meresu:
             resul2[i]=resul.resultats[i]
         resul.resultats=studyDico(resul2)
+        resul=resul._import(resul)
         return resul
 
 
@@ -392,6 +394,9 @@ class StudyProject(Base):
     def _import(cls,loaded,clone=False):
         sf={}
         sl=loaded
+        # print(sl)
+        if sl is None:
+            return sl
         for k,v_ in sl._studies.items():
             v=ifelse(clone,lambda: clonee(v_),lambda:v_)()
             # print(v)
@@ -415,6 +420,7 @@ class StudyProject(Base):
                     clsCV= get_args_typing(clsCV["cv"])[1] if "cv" in clsCV else None
                     v._cv  = studyDico({k:cls.import_give_me_cv(sl,k,clsStudy=clsCV) for k in v._cv})
                 v.check()
+                v=v._import(v)
             sf[k]=v
         sl._studies=studyDico(sf)
         return sl
