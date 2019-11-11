@@ -40,7 +40,7 @@ class Study_CvResultatsClassif_Viz(Viz):
             fe=np.sum(confMat2,axis=axis,keepdims=True)
             fe=np.tile(fe,vlaS[0]).flatten()
             # print(fe)
-            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 or not noLabel else "",enumerate(zip(vla.flatten(),confMat2.flatten()))))
+            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 and not noLabel else "",enumerate(zip(vla.flatten(),confMat2.flatten()))))
             annotation_text=np.reshape(annotation_text,vlaS)
         if chutDiag:
             vlo=vla
@@ -88,7 +88,7 @@ class Study_CvResultatsClassif_Viz(Viz):
             ylabel+" : %{x}<br>"+"<extra></extra>")
 
 
-        if normalize:
+        if normalize and not noLabel and not zmin is None or zmax is None:
             ooo=np.array(vla.flatten())/100.
             o=[]
             cl=conf.data[0].colorscale
@@ -132,7 +132,7 @@ class Study_CvResultatsClassif_Viz(Viz):
             return [zmin,zmax]
 
 
-        annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 or not noLabel else "",
+        annotation_text=list(map(lambda a: "{}%".format(np.round(a[1],round_val)) if np.round(a[1],round_val)>0.0 and not noLabel else "",
             enumerate(vlaS.flatten())))
         vlaSe=vlaS.shape
         # print(annotation_text)
@@ -150,12 +150,13 @@ class Study_CvResultatsClassif_Viz(Viz):
         dd.update_layout(width=560,height=600)
         dd=dd.update_layout(title_text="Classification report {}".format('' if obj.name is None else obj.name) if title is None else title)
         
-        ooo=np.array(vlaS.flatten())/100.
-        o=[]
-        cl=dd.data[0].colorscale
-        rcl=dd.data[0].reversescale
-        cll=flipScale(cl) if rcl else cl
-        clrs=frontColorFromColorscaleAndValues(ooo,cll,zmin=zmin/100.,zmax=zmax/100.)
-        for c,i in zip(clrs,dd.layout.annotations):
-            i.font.color=c
+        if not noLabel and not zmin is None and not zmax is None:
+            ooo=np.array(vlaS.flatten())/100.
+            o=[]
+            cl=dd.data[0].colorscale
+            rcl=dd.data[0].reversescale
+            cll=flipScale(cl) if rcl else cl
+            clrs=frontColorFromColorscaleAndValues(ooo,cll,zmin=zmin/100.,zmax=zmax/100.)
+            for c,i in zip(clrs,dd.layout.annotations):
+                i.font.color=c
         return dd

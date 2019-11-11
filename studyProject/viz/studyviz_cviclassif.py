@@ -13,7 +13,7 @@ from ..utils import isStr, T, F, merge
 from operator import itemgetter
 
 class Study_CVIClassif_Viz(Viz):
-    def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",
+    def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="Greys",
         showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
         nbCols=3,colFixed=None,shared_xaxes=True,
                                 shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
@@ -99,7 +99,9 @@ class Study_CVIClassif_Viz(Viz):
         fig= go.Figure(subpl)
         if title is None:
             fig.update_layout(title_text="Confusion Matrix : cv '{}'".format(obj.ID if cvName is None else cvName))
-        
+        else:
+            fig.update_layout(title_text=title)
+
         # for axis, n in list(get_len(fig).items()):
         #   for u in range(1,n+1):
         #       _='' if u==1 else u
@@ -125,7 +127,7 @@ class Study_CVIClassif_Viz(Viz):
         return fig
 
 
-    def plot_classification_report(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="RdBu",
+    def plot_classification_report(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="Greys",
         showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
         nbCols=3,colFixed=None,shared_xaxes=True,updateEachPlot=dict(),
                                 shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},

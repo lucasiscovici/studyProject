@@ -948,14 +948,17 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
     def fromCVItem(cls,cvItem):
         return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
 
-#put in CrossValidItemClassif
-    def resultatsSummary(self):
+#add std
+    def resultatsSummary(self,roundVal=3):
         u=lambda i:(
             {k:getattr(v.scores,i) for k,v in self.resultats.items()}
             | (pd.DataFrame |_funsInv_| dict(data=__.values(),
                                             index=__.keys())).T \
-                | (np.round |_funsInv_| dict(a=__,decimals=2)) \
-                | __.mean(axis=0).to_frame().T | __.rename(index={0:i}))
+                | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
+                | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                |_fun_.pd.concat(axis=1).T \
+                | __.transform(lambda a:"{} ({})".format(a[0],a[1]) ).to_frame().T | __.rename(index={0:i})
+        )
         return u("Tr").append(u("Val"))
 
     def table_resultatsSummary(self,roundVal=3,title="Résultats crossValidés d'accuracy",

@@ -189,6 +189,8 @@ class CvResultatsClassif(CvResultats,CvResultatsClassif_ClassificationReport,CvR
             if isinstance(namesY,str):
                 namesY=getattr(me,namesY).cat
         X,y,pred = X_true,y_true,self.preds.Val.sorted
+        indu=np.where((y==classe) & (predit==pred))
+        pd.DataFrame(np.array(X)[(y==classe) & (predit==pred)][:lim],index=indu)
         return np.array(X)[(y==classe) & (predit==pred)][:lim]
 
 from sklearn.metrics import classification_report, confusion_matrix
