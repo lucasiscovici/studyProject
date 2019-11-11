@@ -7,7 +7,7 @@ from ..utils import flipScale, frontColorFromColorscaleAndValues
 class Study_CvResultatsClassif_Viz(Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,addDiagonale=True,colorscale="RdBu",
                                 showscale=True,reversescale=True,size=18,width=500,zmax=None,zmin=None,zmid=None,line_color="red",line_dash="longdash",
-                                line_width=6,border=True,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",
+                                line_width=6,border=True,relative=False,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",
                                 title=None,axis=1,plots_kwargs={},chutDiag=True,dontRescale=False,onlyConfMat=False,noLabel=False,me=None):
         obj=self.obj
         # print(y_true)                               "train_datas"
@@ -23,8 +23,12 @@ class Study_CvResultatsClassif_Viz(Viz):
             if isinstance(namesY,str):
                 namesY=getattr(me,namesY).cat
 
-        confMatCls=obj.confusion_matrix(y_true,namesY=namesY,normalize=normalize,returnNamesY=True,axis=axis)
+
+        confMatCls=obj.confusion_matrix(y_true,namesY=namesY,relative=relative,sum_=False,normalize=normalize,returnNamesY=True,axis=axis)
         confMat=np.nan_to_num(confMatCls.confusion_matrix)
+        confMatClsX=obj.confusion_matrix(y_true,namesY=namesY,relative=False,sum_=False,normalize=normalize,returnNamesY=True,axis=axis)
+        confMatX=np.nan_to_num(confMatClsX.confusion_matrix)
+
         confMatNamesY=confMatCls.namesY
         zmax=np.max(confMat) if zmax is None else zmax
         zmin=np.min(confMat) if zmin is None else zmin
@@ -36,11 +40,23 @@ class Study_CvResultatsClassif_Viz(Viz):
         annotation_text=np.reshape(annotation_text,vlaS)
         zmid=(zmax-zmin)/2. if zmid is None else zmid
         if addCount and normalize:
-            confMat2=np.nan_to_num(obj.confusion_matrix(y_true,namesY=namesY,normalize=False,returnNamesY=False,axis=axis))
+            confMat2=np.nan_to_num(obj.confusion_matrix(y_true,namesY=namesY,relative=relative,sum_=False,normalize=False,returnNamesY=False,axis=axis))
+            confMat2X=np.nan_to_num(obj.confusion_matrix(y_true,namesY=namesY,relative=False,sum_=False,normalize=False,returnNamesY=False,axis=axis))
             fe=np.sum(confMat2,axis=axis,keepdims=True)
-            fe=np.tile(fe,vlaS[0]).flatten()
+            fe2=np.sum(confMat2X,axis=axis,keepdims=True)
+            fe=np.tile(fe,vlaS[0])
+            fe2=np.tile(fe2,vlaS[0])
+            if relative:
+                vlo2=vla.copy()
+                np.fill_diagonal(vlo2,confMatX.diagonal())
+                np.fill_diagonal(confMat2,confMat2X.diagonal())
+                fe=fe.reshape(vlaS)
+                fe2=fe2.reshape(vlaS)
+                np.fill_diagonal(fe,fe2.diagonal())
+                # print(fe2.diagonal())
+                fe=fe.flatten()
             # print(fe)
-            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 and not noLabel else "",enumerate(zip(vla.flatten(),confMat2.flatten()))))
+            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 and not noLabel else "",enumerate(zip(vlo2.flatten(),confMat2.flatten()))))
             annotation_text=np.reshape(annotation_text,vlaS)
         if chutDiag:
             vlo=vla
@@ -107,7 +123,7 @@ class Study_CvResultatsClassif_Viz(Viz):
 
 
     def plot_classification_report(self,y_true="y_train",namesY="train_datas",
-        colorscale="Greys",reversescale=True,showscale=True,round_val=2,
+        colorscale="Greys",reversescale=False,showscale=True,round_val=2,
         paper_bgcol="#F5F6F9",plot_bgcolor="black",zmax=None,zmin=None,
         linecolor="black",linewidth=2,title=None,noLabel=False,onlyConfMat=False,
         xgap=1,ygap=1,

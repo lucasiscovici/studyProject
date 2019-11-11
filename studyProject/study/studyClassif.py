@@ -139,7 +139,8 @@ class CvResultatsClassif_ClassificationReport:
 
 
 class CvResultatsClassif_ConfusionMatrix:
-    def confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,axis=1,round_=2,returnNamesY=False,me=None):
+    def confusion_matrix(self,y_true="y_train",namesY="train_datas",
+        normalize=True,axis=1,round_=2,relative=False,sum_=True,returnNamesY=False,me=None):
         # print(y_true)
         obj=self
         if me is not None:
@@ -155,9 +156,14 @@ class CvResultatsClassif_ConfusionMatrix:
                 namesY=getattr(me,namesY).cat
 
         ff2=confusion_matrix(y_true,self.preds.Val.sorted)
+        ff3=ff2.copy()
+        if relative:
+            np.fill_diagonal(ff2,0)
         if normalize:
             ff2=np.round(np.divide(ff2,np.sum(ff2,axis=axis,keepdims=True)),round_)*100
         namesY= rangel(len(np.unique(y_true))) if namesY is None else namesY
+        if sum_ and relative:
+            np.fill_diagonal(ff2,ff3.diagonal())
         p=pd.DataFrame(ff2,columns=namesY).set_axis(namesY,inplace=F)
         if returnNamesY:
             return StudyClass(confusion_matrix=p,namesY=namesY)

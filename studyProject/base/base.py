@@ -957,7 +957,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
                 | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
                 | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
                 |_fun_.pd.concat(axis=1).T \
-                | __.transform(lambda a:"{} ({})".format(a[0],a[1]) ).to_frame().T | __.rename(index={0:i})
+                | __.aply(lambda a:"{} ({})".format(a[0],a[1]),axis=1).to_frame().T | __.rename(index={0:i})
         )
         return u("Tr").append(u("Val"))
 

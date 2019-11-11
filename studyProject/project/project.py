@@ -575,14 +575,14 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         return rep
 
 
-    def addMethodsToCurrCV(self,models:List):
+    def addModelsToCurrCV(self,models:List,namesM=None):
         cvCurr=self.currCV
         li=cvCurr.ID
         cloneE=self.clone()
-        cloneE.setModels(self.models+models)
+        cloneE.setModels(self.models+models,)
         # return cloneE
         namesM=cloneE.namesModels[-len(models):]
-        cloneE.setModels(models,names=namesM)
+        cloneE.setModels(models,names=namesM if namesM is None else namesM)
         params=cvCurr.args
         params["cv"]=cvCurr.cv
         params["nameCV"]=randomString()
