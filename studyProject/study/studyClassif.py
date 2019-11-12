@@ -196,14 +196,15 @@ class CvResultatsClassif(CvResultats,CvResultatsClassif_ClassificationReport,CvR
                 namesY=getattr(me,namesY).cat
         X,y,pred = X_true,y_true,self.preds.Val.sorted
         indu=np.where((y==classe) & (predit==pred))
-        pd.DataFrame(np.array(X)[(y==classe) & (predit==pred)][:lim],index=indu)
-        return np.array(X)[(y==classe) & (predit==pred)][:lim]
+        # print(indu)
+        return pd.DataFrame(np.array(X)[(y==classe) & (predit==pred)],index=indu[0]).iloc[:lim,:]
+        #return np.array(X)[(y==classe) & (predit==pred)][:lim]
 
 from sklearn.metrics import classification_report, confusion_matrix
 from ..viz import vizGet
 factoryCls.register_class(CvResultatsClassif)
 class CVIClassif_ConfusionMatrix:
-    def confusion_matrix(self,y_true,namesY=None,normalize=True,mods=[],me=None,*args,**xargs):
+    def confusion_matrix(self,y_true="X_train",namesY="train_datas",normalize=True,mods=[],me=None,*args,**xargs):
         # print(y_true)
         obj=self
         if me is not None:

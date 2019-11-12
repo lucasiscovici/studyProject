@@ -15,7 +15,7 @@ from operator import itemgetter
 class Study_CVIClassif_Viz(Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="Greys",
         showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
-        nbCols=3,colFixed=None,shared_xaxes=True,relative=F,
+        nbCols=3,colFixed=None,shared_xaxes=True,relative=F,axis=1,
                                 shared_yaxes=False,vertical_spacing=0.02,horizontal_spacing=0.15,title=None,plots_kwargs={},
                                 modelsNames=None,cvName=None,prefixTitle="Confusion Matrix of ",me=None,**plotConfMat_kwargs):
         # print(y_true)
@@ -45,7 +45,7 @@ class Study_CVIClassif_Viz(Viz):
         namesY= namesEscape(namesY) if namesY is not None else namesY
         if len(models) > 1:
             confMatM=[v.viz.plot_confusion_matrix(y_true,relative=relative,
-                namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,onlyConfMat=True,**plotConfMat_kwargs) for v in models.values()]
+                namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,onlyConfMat=True,axis=axis,**plotConfMat_kwargs) for v in models.values()]
             # print(confMatM)
             zmin=min(map(itemgetter(0),confMatM))
             zmax=max(map(itemgetter(1),confMatM))
@@ -58,7 +58,7 @@ class Study_CVIClassif_Viz(Viz):
         confMatCls={k:v.viz.plot_confusion_matrix(y_true,relative=relative,
                 namesY=namesY,normalize=normalize,addDiagonale=addDiagonale,colorscale=colorscale,
                 showscale=showscale,reversescale=reversescale,size=size,width=width,
-                line_color=line_color,line_dash=line_dash,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1),**plotConfMat_kwargs) 
+                line_color=line_color,line_dash=line_dash,axis=axis,line_width=line_width,plots_kwargs=plots_kwargs,title=(prefixTitle+"{}").format(k),name="Diag {}".format(i_+1),**plotConfMat_kwargs) 
         for i_,(k,v) in enumerate(models.items())}
         nbCols=min(len(confMatCls),nbCols)
         images_per_row=nbCols
@@ -98,7 +98,7 @@ class Study_CVIClassif_Viz(Viz):
 
         fig= go.Figure(subpl)
         if title is None:
-            fig.update_layout(title_text="Confusion Matrix : cv '{}'".format(obj.ID if cvName is None else cvName))
+            fig.update_layout(title_text="Confusion Matrix : cv '{}' ({})".format(obj.ID if cvName is None else cvName,"col" if axis==0 else "row"))
         else:
             fig.update_layout(title_text=title)
 
