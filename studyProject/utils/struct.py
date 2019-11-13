@@ -1,6 +1,6 @@
 from collections import UserDict,UserList
 import numpy as np
-from .is_ import isInt, isNumpyArr
+from .is_ import isInt, isNumpyArr, isArr, isStr
 # from . import getPrivateAttr, isInt, isNumpyArr, iterable
 class StudyList(UserList): pass
 import copy
@@ -45,10 +45,15 @@ class StudyDict(UserDict,dict):
         instance= super().__new__(cls)
         return instance
 
-    def __getitem__(self, key):
+    def __getitem__(self, key_):
         from .util2 import getPrivateAttr
-        key=list(self.keys())[key] if isInt(key) else key
+        key2=key_ if isArr(key_) and not isStr(key_) else [key_]
+        rt=list(self.keys())
+        key=[ rt[key] if isInt(key) else key for key in key2]
         #key=key if isStr(key) else key
+        if len(key)>1:
+            return [self.__getitem__(i) for i in key]
+        key=key[0]
         if key in self.data:
             rep = self.data[key]
             atty=getPrivateAttr(self)

@@ -248,3 +248,29 @@ class Study_CVIClassif_Viz(Viz):
         # fig.update_yaxis(title_text=tiplesSAxis[1])
 
         return fig
+
+
+    def plot_ObsConfused(self,classes,preds,lim=10,nbCols=None,mods=[],me=None,**plotConfMat_kwargs):
+        from ..helpers import plotDigits
+        obj=self.obj
+
+        modsN=obj.papa._models.namesModels
+        # models=obj.resultats
+
+        if len(mods)>0:
+            mods_ = [i if isStr(i) else modsN[i] for i in mods]
+            # models= [obj.resultats[i] for i in mods_]
+            # modelsNames_=[i for i in mods_]
+            # models=dict(zip(modelsNames_,models)) if modelsNames is None else dict(zip(modelsNames,models))
+
+        # namesY= namesEscape(namesY) if namesY is not None else namesY
+
+        classes= np.array([classes])
+        preds=np.array([preds])
+        if len(classes) > 1:
+            raise NotImplementedError()
+        
+        dm=obj.getObsConfused(namesEscape(classes[0]),namesEscape(preds[0]),lim=lim)
+        if len(mods) > 0:
+            dm=dm[mods_]
+        plotDigits(dm,lim=lim,elemsByRows=nbCols,reshape=T)
