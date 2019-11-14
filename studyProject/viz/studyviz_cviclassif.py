@@ -9,8 +9,9 @@ from plotly.offline import iplot
 import plotly.graph_objs as go
 from functools import reduce
 import operator
-from ..utils import isStr, T, F, merge
+from ..utils import isStr, T, F, merge, IMG_GRID
 from operator import itemgetter
+import matplotlib.pyplot as plt
 
 class Study_CVIClassif_Viz(Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="Greys",
@@ -250,27 +251,55 @@ class Study_CVIClassif_Viz(Viz):
         return fig
 
 
-    def plot_ObsConfused(self,classes,preds,lim=10,nbCols=None,mods=[],me=None,**plotConfMat_kwargs):
-        from ..helpers import plotDigits
+    def plot_ObsConfused(self,classes,preds,globalLim=10,globalNbCols=2,
+        lim=10,limByPlots=100,elemsByRows=10,nbCols=2,mods=[],title=None,modelsNames=None,filename=None,titleFontsize=19,**plotConfMat_kwargs):
+        # from ..helpers import plotDigits
         obj=self.obj
 
         modsN=obj.papa._models.namesModels
-        # models=obj.resultats
+        models=obj.resultats
 
         if len(mods)>0:
             mods_ = [i if isStr(i) else modsN[i] for i in mods]
-            # models= [obj.resultats[i] for i in mods_]
-            # modelsNames_=[i for i in mods_]
-            # models=dict(zip(modelsNames_,models)) if modelsNames is None else dict(zip(modelsNames,models))
+            models= [obj.resultats[i] for i in mods_]
+            modelsNames_=[i for i in mods_]
+            models=dict(zip(modelsNames_,models)) if modelsNames is None else dict(zip(modelsNames,models))
 
         # namesY= namesEscape(namesY) if namesY is not None else namesY
+        confMatM=[v.viz.plot_ObsConfused(classes,preds,lim=lim,limByPlots=limByPlots,
+                                        elemsByRows=elemsByRows,returnOK=True,nbCols=nbCols,show=False,**plotConfMat_kwargs) for v in models.values()]
 
-        classes= np.array([classes])
-        preds=np.array([preds])
-        if len(classes) > 1:
-            raise NotImplementedError()
+        title = "ObsConfused CV {}".format(obj.ID) if title is None else title
+        filename="obj_confused_cv_{}.png".format(obj.ID) if filename is None else filename
+        # print(confMatM)
+        img=IMG_GRID.grid(confMatM,nbCols=globalNbCols,toImg=True,title=title,titleFontsize=titleFontsize)
+        # img.show(figsize=img.figsize,show=True);
+        # print(img.data)
+        fig=img.show(returnFig=True,show=False,figsize=img.figsize)
+        from IPython.display import display_html, HTML
+        import mpld3
+        # mpld3.enable_notebook()
+        display_html(HTML("""
+        <style>
+        g.mpld3-xaxis, g.mpld3-yaxis {
+        display: none;
+        }
+        </style>
+        """))
+        # # print(img)
+        # # print(img.filename)
+        # # print(img.data)
+        display_html(HTML("""
+            <span style='width:20px;height:20px;position: absolute;' title="Save image as png">
+        <a href="data:image/png;base64,{{imgData}}" download="{{filename}}"><img width="20px" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABmJLR0QA/wD/AP+gvaeTAAAAs0lEQVRIie2WPQ6DMAxGXzJwqIrerN3pORi7cqWwtjegQymyUlMZCIlU8UleIvt7cv4BKuAG9MCQIJ7ABfBEapTkU5xkVC087mMTk4ICskqrkWOdhGntpwJ9OvNuxtgtAMU1mt81F+iRC/S9BfdScVBtrHciAM6/Epds59UqPnW7KMUdp0nee0O8RtbzY9Xk/X9rdIAOUBlQn4ETPNCKAevzYJF8Mlp4f4ca9G/X1gijd/UCDStihJWAousAAAAASUVORK5CYII="></a></span>
+            """.replace("{{imgData}}",str(img.data)[2:-1]).replace("{{filename}}",filename)))
+        display_html(mpld3.display(fig))
+        plt.close()
+        # if len(classes) > 1:
+        #     raise NotImplementedError()
         
-        dm=obj.getObsConfused(namesEscape(classes[0]),namesEscape(preds[0]),lim=lim)
-        if len(mods) > 0:
-            dm=dm[mods_]
-        plotDigits(dm,lim=lim,elemsByRows=nbCols,reshape=T)
+        # dm=obj.getObsConfused(namesEscape(classes[0]),namesEscape(preds[0]),lim=lim)
+        # if len(mods) > 0:
+            # dm=dm[mods_]
+
+        # plotDigits(dm,lim=lim,elemsByRows=nbCols,reshape=T)

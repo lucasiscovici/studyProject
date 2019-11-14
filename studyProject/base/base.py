@@ -15,6 +15,8 @@ from interface import implements, Interface
 from abc import ABCMeta, abstractmethod, ABC
 from ..version import __version__
 from studyPipe.pipes import *
+from studyPipe import config
+config.globalsFn=lambda:globals()
 from plotly.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
@@ -749,7 +751,7 @@ class DatasSupervise(Base):
         self.dataTest=dataTest
 
     @classmethod
-    def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,namesY=None,ID=None):
+    def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):
         return cls(cls.D(X_train,y_train),
                               cls.D(X_test,y_test),ID)
     def get(self,deep=False,optsTrain={},optsTest={}):
@@ -784,6 +786,7 @@ class Models(Base):
         self.init()
         self.namesModels=x
         self.initModelsAndNames()
+        
     def initModelsAndNames(self):
         if self.models is not None:
             self.namesModels=self.namesModels if self.namesModels is not None else np.array(uniquify([getClassName(i) for i in self.models]))
@@ -949,16 +952,27 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
 
 #add std
-    def resultatsSummary(self,roundVal=3):
-        u=lambda i:(
-            {k:getattr(v.scores,i) for k,v in self.resultats.items()}
-            | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                            index=__.keys())).T \
-                | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
-                | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
-                |_fun_.pd.concat(axis=1).T \
-                | __.aply(lambda a:"{} ({})".format(a[0],a[1]),axis=1).to_frame().T | __.rename(index={0:i})
-        )
+    def resultatsSummary(self,roundVal=3,withStd=True):
+        if not withStd:
+            u=lambda i:(
+                {k:getattr(v.scores,i) for k,v in self.resultats.items()}
+                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
+                                                    index=__.keys())).T \
+                        | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
+                        | __.mean(axis=0).round(roundVal)\
+                        #| _fun_.pd.concat(axis=1).T \
+                        | __.to_frame().T | __.rename(index={0:i})
+            )
+        else:
+            u=lambda i:(
+                {k:getattr(v.scores,i) for k,v in self.resultats.items()}
+                | (pd.DataFrame |_funsInv_| dict(data=__.values(),
+                                                index=__.keys())).T \
+                    | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
+                    | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                    |_fun_.pd.concat(axis=1).T \
+                    | __.apply(lambda a:"{} ({})".format(a[0],a[1]),axis=0).to_frame().T | __.rename(index={0:i})
+            )
         return u("Tr").append(u("Val"))
 
     def table_resultatsSummary(self,roundVal=3,title="Résultats crossValidés d'accuracy",

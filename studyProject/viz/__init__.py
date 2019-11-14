@@ -12,3 +12,4 @@ from .studyviz_studyclassif import Study_StudyClassif_Viz
 from .studyviz_studyclassifproject import Study_StudyClassifProject_Viz
 from .studyviz_cviclassif import Study_CVIClassif_Viz
 
+from .sameErrors import sameErrorsViz

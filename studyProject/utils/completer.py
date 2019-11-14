@@ -69,8 +69,10 @@ class CompleterStudy(IPCompleter):
             
             callableObj,usedNamedArgs=oo
             
-            namedArgs = self._default_arguments(eval(callableObj,
-                                                    self.namespace))
+            ei=eval(callableObj,self.namespace)
+            if hasattr(ei,"completer__custom"):
+                ei=ei.completer__custom(ei)
+            namedArgs = self._default_arguments(ei)
             
             #print("iid",text,s,namedArgs,usedNamedArgs,set(namedArgs) - set(usedNamedArgs),file=open("/home/devel/work/oo3.txt","a"))
             # Remove used named arguments from the list, no need to show twice

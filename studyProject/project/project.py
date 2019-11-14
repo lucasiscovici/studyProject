@@ -297,7 +297,7 @@ class StudyProject(Base):
     def saveDatasWithId(self,id_,X_train,y_train,X_test,y_test,namesY=None,classif=False):
         D=str2Class("DatasSuperviseClassif") if classif else DatasSupervise
 
-        self._data[id_]=D.from_XY_Train_Test(*[X_train,y_train,X_test,y_test,namesY,id_])
+        self._data[id_]=D.from_XY_Train_Test(*[X_train,y_train,X_test,y_test],ID=id_)
 
     def saveDataSupervise(self,dataSup):
         id_= dataSup.ID

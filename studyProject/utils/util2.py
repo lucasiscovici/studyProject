@@ -355,6 +355,7 @@ def toThreeDimsInv(arr):
     if np.ndim(arr) == 1:
         return np.array(arr).reshape((1,-1))
 def ifOneGetArr(arr,m):
+    from . import isInt
     if isInt(m):
         return [arr] if m==1 else arr
     if len(m)==1:

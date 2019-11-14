@@ -1,7 +1,7 @@
 import cufflinks as cf
 # import plotly_express as pe
 # cf.go_offline(connected=False)
-
+import pandas as pd
 from interface import Interface
 from ..utils import get_args, isinstanceBase, isinstance
 
@@ -157,3 +157,21 @@ def enable_plotly_in_cell():
     init_notebook_mode(connected=False)
 def plotly_google_colab():
     get_ipython().events.register('pre_run_cell', enable_plotly_in_cell)
+
+import plotly.figure_factory as ff
+def pdViz(self):
+    def to_heatmap(colorscale="Greys",reversescale=False):
+        mat=ff.create_annotated_heatmap(z=self.values,x=self.columns.tolist(),y=self.index.tolist(),
+                                        annotation_text=self.values,colorscale=colorscale,reversescale=reversescale)
+        return heatmap_to_grid(mat)
+    return StudyClass(to_heatmap=to_heatmap)
+        
+pd.DataFrame.viz = property(lambda self: pdViz(self))
+def heatmap_to_grid(hm,paper_bgcol="#F5F6F9",plot_bgcolor="black",linewidth=2,linecolor="black"):
+    hm.update_layout(paper_bgcolor= paper_bgcol,
+                          plot_bgcolor= plot_bgcolor,
+                            xaxis=dict(side="bottom",linewidth= linewidth,mirror=True,
+                                showgrid=F,linecolor = linecolor,zeroline=F,showline=T),
+                            yaxis=dict(linewidth= linewidth,mirror=True,showgrid=F,linecolor = linecolor,
+                                zeroline=F,showline=T))
+

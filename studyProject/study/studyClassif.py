@@ -12,8 +12,9 @@ import numpy as np
 from studyPipe.pipes import * 
 from studyPipe import df_
 from ..viz.viz import vizHelper
-from ..utils import isinstanceBase, isinstance, studyDico
+from ..utils import isinstanceBase, isinstance, studyDico,  namesEscape
 from typing import Dict
+from ..viz import sameErrorsViz
 
 class DatasClassif_ClassBalance:
     def class_balance(self,normalize=True,name="Class Balance"):
@@ -81,6 +82,9 @@ class DatasClassif(Datas,DatasClassif_ClassBalance):
                         )
                 self.y=self.y.astype("category")
             self.cat=self.y.cat.categories.tolist()
+            cat=namesEscape(self.cat)
+            if cat != self.cat:
+                self.y=self.y.cat.rename_categories(dict(zip(self.cat,cat)))
 
 
 factoryCls.register_class(DatasClassif)
@@ -200,6 +204,10 @@ class CvResultatsClassif(CvResultats,CvResultatsClassif_ClassificationReport,CvR
         return pd.DataFrame(np.array(X)[(y==classe) & (predit==pred)],index=indu[0]).iloc[:lim,:]
         #return np.array(X)[(y==classe) & (predit==pred)][:lim]
 
+    def getErrors(self):
+        err=self.preds.Val.sorted
+        errors=err!=self.papa.papa.y_train
+        return StudyClass(errors=errors,nb=errors.sum(),perc=errors.mean())
 from sklearn.metrics import classification_report, confusion_matrix
 from ..viz import vizGet
 factoryCls.register_class(CvResultatsClassif)
@@ -226,6 +234,51 @@ class CVIClassif_ConfusionMatrix:
         r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize,*args,**xargs) for k,v in models.items()}) 
         return r
 
+    from itertools import combinations
+
+    def getCvPreds(self,type_="Val",isSorted=True):
+        cv=self
+        return {k:getattr(getattr(i.preds,type_),"sorted") if isSorted else getattr(getattr(i.preds,type_),"original") for k,i in cv.resultats.items()}
+
+    @property
+    def sameErrors(self):
+        from itertools import combinations
+        y_test=self.papa.y_train
+        if np.ndim(y_test)==2:
+            raise NotImplemented("MultiLabelNotImplemented")
+            #return [diff_classif_models2([ m[:,i] for m in models],X_test,y_test[:,i],names) for i in range(y_test.ndim)]
+        models=self.getCvPreds()
+        X_test=self.papa.X_train
+        names=self.papa.namesModels
+        kkd=[ (y_test!=i).values for k,i in models.items()] 
+        # print(kkd)
+        combi=list(combinations(range(len(names)),2))
+        o=np.zeros((len(names),len(names)))
+        o2=np.zeros((len(names),len(names)))
+        o3=np.full((len(names),len(names),np.shape(X_test)[0]),-1,dtype="O")
+        for (i,j) in combi:
+            o[i][j]=(kkd[i]*kkd[j]).sum()
+            o2[i][j]=o[i][j]/(kkd[i] | kkd[j]).sum()
+            if((o3[i][i]==-1).all()): o3[i][i]=kkd[i]
+            if((o3[j][j]==-1).all()): o3[j][j]=kkd[j]
+            o3[i][j]=kkd[i]*kkd[j]
+            o3[j][i]=kkd[i]*kkd[j]
+        rep=StudyClass(sameErrors=pd.DataFrame(o,columns=names,index=names),
+                          sameErrorsPerc=pd.DataFrame(o2,columns=names,index=names),
+                          sameErrorsBrut=o3,
+                          errors=kkd)
+        rep.viz=property(sameErrorsViz)
+        return viz
+
+    def getErrors(self,mods=[]):
+        modsN=list(self.resultats.keys())
+        models=self.resultats
+        if len(mods)>0:
+            mods_ = [i if isStr(i) else modsN[i] for i in mods]
+            models= {i:self.resultats[i] for i in mods_}
+
+        r={k:v.getErrors() for k,v in models.items()}
+        return r
 class CVIClassif(CVIClassif_ConfusionMatrix):
 
     def getObsConfused(self,classe,predit,mods=[],lim=10,y_true="y_train",X_true="X_train",namesY="train_datas",me=None):
