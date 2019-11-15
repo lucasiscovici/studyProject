@@ -112,6 +112,7 @@ class Base(object):
     #         self.__dict__.update(state)
     # viz=
 
+    #include all function even if in dad
     @staticmethod
     def __viz_viz__(self,selfo):
         # print(self.__name__)
@@ -126,7 +127,7 @@ class Base(object):
             # n2=self
             if hasattr(self,"__bases__"):
                 # print(self.__bases__)
-                for i in self.__bases__:
+                for i in self.__bases__[::-1]:
                     rep=Base.__viz_viz__(i,selfo)
                     if rep is not None:
                         break

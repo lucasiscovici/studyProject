@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from ..utils import flipScale, frontColorFromColorscaleAndValues, namesEscape, isArr
 class Study_CvResultatsClassif_Viz(Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",normalize=True,addDiagonale=True,colorscale="RdBu",
-                                showscale=True,reversescale=True,size=18,width=500,zmax=None,zmin=None,zmid=None,line_color="red",line_dash="longdash",
+                                showscale=True,reversescale=True,size=18,round_val=2,width=500,zmax=None,zmin=None,zmid=None,line_color="red",line_dash="longdash",
                                 line_width=6,lim=None,border=True,relative=False,xlabel="Predict",ylabel="Actuelle",addCount=True,name="Diag",
                                 title=None,axis=1,plots_kwargs={},chutDiag=True,dontRescale=False,onlyConfMat=False,noLabel=False,me=None):
         obj=self.obj
@@ -47,7 +47,7 @@ class Study_CvResultatsClassif_Viz(Viz):
             xxx=xxx.flatten()
             i[np.argsort(xxx)[::-1][:lim]]=T
             ok=i
-        annotation_text=list(map(lambda a: "{}".format(np.round(a[1]) if np.round(a[1],2)>0.0 and not noLabel and ok[a[0]] else ""),enumerate(vla.flatten())))
+        annotation_text=list(map(lambda a: "{}".format(np.round(a[1],round_val) if np.round(a[1],round_val)>0.0 and not noLabel and ok[a[0]] else ""),enumerate(vla.flatten())))
         annotation_text=np.reshape(annotation_text,vlaS)
         zmid=(zmax-zmin)/2. if zmid is None else zmid
         if addCount and normalize:
@@ -80,7 +80,7 @@ class Study_CvResultatsClassif_Viz(Viz):
             # print(confMat2)
             # print(vlo2)
             # print(ok)
-            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],2),a[1][1],fe[a[0]]) if np.round(a[1][0],2)>0.0 and not noLabel and ok[a[0]]  else "",enumerate(zip(vlo2.flatten(),confMat2.flatten()))))
+            annotation_text=list(map(lambda a: "{}%<br />{}/{}".format(np.round(a[1][0],round_val),a[1][1],fe[a[0]]) if np.round(a[1][0],round_val)>0.0 and not noLabel and ok[a[0]]  else "",enumerate(zip(vlo2.flatten(),confMat2.flatten()))))
             annotation_text=np.reshape(annotation_text,vlaS)
         if chutDiag:
             vlo=vla

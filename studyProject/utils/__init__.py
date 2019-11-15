@@ -19,3 +19,4 @@ from .colors import luminence, frontColorFromColorscaleAndValue, flipScale, fron
 from .completer import config_completer, createSubClassFromIPCompleter, returnCom
 from .image import IMG, IMG_GRID
 from .format import format_perc
+from .progress_bar import LogProgress, ProgressBarCalled

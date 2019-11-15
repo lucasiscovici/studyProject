@@ -1,6 +1,6 @@
 import cufflinks as cf
 # import plotly_express as pe
-# cf.go_offline(connected=False)
+cf.go_offline(connected=False)
 import pandas as pd
 from interface import Interface
 from ..utils import get_args, isinstanceBase, isinstance

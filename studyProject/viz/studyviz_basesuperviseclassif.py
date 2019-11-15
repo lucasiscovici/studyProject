@@ -82,3 +82,12 @@ class Study_BaseSuperviseClassif_Viz(Viz):
                 k.show()
         return y
 
+    def plot_resultatsSummary(self):
+        obj=self.obj
+        e=(
+            obj.currCV.resultatsSummary(withStd=F).T.iplot(kind="scatter",mode="markers",asFigure=T)
+            .update_config(plotlyServerURL="") 
+            .update_layout(width=600)
+        )
+        return e
+

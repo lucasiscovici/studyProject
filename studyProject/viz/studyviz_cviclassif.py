@@ -2,6 +2,7 @@ import plotly.figure_factory as ff
 import numpy as np
 from ..utils import StudyClass,namesEscape
 from . import Viz
+from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
 from plotly.subplots import make_subplots
 import cufflinks as cf
 from cufflinks.tools import get_len
@@ -13,7 +14,7 @@ from ..utils import isStr, T, F, merge, IMG_GRID
 from operator import itemgetter
 import matplotlib.pyplot as plt
 
-class Study_CVIClassif_Viz(Viz):
+class Study_CVIClassif_Viz(Study_CrossValidItem_Viz):
     def plot_confusion_matrix(self,y_true="y_train",namesY="train_datas",mods=[],normalize=True,addDiagonale=True,colorscale="Greys",
         showscale=True,reversescale=True,size=18,width=500,line_color="red",line_dash="longdash",line_width=6,
         nbCols=3,colFixed=None,shared_xaxes=True,relative=F,axis=1,

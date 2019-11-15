@@ -11,5 +11,5 @@ from .studyviz_studyclassif_ import Study_StudyClassif__Viz
 from .studyviz_studyclassif import Study_StudyClassif_Viz
 from .studyviz_studyclassifproject import Study_StudyClassifProject_Viz
 from .studyviz_cviclassif import Study_CVIClassif_Viz
-
+from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
 from .sameErrors import sameErrorsViz
