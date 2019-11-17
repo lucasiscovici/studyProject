@@ -600,9 +600,15 @@ plotly.graph_objs._figure.Figure.update_config=upConf
 def showshow(self,*args,**kwargs):
 	kwargs= {} if kwargs is None else kwargs
 	meme=merge(dict(config=self._config),kwargs,add=F)
-	return self.show(*args,**meme) if hasattr(self,"_config") else self.show(*args,**kwargs)
+	rep=self._show(*args,**meme) if hasattr(self,"_config") else self._show(*args,**kwargs)
+	
+	if hasattr(self,"fnShow"):
+		self.fnShow()
+	return rep
 plotly.graph_objs._figure.Figure.showWithConfig=showshow
-
+plotly.graph_objs._figure.Figure._show=plotly.graph_objs._figure.Figure.show
+plotly.graph_objs._figure.Figure.show=showshow
+# .show()
 
 # lasFrepre=plotly.graph_objs._figure.Figure.__repr__
 # plotly.graph_objs._figure.Figure.__repr2__=lasFrepre
@@ -613,10 +619,11 @@ def ipython_display2(self):
     import plotly.io as pio
 
     if pio.renderers.render_on_display and pio.renderers.default:
-        if hasattr(self,"showWithConfig"):
-        	self.showWithConfig()
-        else:
-        	pio.show(self)
+        # if hasattr(self,"showWithConfig"):
+        # 	self.showWithConfig()
+        # else:
+        # 	pio.show(self)
+        self.show()
     else:
         print (repr(self))
 

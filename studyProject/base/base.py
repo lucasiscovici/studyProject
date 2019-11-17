@@ -1086,15 +1086,16 @@ class CrossValid(Base):
 
         return resul
 factoryCls.register_class(CrossValid)
+from .hypertune import HyperTune
 class BaseSupervise(Base):
     # @abstractmethod
     isClassif=False
     cvrCls=CvResultats
     cviCls=CrossValidItem
-    EXPORTABLE=["datas","models","metric","cv","nameCvCurr"]
+    EXPORTABLE=["datas","models","metric","cv","nameCvCurr","hypertune"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,datas:DatasSupervise=None,
-                    models:Models=None,metric:Metric=None,
+                    models:Models=None,metric:Metric=None,hypertune:HyperTune=None,
                     cv:Dict[str,CrossValidItem]=studyDico({}),nameCvCurr=None,
                     *args,**xargs):
         super().__init__(ID)
@@ -1103,6 +1104,7 @@ class BaseSupervise(Base):
         self._metric=metric
         self._cv=cv
         self._nameCvCurr=nameCvCurr
+        self._hypertune=HyperTune() if hypertune is None else hypertune
         # self._isClassif=False
         self.init()
     
@@ -1198,6 +1200,11 @@ class BaseSupervise(Base):
         
     def getCurrCvResultats(self,i):
         return self.currCV.resultats[i]
+
+    @property
+    def hyperTune(self):
+        return self._hypertune
+    
     @property
     def currCV(self):
         return self._cv[self._nameCvCurr]

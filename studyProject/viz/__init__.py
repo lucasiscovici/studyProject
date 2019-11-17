@@ -13,3 +13,4 @@ from .studyviz_studyclassifproject import Study_StudyClassifProject_Viz
 from .studyviz_cviclassif import Study_CVIClassif_Viz
 from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
 from .sameErrors import sameErrorsViz
+from .studyviz_tuned import Study_Tuned_Viz

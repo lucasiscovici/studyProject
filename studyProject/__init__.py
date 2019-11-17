@@ -16,6 +16,7 @@ factoryCls.register_class(Study_BaseSuperviseClassif_Viz)
 # factoryCls.register_class(Study_BaseSuperviseProject_Viz)
 factoryCls.register_class(Study_StudyClassif__Viz)
 factoryCls.register_class(Study_CrossValidItem_Viz)
+factoryCls.register_class(Study_Tuned_Viz)
 # factoryCls.register_class(Study_StudyClassifProject_Viz)
 # print(factoryCls._classes)
  # BaseSuperviseProject
