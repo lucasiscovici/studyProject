@@ -53,7 +53,7 @@ def fromCombiToplot(fig,combi,nbCols=4,):
         yba=[]
         for i_,j2 in enumerate(nbT):
             if i_ ==0:
-                tb=[ "z : "+l["scene"+("" if i+iio==0 else str(i+iio+1))]["zaxis"]["title"]["text"] for i in range(j2)]
+                tb=[ "z : "+l["scene"+("" if i+iio+j==0 else str(i+iio+j+1))]["zaxis"]["title"]["text"] for i in range(j2)]
                 yba.append([""]*i_+tb+[""]*(nbCols-j2-i_))
             else:
                 yba.append([""]*j2+[""]*(nbCols-j2))
@@ -120,7 +120,7 @@ def fromCombiToplot(fig,combi,nbCols=4,):
                 for k2 in range(ncols):
                     #print("IIO",iio+1)
                     lop="scene"+("" if iio==0 else str(iio+1))
-                    lopX="scene"+("" if iio+i_==0 else str(iio+i_+1))
+                    lopX="scene"+("" if iio+i_+j==0 else str(iio+i_+j+1))
                     #print("t",k,k2,layoutJ2,iio2)
                     layU=copy(layoutJ2[iio2])
                     layU2=fl[lopX]["domain"]
