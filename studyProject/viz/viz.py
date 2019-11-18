@@ -1,6 +1,28 @@
 import cufflinks as cf
 # import plotly_express as pe
+# import os
+# import pkgutil
+# def get_plotlyjs2():
+#     # print("iicie")
+#     path = os.path.join("package_data", "plotly.min.js")
+#     plotlyjs = pkgutil.get_data("studyProjectGit", path).decode("utf-8")
+#     # print("icicicici")
+#     # print(plotlyjs)
+#     return plotlyjs
+
+# from plotly import offline
+# import plotly
+# plotly.offline.offline.get_plotlyjs=get_plotlyjs2
+# offline.get_plotlyjs=get_plotlyjs2
+# if cf.offline.run_from_ipython():
+#     try:
+#         offline.init_notebook_mode(False)
+#     except TypeError:
+#         #For older versions of plotly
+#         offline.init_notebook_mode()
+#     offline.__PLOTLY_OFFLINE_INITIALIZED=True
 cf.go_offline(connected=False)
+
 import pandas as pd
 from interface import Interface
 from ..utils import get_args, isinstanceBase, isinstance
