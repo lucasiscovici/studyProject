@@ -13,8 +13,25 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import numpy as np
 import plotly.colors as pcol
-
+import plotly.express as pe
 # def from
+from copy import copy
+def fromCodeToCat(codes,lev):
+    return pd.Categorical(codes).rename_categories(lev).tolist()
+def heatmap3D(c1,c2,c3,yy=None):
+    d1=c1 if isinstance(c1,pd.Series) or isinstance(c1,np.ndarray) or isinstance(c1,list) else (yy.loc[:,c1] if isinstance(c1,str) else yy.iloc[:,c1] )
+    d2=c2 if isinstance(c2,pd.Series) or isinstance(c2,np.ndarray) or isinstance(c2,list) else (yy.loc[:,c2] if isinstance(c2,str) else yy.iloc[:,c2] )
+    d3=c3 if isinstance(c3,pd.Series) or isinstance(c3,np.ndarray) or isinstance(c3,list) else (yy.loc[:,c3] if isinstance(c3,str) else yy.iloc[:,c3] )
+    th=pd.crosstab([d1,d2],d3)
+    nbCol=len(th.columns)
+    nbRow=len(th.index.codes[0])
+    return pd.DataFrame(dict(x=np.repeat(namesEscape(
+        fromCodeToCat(th.index.codes[0],th.index.levels[0])),nbCol),mode="markers",
+                                y=np.repeat(namesEscape(fromCodeToCat(th.index.codes[1],th.index.levels[1])),nbCol),
+                                z=np.tile(namesEscape(th.columns.tolist()),nbRow),col=th.values.flatten()))
+def plotHeatmap3D(d1,d2,d3):
+    yu=heatmap3D(d1,d2,d3)
+    return pe.scatter_3d(yu,x="x",y="y",z="z",color="col",color_continuous_scale="BlueRed") |_fun_| go.Figure
 from copy import copy
 def getNbRowsCols(datasl,nbCols=4):
     images_per_row = min(datasl,nbCols)
@@ -29,7 +46,7 @@ def getLayoutsScene(l,offset,nb):
         yy.append(scn)
     return yy
 
-def fromCombiToplot(fig,combi,nbCols=4,):
+def fromCombiToplot(fig,combi,nbCols=4):
     d=fig.data
     l=fig.layout
     comb=np.array(combi)
@@ -53,8 +70,9 @@ def fromCombiToplot(fig,combi,nbCols=4,):
         yba=[]
         for i_,j2 in enumerate(nbT):
             if i_ ==0:
-                tb=[ "z : "+l["scene"+("" if i+iio+j==0 else str(i+iio+j+1))]["zaxis"]["title"]["text"] for i in range(j2)]
-                yba.append([""]*i_+tb+[""]*(nbCols-j2-i_))
+                tb=[ "z : "+l["scene"+("" if i+iio==0 else str(i+iio+1))]["zaxis"]["title"]["text"] for i in range(j2)]
+                #print([""]*(i_+j)+tb+[""]*(nbCols-j2-i_-j))
+                yba.append([""]*(i_+j)+tb+[""]*(nbCols-j2-i_-j))
             else:
                 yba.append([""]*j2+[""]*(nbCols-j2))
             nrows,ncols=getNbRowsCols(j2,nbCols)
@@ -125,7 +143,7 @@ def fromCombiToplot(fig,combi,nbCols=4,):
                     layU=copy(layoutJ2[iio2])
                     layU2=fl[lopX]["domain"]
                     layU["domain"]=layU2
-                    print("lop",k,lop,lopX,layU2)
+                    #print("lop",k,lop,lopX,layU2)
                     layU.camera.eye=dict(x=-1.5,y=1.5,z=-0.1)
                     layU["xaxis"]["title"]["text"]="x"
                     layU["yaxis"]["title"]["text"]="y"
@@ -170,14 +188,15 @@ def fromCombiToplot(fig,combi,nbCols=4,):
     layu["coloraxis"]["colorbar"]["x"]=1.25
     layu["showlegend"]=False
     return go.Figure(data=datg,layout=merge(fl.to_plotly_json(),layu,add=F))
-def scatter3D_MESH(*,x,y,z,col,cmax=100,cmin=0,scat=None,onlyMesh=False):
+def scatter3D_MESH(*,x,y,z,col,cmax=100,cmin=0,scat=None,onlyMesh=False,visible=True):
     data=([go.Scatter3d( marker=dict(color=col),x=x,y=y,
                        z=z,mode="markers")]if scat is None else [scat]) if not onlyMesh else [] 
-    return go.Figure(data=data+[go.Mesh3d(cmax=cmax,cmin=cmin,colorscale="BlueRed",showscale=False,x=x,y=y,z=z,intensity=col,hoverinfo="none")])
+    return go.Figure(data=data+[go.Mesh3d(cmax=cmax,cmin=cmin,colorscale="BlueRed",showscale=False,x=x,y=y,z=z,intensity=col,hoverinfo="none",visible=visible)])
 class Study_Tuned_Viz(Viz):
     
     def plot_resultats(self,col=pcol.sequential.Bluered,d3=False,share_xaxes=True,
-        share_yaxes=True,hideUpper=False,zmaxHisto=4,max3d=15,begin3d=0,offset3d=0,scatterColorBarX=-0.2,nbCols=3):
+        share_yaxes=True,hideUpper=False,zmaxHisto=4,max3d=15,begin3d=0,offset3d=0,
+        scatterColorBarX=-0.2,nbCols=3,mesh3d=True):
         obj=self.obj
         resu=obj.resultat
         yy=resu >>  df_.select(df_.starts_with("param_"),"mean_test_score")
@@ -237,14 +256,14 @@ class Study_Tuned_Viz(Viz):
                              row=i+1,col=j+1
                         )
                     fig.append_trace(
-                             scatter3D_MESH(x=yy_.loc[:,x],y=yy_.loc[:,y],z=yy_.loc[:,z],cmax=cmax,cmin=cmin,col=yy_.loc[:,"mean_test_score"],onlyMesh=True).data[0],
+                             scatter3D_MESH(x=yy_.loc[:,x],y=yy_.loc[:,y],z=yy_.loc[:,z],cmax=cmax,cmin=cmin,col=yy_.loc[:,"mean_test_score"],onlyMesh=True,visible=mesh3d).data[0],
                              row=i+1,col=j+1
                         )
                     iio+=1
                     if len(comb) == iio:
                         lay["coloraxis"]=ip
                         fig["layout"]= merge(fig["layout"].to_plotly_json(),lay,add=False)
-                        return fig.update_layout(showlegend=False)
+                        return fromCombiToplot(fig.update_layout(showlegend=False),comb,nbCols)
             # return fig
             # raise NotImplementedError() 
         else:
@@ -264,6 +283,21 @@ class Study_Tuned_Viz(Viz):
             gh=True
             gh2=True
             # df2=
+            mmax=0
+            mmin=0
+            for i in range(1,nb):
+                for k in range(1,nb):
+                    if i<k:
+                        xx=yy_.iloc[:,k-1]
+                        dt=od2[ii]
+                        yy=dt["y"]
+                        yy=yy_.iloc[:,i-1]
+                        mmax_=np.max(pd.crosstab(np.array(yy),np.array(xx)).values)
+                        mmin_=np.min(pd.crosstab(np.array(yy),np.array(xx)).values)
+                        mmax=max(mmax,mmax_)
+                        mmin=max(mmin,mmin_)
+                        ii+=1
+            ii=0
             for i in range(1,nb):
                 i1=i
                 x_ticker = ff2[i-1]
@@ -287,7 +321,7 @@ class Study_Tuned_Viz(Viz):
 
 
                         figi=go.Heatmap(#blueRed
-                            colorscale="oranges",showscale=gh,colorbar=dict(x=1.10,title="Histogram2d"),zmin=0,zmax=zmaxHisto,
+                            colorscale="oranges",showscale=gh,colorbar=dict(x=1.10,title="Histogram2d"),zmin=mmin,zmax=mmax,
                             z=zz.values,y=namesEscape(zz.index.tolist()),x=namesEscape(zz.columns.tolist()),xgap=2,ygap=2,xaxis=ft,yaxis=dt.yaxis,visible=visible)
                         gh=False
                         # if i1==1:
