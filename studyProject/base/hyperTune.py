@@ -4,7 +4,7 @@ from skopt.plots import plot_convergence, plot_regret, plot_evaluations, plot_ob
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from ..base.base import Base, factoryCls
-from ..utils import isStr, StudyDict, merge, T, F
+from ..utils import isStr, StudyDict, merge, T, F, ProgressBarCalled
 
 from typing import Dict
 
@@ -123,30 +123,33 @@ class HyperTune(Base):
                       deltaYStopper=False)
             opt2=merge(fit_,optsFit,add=F)
             # fit=dict()
-            if opt2.get("deadlineStopper") is not None and not opt2.get("deadlineStopper"):
-                opt2.pop("deadlineStopper")
-                deadtime=120
-                if opt2.get("deadlineStopperTime") is not None:
-                    deadtime=opt2.pop("deadlineStopperTime")
+            if opt2.get("deadlineStopper") is not None:
+                v=opt2.pop("deadlineStopper")
+                if v:
+                    deadtime=120
+                    if opt2.get("deadlineStopperTime") is not None:
+                        deadtime=opt2.pop("deadlineStopperTime")
 
-                dd2=skopt.callbacks.DeadlineStopper(deadtime)
-                opt2["callback"]=(opt2 if "callback" in opt2 else []) + [dd2]
+                    dd2=skopt.callbacks.DeadlineStopper(deadtime)
+                    opt2["callback"]=(opt2["callback"] if "callback" in opt2 else []) + [dd2]
 
-            if opt2.get("deltaYStopper") is not None and not opt2.get("deltaYStopper"):
-                opt2.pop("deltaYStopper")
-                delta=0.01
-                if opt2.get("deltaYStopperDelta") is not None:
-                    delta=opt.pop("deltaYStopperDelta")
-                dd2=skopt.callbacks.DeltaYStopper(delta)
-                opt2["callback"]=(opt2 if "callback" in opt2 else []) + [dd2]
+            if opt2.get("deltaYStopper") is not None:
+                v=opt2.pop("deltaYStopper")
+                if v:
+                    delta=0.01
+                    if opt2.get("deltaYStopperDelta") is not None:
+                        delta=opt2.pop("deltaYStopperDelta")
+                    dd2=skopt.callbacks.DeltaYStopper(delta)
+                    opt2["callback"]=(opt2["callback"] if "callback" in opt2 else []) + [dd2]
 
-            if opt2.get("CheckpointSaver") is not None and not opt2.get("CheckpointSaver"):
-                opt2.pop("CheckpointSaver")
-                path="./result.pkl"
-                if opt2.get("CheckpointSaverPath") is not None:
-                    path=opt.pop("CheckpointSaverPath")
-                dd2 = CheckpointSaver2(path)
-                opt2["callback"]=(opt2 if "callback" in opt2 else []) + [dd2]
+            if opt2.get("CheckpointSaver") is not None:
+                v=opt2.pop("CheckpointSaver")
+                if v:
+                    path="./result.pkl"
+                    if opt2.get("CheckpointSaverPath") is not None:
+                        path=opt2.pop("CheckpointSaverPath")
+                    dd2 = CheckpointSaver2(path)
+                    opt2["callback"]=(opt2["callback"] if "callback" in opt2 else []) + [dd2]
 
 
 
@@ -158,7 +161,7 @@ class HyperTune(Base):
             pb=False
             if "verbose" in opts and opts.get("verbose"):
                 dd2=bestScoreCallback()
-                opts2["callback"]=(opt2 if "callback" in opt2 else []) + [dd2]
+                opt2["callback"]=(opt2["callback"] if "callback" in opt2 else []) + [dd2]
 
             if "progressBar" in opts and opts.get("progressBar"):
                 pb=True
@@ -196,20 +199,25 @@ class HyperTune(Base):
 
             # if "callback" in opts2:
                 # optimizer_kwargs["callback"]=opts2.pop("callback")
-            opts=merge(dict(optimizer_kwargs),opts,add=False)
+            opts=merge(dict(optimizer_kwargs=optimizer_kwargs),opts,add=False)
+            print(opts)
             cv=BayesSearchCV(model,
                  hyper_params,#optimizer_kwargs=dict(callback=[checkpoint_callback]),
                  **opts)
-            nbOpts=len(cv.optimizers_)
+            # return cv
+            # print(cv)
+            nbOpts=len(hyper_params) if isinstance(hyper_params,list) else 1
             if pb:
                 nameM="hyper-{}".format(modelName)
                 dd2=ProgressBarCalled(total=cv.total_iterations,
                                    name=nameM,
                                    generatorExitAsSuccess=True,
-                                  fnCalled=lambda args,xargs,pb: setattr(pb,"name",nameM+str(args[0].optimizer.id)+"/"+str(nbOpts)+"]" ))
-                opts2["callback"]=(opt2 if "callback" in opt2 else []) + [dd2]
+                                  fnCalled=lambda args,xargs,pb: setattr(pb,"name",nameM+" "+str(args[0].optimizer.id)+"/"+str(nbOpts)+"]" ))
+                opt2["callback"]=(opt2["callback"] if "callback" in opt2 else []) + [dd2]
+            print(opt2)
             cv.fit(X_train,
-                    y_train,**opts2)
+                    y_train,**opt2)
+            obj=cv
             resultat=obj.cv_results_
             best_estimator_=obj.best_estimator_
             best_score_=obj.best_score_

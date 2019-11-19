@@ -6,7 +6,7 @@ import plotly.colors as pcol
 from studyPipeGit import df_,X_
 import numpy as np
 from plotly import graph_objs as go
-from ..utils import T,F,namesEscape, merge
+from ..utils import T,F,namesEscape, merge, zipl
 import pandas as pd
 from itertools import combinations
 from plotly.subplots import make_subplots
@@ -16,6 +16,15 @@ import plotly.colors as pcol
 import plotly.express as pe
 # def from
 from copy import copy
+def unique(array):
+    uniq, index = np.unique(array, return_index=True)
+    return uniq[index.argsort()]
+def secureSort(ll):
+    kepp=[i for i in ll if isinstance(i,int) or isinstance(i,float)]
+    notKeep=[i for i in ll if not isinstance(i,int) and  not isinstance(i,float)]
+    # print(kepp,notKeep)
+    # print(np.sort(kepp).tolist()+notKeep)
+    return np.sort(kepp).tolist()+notKeep
 def fromCodeToCat(codes,lev):
     return pd.Categorical(codes).rename_categories(lev).tolist()
 def heatmap3D(c1,c2,c3,yy=None):
@@ -195,23 +204,36 @@ def scatter3D_MESH(*,x,y,z,col,cmax=100,cmin=0,scat=None,onlyMesh=False,visible=
 class Study_Tuned_Viz(Viz):
     
     def plot_resultats(self,col=pcol.sequential.Bluered,d3=False,share_xaxes=True,
-        share_yaxes=True,hideUpper=False,zmaxHisto=4,max3d=15,begin3d=0,offset3d=0,
-        scatterColorBarX=-0.2,nbCols=3,mesh3d=True):
+        share_yaxes=True,hideUpper=False,zmaxHisto=4,offset=0,iloc=slice(None),loc=slice(None),nb=None,max3d=15,begin3d=0,offset3d=0,
+        scatterColorBarX=-0.2,mesh3d=True):
         obj=self.obj
         resu=obj.resultat
         yy=resu >>  df_.select(df_.starts_with("param_"),"mean_test_score")
         yy["mean_test_score"]=np.round(yy["mean_test_score"]*100,2)
-        yy_=yy
+        nb = nb if nb is not None else np.shape(yy)[1]-1
+        nbo=min(nb+offset,nb)
+        yyX=yy.iloc[:,:-1].iloc[:,offset:nbo].loc[:,loc].iloc[:,iloc]
+        yyX["mean_test_score"]=yy["mean_test_score"]
+        yy=yyX
+        yy_=yy.fillna("`None`")
         yl=yy["mean_test_score"]
         cmax=max(yl)
         cmin=min(yl)
-        yy=yy.apply(lambda x:namesEscape(x.values),axis=0)
+
+        # yy=yy.fillna("`None`")
+        yy=yy_.apply(lambda x:namesEscape(x.values),axis=0)
+        # print(yy)
         yy["mean_test_score"]=yl
+        yy2=yy
         # print(yy)
         nb=np.shape(yy)[1]
         nb1=nb-1
+        nbCols=nb1
         ff2=yy.columns.tolist()[:-1]
         if d3:
+            nbCols-=2
+            if nbCols==0:
+                raise Exception("if 3D -> minimun 3 params")
             comb=list(combinations(range(nb1),3))[(begin3d + offset3d):(max3d+offset3d)]
             # Initialize figure with 4 3D subplots
             images_per_row = min(len(comb),nbCols)
@@ -244,6 +266,7 @@ class Study_Tuned_Viz(Viz):
                     opX["data"][0]["scene"]="scene"+("" if iio ==0 else str(iio+1))
                     opX['data'][0]["marker"].cmax=cmax
                     opX['data'][0]["marker"].cmin=cmin
+                    opX["data"][0].hoverlabel=dict(bgcolor=yy_["mean_test_score"])
                     # opX["data"][0]["yaxis"]="y"+("" if i ==0 else str(i+1))
                     oip[xxo]["domain"]=None
                     if iio==0:
@@ -267,8 +290,10 @@ class Study_Tuned_Viz(Viz):
             # return fig
             # raise NotImplementedError() 
         else:
+            # print(yy)
+
             oo2=ff.create_scatterplotmatrix(yy,index="mean_test_score",
-                                    diag='histogram',marker=dict(colorbar=dict(x=scatterColorBarX,ticktextside="left",title="Scatter"),showscale=True),
+                                    diag='histogram',marker=dict(colorbar=dict(x=scatterColorBarX,ticktextside="left",title="mean_test_score"),showscale=True),
                                     colormap=col,
                                     width=1000,
                                     height=1000,hovertemplate="<b>%{marker.color}%</b><br>" +
@@ -295,7 +320,7 @@ class Study_Tuned_Viz(Viz):
                         mmax_=np.max(pd.crosstab(np.array(yy),np.array(xx)).values)
                         mmin_=np.min(pd.crosstab(np.array(yy),np.array(xx)).values)
                         mmax=max(mmax,mmax_)
-                        mmin=max(mmin,mmin_)
+                        mmin=min(mmin,mmin_)
                         ii+=1
             ii=0
             for i in range(1,nb):
@@ -311,6 +336,7 @@ class Study_Tuned_Viz(Viz):
                         # dt.update(visible=False)
                         xx=yy_.iloc[:,k-1]
                         yy=dt["y"]
+                        # yy=yy.fillna("None")
                         yy=yy_.iloc[:,i-1]
                         ft=dt.xaxis
                         visible=True
@@ -321,9 +347,10 @@ class Study_Tuned_Viz(Viz):
 
 
                         figi=go.Heatmap(#blueRed
-                            colorscale="oranges",showscale=gh,colorbar=dict(x=1.10,title="Histogram2d"),zmin=mmin,zmax=mmax,
+                            colorscale="oranges",showscale=gh,colorbar=dict(x=1.10,title="Count"),zmin=mmin,zmax=mmax,
                             z=zz.values,y=namesEscape(zz.index.tolist()),x=namesEscape(zz.columns.tolist()),xgap=2,ygap=2,xaxis=ft,yaxis=dt.yaxis,visible=visible)
                         gh=False
+                        # figi.hoverlabel=dict(bgcolor=zz.values.tolist())
                         # if i1==1:
                             # oo2.layout["xaxis{}".format("" if ii==0 else ii+1)].tickangle=0
                         # if k1 == (nb-1):
@@ -339,34 +366,96 @@ class Study_Tuned_Viz(Viz):
 
 
                     if i1 == k1 :
-                        od2[ii].marker.color="black"
                         zr=yy_.iloc[:,k-1]
                         # print(zr)
-                        od2[ii].x = od2[ii].x if isinstance(zr[0],str) else namesEscape(np.sort(zr))
+                        od2[ii].x = od2[ii].x if isinstance(zr[0],str) else namesEscape(secureSort(zr))
+                        uni=unique(od2[ii].x)
+                        # print(yy)
+                        vl=yy2.groupby(x_ticker).mean().loc[uni,:].values.flatten().tolist()
+                        # print(vl)
+                        od2[ii].marker.cmin=cmin
+                        od2[ii].marker.cmax=cmax
+                        od2[ii].marker.color=vl
+                        od2[ii].marker.colorscale="Bluered"
+                        od2[ii]["hovertemplate"]="x ["+y_ticker+"]: %{x}<br>" +\
+                                                "nb : %{y}<br>" +\
+                                                "mean(mean_test_score) : %{marker.color} <br>" +\
+                                                "<extra></extra>"
                     od2[ii]["name"]=""
                     if i1 < k1:
                         od2[ii]["hovertemplate"]="x ["+y_ticker+"]: %{x}<br>" +\
                                                 "y ["+x_ticker+"]: %{y}<br>" +\
-                                                "%{z} <br>" +\
+                                                "nb : %{z} <br>" +\
                                                 "<extra></extra>"
                     if i1 > k1 :
                         od2[ii]["marker"]["opacity"]=0.5,
+                        # zr=yy_.iloc[:,k-1]
+                        # # print(zr)
+                        # # print(isinstance(zr[0],str))
+                        # od2[ii].x = od2[ii].x# if isinstance(zr[0],str) else namesEscape(secureSort(zr))
+                        # # print(od2[ii].x)
+                        # zr=yy_.iloc[:,i-1]
+                        # # print(zr)
+                        # od2[ii].y = od2[ii].y #if isinstance(zr[0],str) else namesEscape(secureSort(zr))
+                        
+                        xo=yy_.iloc[:,k-1]#od2[ii].x
+                        yi=yy_.iloc[:,i-1]#od2[ii].y
+                        colr=od2[ii].marker.color
+                        bhh=pd.DataFrame(dict(a=xo,b=yi,z=colr))
+                        # print(bhh)
+                        bhh2_=bhh.groupby(["a","b"], sort=False)
+                        bhh2=bhh2_.mean().reset_index()
+                        bhj_=(bhh2_.count().values).flatten()
+                        bhj=[min(10,int(i/2.)) for i in bhj_]
+                        # print(bhj)
+                        # raise Exception()
+                        od2[ii].x=bhh2.loc[:,"a"]
+                        od2[ii].y=bhh2.loc[:,"b"]
+                        od2[ii].marker.color=bhh2.loc[:,"z"]
+                        od2[ii].marker.line=dict(width=bhj,
+                                        color='black')
+                        od2[ii].customdata=bhj_
                         od2[ii]["hovertemplate"]="x ["+y_ticker+"]: %{x}<br>" +\
                                                 "y ["+x_ticker+"]: %{y}<br>" +\
-                                                "%{marker.color}%<br>" +\
+                                                "mean(mean_test_score) : %{marker.color}%<br>nb : %{customdata}" +\
                                                 "<extra></extra>"
-                        zr=yy_.iloc[:,k-1]
-                        # print(zr)
-                        od2[ii].x = od2[ii].x if isinstance(zr[0],str) else namesEscape(np.sort(zr))
-                        zr=yy_.iloc[:,i-1]
-                        # print(zr)
-                        od2[ii].y = od2[ii].y if isinstance(zr[0],str) else namesEscape(np.sort(zr))
+
+                        kkop=od2[ii].x
+                        kkop2=od2[ii].y
+                        od2[ii].x=namesEscape(od2[ii].x)
+                        od2[ii].y=namesEscape(od2[ii].y)
+                        # print(od2[ii].x)
+
                     ii+=1
                     if i1 > k1 :
+                        zr=kkop.tolist()#yy_.iloc[:,k-1]
+                        # print(zr)
                         # oo2.layout["xaxis{}".format("" if ii==0 else ii+1)].tickangle=0
-                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickvals=np.unique(xx)
-                        yy=dt["y"]
-                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].tickvals=np.unique(yy)                            
+                        yj=kkop if isinstance(zr[0],str) else namesEscape(secureSort(zr))
+                        # print(unique(yj))
+                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].categoryorder="array"
+                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].categoryarray=unique(yj).tolist()
+                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].type="category"
+                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickvals=unique(yj).tolist()
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].rangemode = 'tozero'
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].range= [0, len(unique(yj).tolist())-1]
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].tick0= ''
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickson='boundaries'#=unique(yj).tolist()
+                        # yy=dt["y"]
+                        zr=kkop2.tolist()
+                        # print(type(zr[0]))
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii+1)].tickangle=0
+                        yj2=zr if isinstance(zr[0],str) else namesEscape(secureSort(zr))
+                        # print(unique(yj2))
+                        # print(yj2)
+                        # oo2.layout["yaxis{}".format("" if ii==0 else ii)].tickvals=unique(yj2).tolist()
+                        # oo2.layout["yaxis{}".format("" if ii==0 else ii)].ticktext=unique(yj2).tolist()
+                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].categoryorder="array"
+                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].categoryarray=unique(yj2).tolist()
+                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].type="category"
+                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].tickvals=unique(yj2).tolist()
+                        oo2.layout["yaxis{}".format("" if ii==0 else ii)].rangemode = 'tozero'
+                        # oo2.layout["yaxis{}".format("" if ii==0 else ii)].range= [0, len(unique(yj2).tolist())-1]                         
                         # gg=list(oo2.data)
                     
                     if i1<k1 and hideUpper:
@@ -414,9 +503,13 @@ class Study_Tuned_Viz(Viz):
                         oo2.layout["yaxis{}".format("" if ii==0 else ii)].title.text=""
                     if share_xaxes and i1>1 and i1<(nb-1) and i1 != k1:
                         # print(ii)
+                        # if k1 >1:
                         oo2.layout["xaxis{}".format("" if ii==0 else ii)].showticklabels=F
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickangle=45
                         # oo2.layout["yaxis{}".format("" if ii==0 else ii)].showticklabels=F
                         # oo2.layout["xaxis{}".format("" if ii==0 else ii)].showgrid=True
+                    # if i1==2 and k1==1:
+                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].showticklabels=T
                     if share_yaxes and (i1==k1 or k1 == (nb-1)):
                         oo2.layout["yaxis{}".format("" if ii==0 else ii)].side="right"
                     if share_yaxes and k1>1 and i1 != k1 and k1 != (nb-1): 
