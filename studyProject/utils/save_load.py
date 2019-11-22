@@ -13,10 +13,12 @@ class SaveLoad:
         return name
     @staticmethod
     def load(name,n="rb", compression=DEFAULT_COMPRESSION,
-        set_default_extension=False,chut=True,addExtension=False,**xargs):
+        set_default_extension=False,chut=True,addExtension=False,fake=False,**xargs):
         #return dill.load(open(name,n))
         if addExtension:
             name=name+(".{}").format(compression)
+        if fake:
+            return name
         ty="\n[SaveLoad load] Loading {}".format(name)
         # warnings.warn(ty)
         # print("id")
@@ -28,10 +30,12 @@ class SaveLoad:
         return rep
     @staticmethod
     def save(selfo,name,n="wb", compression=DEFAULT_COMPRESSION,addExtension=False,
-        set_default_extension=False,chut=True,preventError=True,**xargs):
+        set_default_extension=False,chut=True,preventError=True,fake=False,**xargs):
         #return dill.dump(selfo,open(name,n),)
         if addExtension:
             name=name+(".{}").format(compression)
+        if fake:
+            return name
         if not chut:
             ty="\n[SaveLoad Save] Saving {}".format(name)
             with showWarningsTmp:
@@ -51,6 +55,7 @@ class SaveLoad:
         try:
             rep=compress_pickle.dump(selfo,name,compression=compression,
                                         set_default_extension=set_default_extension,**xargs)
+            return name
         except Exception as e:
             if preventError:
                 SaveLoad.save(old,name)

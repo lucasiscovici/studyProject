@@ -9,6 +9,7 @@ from sklearn.model_selection import cross_validate
 import numpy as np
 import copy
 import os
+import shutil 
 import warnings
 import pandas as pd
 from interface import implements, Interface
@@ -76,8 +77,10 @@ def get_args_typing(l):
     return rep
 class Base(object):
     DEFAULT_PATH="__studyFiles"
+    DEFAULT_PATH_FTS="__toSave"
     DEFAULT_REP="study_"
     DEFAULT_EXT=".study_"
+    DEFAULT_DIRS="dirs.txt"
     EXPORTABLE=["ID"]
     EXPORTABLE_SUFFIX="EXP"
     EXPORTABLE_ARGS={}
@@ -267,6 +270,22 @@ class Base(object):
             repo=repos[0]
         return (repos,
                      cls.build_ext(repo,ext,ID,delim,recreate,chut))
+    
+    @staticmethod
+    def __listFilesAndTar(dirFiles,sv,patho=None):
+        if dirFiles is not None:
+            tt="\n".join(dirFiles
+            io=TMP_DIR()
+            iof=io.get()
+            with open(iof+"/"+Base.DEFAULT_DIRS,"w") as f:
+                f.write(tt)
+            u=iof+"/"+Base.DEFAULT_DIRS
+
+        patho=Base.DEFAULT_PATH+"/"+Base.DEFAULT_PATH_FTS+"/"+randomString() if patho is None else patho
+        pathoTar=make_tarfile(patho,u+[sv,dirFiles])
+        io.delete()
+        return pathoTar
+
     @classmethod
     def Save(cls,self,
              ID,
@@ -280,6 +299,7 @@ class Base(object):
              noDefaults=False,
              addExtension=True,
              fnBuildRepExt=None,
+             dirAdded=[],
              **xargs):
         ID=self.ID if ID is None else ID
         if noDefaults:
@@ -293,7 +313,14 @@ class Base(object):
                                             chut=chut,recreate=recreate,fn=fnBuildRepExt)
         # print(ok)
         if ok:
-            SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,**xargs)
+            dirTmp=None
+            if len(dirAdded) >0:
+                dirTmp=dirAdded
+            filos=SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,fake=True,**xargs)
+            filo=filos+".partial"
+            patho=SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,**xargs)
+            Base.__listFilesAndTar(dirTmp,patho,filos)
+            os.remove(patho)
     
     def save(self,
              repertoire=None,
@@ -303,8 +330,9 @@ class Base(object):
              delim="/",
              recreate=False,
              addExtension=True,
+             dirAdded=[],
              **xargs):
-        self.__class__.Save(self,ID,repertoire,ext,path,delim,recreate,**xargs)
+        self.__class__.Save(self,ID,repertoire,ext,path,delim,recreate,dirAdded=dirAdded,**xargs)
     
     @classmethod
     def Load(cls,ID,
@@ -350,16 +378,41 @@ class Base(object):
             if not chut:
                 warnings.warn("\n[Base load] {} n'exite pas ".format(filo))
         try:
-            resu=SaveLoad.load(filo,addExtension=addExtension,chut=chut,**xargs)
+            yyy=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
+            res=read_tarfile(yyy)
+            gg4={}
+            if os.path.isfile(res+"/dirs.txt"):
+                with open(res+"/dirs.txt","r") as f:
+                    gg=f.readlines()
+                gg2=set([i.rstrip("\n\r") for i in gg])
+                hu=[]
+                for j in gg2:
+                    u=TMP_DIR()
+                    uu=u.get()
+                    hu.append(uu)
+                    shutil.move(res+"/"+j, uu) 
+                gg4=dict(zip(gg2,hu))
+            filo=res+"/"+yyy+".partial"
+            resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
+            return (resu,gg4)
         except Exception as e:
             # raise e
             resu=None
         return resu
 
  
+    def addFileToSave(self):
+        return []
+
+    def addDirToSave(self):
+        return []
+
+    def restoreDir(logdir):
+        return {}
+
     @staticmethod
     def import___(cls,ol,loaded,newIDS=False,
-                    papaExport=[],forceInfer=False,*args,**xargs):
+                    papaExport=[],forceInfer=False,dirs={},*args,**xargs):
         if loaded is None:
             return None
         if isinstance(loaded,dict) and len(loaded)==0:
@@ -383,7 +436,7 @@ class Base(object):
                 jj=i.EXPORTABLE==cls.EXPORTABLE
                 sameExport|=jj
                 ol=i.import__(ol,loaded,newIDS=newIDS,
-                    papaExport=cls.EXPORTABLE if not jj else [],
+                    papaExport=cls.EXPORTABLE if not jj else [],dirs=dirs,
                     *args,**xargs)
         # try:
         #     rrr=cls.__base__.__import
@@ -446,7 +499,7 @@ class Base(object):
                         cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
                         if isinstance(cl(),cl2) and not forceInfer:
                             cl2=cl
-                        repo=[ cl2.import__(cl2(),i,newIDS=newIDS,*args,**xargs) for i in loaded[k] ]
+                        repo=[ cl2.import__(cl2(),i,newIDS=newIDS,dirs=dirs,*args,**xargs) for i in loaded[k] ]
                 # setattr(ol,k,repo)
             elif get_origin(v) is dict and isinstance(loaded[k],dict):
                 # if k == "cv" or k == "_cv":
@@ -469,7 +522,7 @@ class Base(object):
                         if isinstance(cl(),cl2) and not forceInfer:
                             cl2=cl
                         # print(cl2) 
-                        repo=studyDico({k2:cl2.import__(cl2(),v2,newIDS=newIDS,*args,**xargs) for k2,v2 in loaded[k].items()})
+                        repo=studyDico({k2:cl2.import__(cl2(),v2,newIDS=newIDS,dirs=dirs,*args,**xargs) for k2,v2 in loaded[k].items()})
                     # print("FINbg")
 
                 # print(k)
@@ -485,7 +538,7 @@ class Base(object):
                         cl2=str2Class(kk["____cls"]) if kk is not None and "____cls" in kk else cl
                         if isinstance(cl(),cl2) and not forceInfer :
                             cl2=cl
-                        repo=cl2.import__(cl2(),loaded[k],newIDS=newIDS,*args,**xargs)
+                        repo=cl2.import__(cl2(),loaded[k],newIDS=newIDS,dirs=dirs,*args,**xargs)
                 else:
                     try:
                         # prinst(k)
@@ -525,10 +578,11 @@ class Base(object):
         return ol
 
     @classmethod 
-    def import__(cls,ol,loaded,newIDS=False,normalNEW=True,forceInfer=False,*args,**xargs):
+    def import__(cls,ol,loaded,newIDS=False,normalNEW=True,forceInfer=False,dirs={},*args,**xargs):
         # if normalNEW:
-        rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,dirs=dirs,*args,**xargs)
         # rep=cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
+        rep.restoreDir(dirs)
         return cls._import(rep)
 
     @classmethod 
@@ -544,7 +598,7 @@ class Base(object):
              loadArgs={},
              forceInfer=False,
             **xargs):
-        loaded=cls.Load(ID,repertoire,
+        loaded,dirs=cls.Load(ID,repertoire,
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
 
@@ -557,7 +611,7 @@ class Base(object):
                         cls.__name__, loaded["__version__"], __version__),
                     UserWarning)
         ol=cls()
-        ol=cls.import__( ol, loaded, forceInfer=forceInfer )
+        ol=cls.import__( ol, loaded, forceInfer=forceInfer,dirs=dirs )
 
         # if cls.__name__ == Base.__name__: 
         #     pass
@@ -574,7 +628,7 @@ class Base(object):
         return ol
 
     @classmethod
-    def __export(cls,obj):
+    def __export(cls,obj,dirAdded=[]):
         # print(type(obj))
         # print(isinstance(type(obj),Base))
         if isinstance(obj,list) or isinstance(obj,tuple):
@@ -582,14 +636,14 @@ class Base(object):
         elif isinstance(obj,dict):
             return {k:cls.__export(v) for k,v in obj.items()}
         if isinstance(obj,Base):
-            rep=obj.export(save=False)
+            rep=obj.export(save=False,dirAdded=dirAdded)
             rep["____cls"]=obj.__class__.__name__
             # rep.update({"____cls":obj.__class__.__name__})
             return rep
         return obj
 
     @classmethod
-    def _export(cls,obj,papaExport=[],*args,**xargs):
+    def _export(cls,obj,papaExport=[],dirAdded=[],*args,**xargs):
         try:
             rpi=cls.EXPORTABLE
             if "underscore" in cls.EXPORTABLE_ARGS and cls.EXPORTABLE_ARGS["underscore"]:
@@ -600,7 +654,7 @@ class Base(object):
             print(cls.__name__)
             print(obj)
             raise e
-        rep={ k:cls.__export(v) 
+        rep={ k:cls.__export(v,dirAdded=dirAdded) 
                 for k,v in rep.items() if k not in papaExport
             }
         rep["____cls"]=cls.__name__
@@ -612,7 +666,7 @@ class Base(object):
             rep=self.__class__.EXPORTABLE+rep
         return rep
     @staticmethod
-    def Export___(cls,obj,save=True,version=None,papaExport=[]):
+    def Export___(cls,obj,save=True,version=None,papaExport=[],dirAdded=[]):
         kk=False
         # print(obj)
         if cls.__name__ == Base.__name__: 
@@ -633,7 +687,7 @@ class Base(object):
                     #         continue
                     jj=i.EXPORTABLE==cls.EXPORTABLE
                     sameExport|=jj
-                    op=i.Export(obj,save=False,papaExport=cls.EXPORTABLE if not jj else [])
+                    op=i.Export(obj,save=False,papaExport=cls.EXPORTABLE if not jj else [],dirAdded=dirAdded)
                     papa=merge_two_dicts(papa,op)
             # except Exception as e:
             #     papa = {}
@@ -643,30 +697,32 @@ class Base(object):
             #     raise e
 
         # print(cls.__name__)
-        rep  = cls._export(obj,papaExport=papaExport)
+        rep  = cls._export(obj,papaExport=papaExport,dirAdded=dirAdded)
         rep  = merge_two_dicts(papa,rep)
         return rep
 
     @staticmethod
-    def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[]):
-        rep=cls.Export___(cls,vizGet(obj),papaExport=papaExport,save=save)
+    def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[],dirAdded=[]):
+        rep=cls.Export___(cls,vizGet(obj),papaExport=papaExport,save=save,dirAdded=dirAdded)
         if version is not None:
             rep["__version__"]=version
         # print(rep.keys())
 
         if save:
             # print(rep)
+            dirAdded=set(dirAdded)
+
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
-            return cls.Save(rep,**opts)
+            return cls.Save(rep,dirAdded=dirAdded,**opts)
         return rep
     @classmethod
-    def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[]):
-        return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport)
+    def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[],dirAdded=[]):
+        return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport,dirAdded=dirAdded)
 
-    def export(self,save=True,*args,**xargs):
+    def export(self,save=True,dirAdded=[],*args,**xargs):
         # print(self.__class__.__name__)
         # print(self)
-        return self.__class__.Export(self,save,version=__version__,*args,**xargs)
+        return self.__class__.Export(self,save,version=__version__,dirAdded=dirAdded,*args,**xargs)
 
     def __repr__(self,ind=1):
         nt="\n"+"\t"*ind

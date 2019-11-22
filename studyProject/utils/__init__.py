@@ -20,3 +20,4 @@ from .completer import config_completer, createSubClassFromIPCompleter, returnCo
 from .image import IMG, IMG_GRID
 from .format import format_perc
 from .progress_bar import LogProgress, ProgressBarCalled
+from .tempdir import TMP_DIR

@@ -266,7 +266,7 @@ class Study_Tuned_Viz(Viz):
                     opX["data"][0]["scene"]="scene"+("" if iio ==0 else str(iio+1))
                     opX['data'][0]["marker"].cmax=cmax
                     opX['data'][0]["marker"].cmin=cmin
-                    opX["data"][0].hoverlabel=dict(bgcolor=yy_["mean_test_score"])
+                    # opX["data"][0].hoverlabel=dict(bgcolor=yy_["mean_test_score"])
                     # opX["data"][0]["yaxis"]="y"+("" if i ==0 else str(i+1))
                     oip[xxo]["domain"]=None
                     if iio==0:
@@ -438,7 +438,7 @@ class Study_Tuned_Viz(Viz):
                         oo2.layout["xaxis{}".format("" if ii==0 else ii)].type="category"
                         oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickvals=unique(yj).tolist()
                         # oo2.layout["xaxis{}".format("" if ii==0 else ii)].rangemode = 'tozero'
-                        # oo2.layout["xaxis{}".format("" if ii==0 else ii)].range= [0, len(unique(yj).tolist())-1]
+                        oo2.layout["xaxis{}".format("" if ii==0 else ii)].range= [0, len(unique(yj).tolist())-1]
                         # oo2.layout["xaxis{}".format("" if ii==0 else ii)].tick0= ''
                         # oo2.layout["xaxis{}".format("" if ii==0 else ii)].tickson='boundaries'#=unique(yj).tolist()
                         # yy=dt["y"]
