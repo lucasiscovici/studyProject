@@ -17,14 +17,18 @@ class SaveLoad:
         #return dill.load(open(name,n))
         if addExtension:
             name=name+(".{}").format(compression)
+        # print("ici")
+        # print("ici")
+        # print(name)
         if fake:
             return name
         ty="\n[SaveLoad load] Loading {}".format(name)
         # warnings.warn(ty)
-        # print("id")
+        # print(ty)
         if not chut:
             with showWarningsTmp:
                 warnings.warn(ty)
+        # print(name)
         rep= compress_pickle.load(name,compression=compression,
                                     set_default_extension=set_default_extension,**xargs)
         return rep

@@ -38,12 +38,12 @@ class basedCv(Base):
 
 
     @staticmethod
-    def Export___(cls,obj,save=True,version=None,papaExport=[]):
+    def Export___(cls,obj,save=True,version=None,papaExport=[],*args,**xargs):
         # print("ici")# TODO: TWO LOOP ON wHY ?
         expo=obj.resu
         bb=obj.based
         if bb is None:
-            expo=expo.export(save=False)
+            expo=expo.export(save=False,*args,**xargs)
         bb = "None" if bb is None else bb
         repu=dict(based=bb,resu=expo)
         repu["____cls"]=cls.__name__

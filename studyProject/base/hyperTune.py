@@ -14,7 +14,8 @@ import pandas as pd
 import numpy as np
 # from evolutionary_search import EvolutionaryAlgorithmSearchCV
 from cvopt.model_selection import SimpleoptCV
-from cvopt.search_setting import search_category, search_numeric, ParamDist
+from cvopt.search_setting import search_category, search_numeric
+from cvopt.search_setting._base import ParamDist
 
 from bokeh.io import output_notebook
 from bokeh.resources import INLINE
@@ -67,12 +68,13 @@ def check_dimension(dimension,name):
     raise ValueError("Invalid dimension {}. Read the documentation for "
                      "supported types.".format(dimension))
 class Tuned(Base):
-    EXPORTABLE=["resultat","obj","logdir","middbk"]
-    def __init__(self,resultat=None,obj=None,logdir=None,middbk=None,ID=None):
+    EXPORTABLE=["resultat","obj","logdir","middbk","args"]
+    def __init__(self,resultat=None,obj=None,logdir=None,middbk=None,args=None,ID=None):
         super(Tuned, self).__init__(ID=ID)
         # self.resultat_=resultat
         self.resultat=pd.DataFrame(resultat) if resultat is not None else  resultat
         self.obj=obj
+        self.args=args
         self.logdir=logdir
         self.middbk=middbk
 
@@ -85,7 +87,7 @@ class Tuned(Base):
 
 class TunedL(Base):
     EXPORTABLE=["dico"]
-    def __init__(self, dico=Dict[str,Tuned]=None,ID=None):
+    def __init__(self, dico:Dict[str,Tuned]=None,ID=None):
         super().__init__(ID=ID)
         self.dico = dico
 
@@ -105,7 +107,7 @@ class HyperTune(Base):
     TYPES_=["random","grid","bayes","bayesopt","bayes_rf","bayes_gp","bayes_dummy","bayes_et","bayes_gbrt"]
     def __init__(self, tuned:Dict[str,TunedL]=None,ID=None):
         super().__init__(ID=ID)
-        self.tuned=StudyDict(defaultdict({},TunedL)) if tuned is None else tuned
+        self.tuned=StudyDict(defaultdict(TunedL)) if tuned is None else tuned
         self._namesCurr=None
         self._modelCurr=None
 
@@ -127,7 +129,9 @@ class HyperTune(Base):
             raise NotImplementedError("hyper_params must be a dict")
         self.hyper_params_=hyper_params
         hyper_params_=self.hyper_params_
-        self.hyper_params = {k:check_dimension(v) for k,v in hyper_params}
+        print(hyper_params_)
+        print(hyper_params)
+        self.hyper_params = {k:check_dimension(v,k) for k,v in hyper_params}
         hyper_params=self.hyper_params
         modsN=self.papa._models.mappingNamesModelsInd
         mid=self.papa._models.ID
@@ -151,6 +155,8 @@ class HyperTune(Base):
             obj=GridSearchCV(model,hyper_params_,**opts)
             obj.fit(X_train,y_train,**optsFit)
             skip=True
+            argsALL=dict(model=model,hyper_params=hyper_params,hyper_params_=hyper_params_,**opts)
+            argsALL["optsFit"]=optsFit
 
         elif typeOfTune in ["bayes","bayes_gp","bayesopt","bayesopt_gp"]:
             bk="bayesopt"
@@ -191,6 +197,19 @@ class HyperTune(Base):
                          **argus,
                          **opts                     # hyperopt,bayesopt, gaopt or randomopt.
                          )
+            argsALL=dict(model=model,hyper_params_=hyper_params_,hyper_params= hyper_params, 
+                         scoring=scoring,              # Objective of search
+                         cv=cv,                          # Cross validation setting
+                         max_iter=max_iter,                    # Number of search
+                         n_jobs=n_jobs,                       # Number of jobs to run in parallel.
+                         verbose=verbose,                      # 0: don't display status, 1:display status by stdout, 2:display status by graph 
+                         logdir=logdir,        # If this path is specified, save the log.
+                         model_id=middbk,                    # used estimator's dir and file name in save.
+                         save_estimator=save_estimator,               # estimator save setting.
+                         **argus,
+                         **opts                     # hyperopt,bayesopt, gaopt or randomopt.
+                         )
+            argsALL["optsFit"]=optsFit
             obj.fit(
                     X_train, y_train, validation_data=(X_test, y_test),
                     **optsFit)
@@ -199,7 +218,10 @@ class HyperTune(Base):
         res.resultat=pd.DataFrame(resultat)
         res.obj=obj
         res.logdir=logdir
+        res.args=dict(argsALL)
         res.middbk=middbk
+        # res.hyper_params=hyper_params
+        # res.hyper_params_=hyper_params_
         # res.best_estimator_=best_estimator_
         # res.best_score_=best_score_
         # res.best_params_=best_params_

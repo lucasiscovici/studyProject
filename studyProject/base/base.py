@@ -22,7 +22,7 @@ from plotly.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
-from ..utils import isinstanceBase, isinstance
+from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -273,17 +273,22 @@ class Base(object):
     
     @staticmethod
     def __listFilesAndTar(dirFiles,sv,patho=None):
+        ooo=[sv]
         if dirFiles is not None:
-            tt="\n".join(dirFiles
+            ooo=[sv]+[dirFiles]
+            tt="\n".join(dirFiles)
             io=TMP_DIR()
             iof=io.get()
             with open(iof+"/"+Base.DEFAULT_DIRS,"w") as f:
                 f.write(tt)
             u=iof+"/"+Base.DEFAULT_DIRS
-
+            ooo=[u]+ooo
         patho=Base.DEFAULT_PATH+"/"+Base.DEFAULT_PATH_FTS+"/"+randomString() if patho is None else patho
-        pathoTar=make_tarfile(patho,u+[sv,dirFiles])
-        io.delete()
+        print(patho)
+        print(ooo)
+        pathoTar=make_tarfile(patho,ooo)
+        if dirFiles is not None:
+            io.delete()
         return pathoTar
 
     @classmethod
@@ -317,10 +322,12 @@ class Base(object):
             if len(dirAdded) >0:
                 dirTmp=dirAdded
             filos=SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,fake=True,**xargs)
+            # print(filos)
             filo=filos+".partial"
-            patho=SaveLoad.save(self,filo,chut=chut,addExtension=addExtension,**xargs)
+            patho=SaveLoad.save(self,filo,chut=chut,addExtension=False,**xargs)
+            # print(patho)
             Base.__listFilesAndTar(dirTmp,patho,filos)
-            os.remove(patho)
+            # os.remove(patho)
     
     def save(self,
              repertoire=None,
@@ -345,6 +352,7 @@ class Base(object):
              noDefaults=False,
              addExtension=True,
             **xargs):
+        # print("coucou")
         if noDefaults:
             repertoire=""
         if repertoire is None:
@@ -373,26 +381,41 @@ class Base(object):
                     ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)
         dp=cls.DEFAULT_PATH if not noDefaults else "" 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
-        filo=repo+delim+ID+ext
+        # print(ID)
+        # print(ext)
+        filo=delim.join([i for i in [repo,ID+ext] if i != ""]) #repo+delim+ID+ext
+        # print(filo)
+        filo=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
+        # print(filo,os.path.isfile(filo))
         if not os.path.isfile(filo):
             if not chut:
                 warnings.warn("\n[Base load] {} n'exite pas ".format(filo))
+            return None
         try:
-            yyy=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
+            # print(filo)
+            # yyy=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
+            yyy=filo
             res=read_tarfile(yyy)
             gg4={}
+            # print(res)
+            # print(os.path.isfile(res+"/dirs.txt"))
             if os.path.isfile(res+"/dirs.txt"):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
+                print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
                     uu=u.get()
                     hu.append(uu)
+                    print(res+"/"+j)
                     shutil.move(res+"/"+j, uu) 
+                print(gg2)
                 gg4=dict(zip(gg2,hu))
-            filo=res+"/"+yyy+".partial"
+                print(gg4)
+            filo=res+"/"+os.path.basename(yyy)+".partial"
+            # print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
             return (resu,gg4)
         except Exception as e:
@@ -407,7 +430,7 @@ class Base(object):
     def addDirToSave(self):
         return []
 
-    def restoreDir(logdir):
+    def restoreDir(self,logdir):
         return {}
 
     @staticmethod
@@ -582,7 +605,8 @@ class Base(object):
         # if normalNEW:
         rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,dirs=dirs,*args,**xargs)
         # rep=cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
-        rep.restoreDir(dirs)
+        if rep is not None:
+            rep.restoreDir(dirs)
         return cls._import(rep)
 
     @classmethod 
@@ -598,10 +622,12 @@ class Base(object):
              loadArgs={},
              forceInfer=False,
             **xargs):
+        # print(loadArgs)
+        # print(xargs)
         loaded,dirs=cls.Load(ID,repertoire,
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
-
+        # print("ici")
         if "__version__" in loaded:
             if loaded["__version__"] != __version__:
                 warnings.warn(
