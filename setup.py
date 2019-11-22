@@ -35,7 +35,7 @@ setup(
         'numpy==1.16.2',
         'python-interface==1.5.1',
         'plotly @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly',
-        'scikit-optimize @ git+git://github.com/lucasiscovici/scikit-optimize#egg=scikit-optimize',
+        'cvopt @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt',
         'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
         'snakeviz @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz',
 

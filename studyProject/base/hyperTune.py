@@ -4,7 +4,7 @@ from skopt.plots import plot_convergence, plot_regret, plot_evaluations, plot_ob
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from ..base.base import Base, factoryCls
-from ..utils import isStr, StudyDict, merge, T, F, ProgressBarCalled, randomString
+from ..utils import isStr, StudyDict, studyDico, merge, T, F, ProgressBarCalled, randomString, TMP_DIR
 
 from typing import Dict
 import numbers
@@ -78,7 +78,8 @@ class Tuned(Base):
         self.logdir=logdir
         self.middbk=middbk
 
-    def addDirToSave():
+    def addDirToSave(self):
+        # print(self.logdir)
         return [self.logdir]
 
     def restoreDir(logdir):
@@ -98,7 +99,7 @@ class TunedL(Base):
     
     def __setitem__(self,n,v):
         if self.dico is None:
-            self.dico={}
+            self.dico=studyDico({},papa=self,addPapaIf=lambda c:isinstance(c,Base),attr="dico")
         self.dico[n]=v
 
 factoryCls.register_class(Tuned)
@@ -107,9 +108,16 @@ class HyperTune(Base):
     TYPES_=["random","grid","bayes","bayesopt","bayes_rf","bayes_gp","bayes_dummy","bayes_et","bayes_gbrt"]
     def __init__(self, tuned:Dict[str,TunedL]=None,ID=None):
         super().__init__(ID=ID)
-        self.tuned=StudyDict(defaultdict(TunedL)) if tuned is None else tuned
+        self.tuned=studyDico({},default=TunedL(),papa=self,addPapaIf=lambda c:instance(c,Base),attr="tuned") if tuned is None else tuned
         self._namesCurr=None
         self._modelCurr=None
+
+    @classmethod 
+    def _import(cls,loaded):
+        lo=super()._import(loaded)
+        if isinstance(lo.tuned,dict):
+            lo.tuned=studyDico(lo.tuned,default=TunedL(),papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="tuned")
+        return lo
 
     @property
     def curr(self):
@@ -122,16 +130,16 @@ class HyperTune(Base):
         typeOfTune: "random" RandomizedSearchCV, "grid" GridSearchCV, "bayes" or "bayes_gp" BayesSearchCV ["Gaussian Process"], "bayes_rf" BayesSearchCV ["Random Forest"], "bayes_dummy" BayesSearchCV ["Dummy"], "bayes_et" BayesSearchCV ["Extra Trees"], "bayes_gbrt" BayesSearchCV ["gradient boosted trees"]
         """
         middbk=None
-        if logdir is None and typeOfTune not in ["random","randomopt"]:
+        if logdir is None:
             logs=TMP_DIR()
             logdir = logs.get()
         if not isinstance(hyper_params,dict):
             raise NotImplementedError("hyper_params must be a dict")
         self.hyper_params_=hyper_params
         hyper_params_=self.hyper_params_
-        print(hyper_params_)
-        print(hyper_params)
-        self.hyper_params = {k:check_dimension(v,k) for k,v in hyper_params}
+        # print(hyper_params_)
+        # print(hyper_params)
+        self.hyper_params = {k:check_dimension(v,k) for k,v in hyper_params.items()}
         hyper_params=self.hyper_params
         modsN=self.papa._models.mappingNamesModelsInd
         mid=self.papa._models.ID
@@ -146,9 +154,11 @@ class HyperTune(Base):
         
         model=self.papa._models.models[mod]
         X_train=self.papa.X_train
-        y_train=self.papa.y_train
+        y_train=np.array(self.papa.y_train.tolist())
         X_test=self.papa.X_test
-        y_test=self.papa.y_test
+        y_test=np.array(self.papa.y_test.tolist())
+        obj=None
+        # print("typeOfTune",typeOfTune)
         if typeOfTune == "grid":
             deff=dict(n_jobs=-1,return_train_score=True)
             opts=merge(deff,opts,add=False)
@@ -182,7 +192,7 @@ class HyperTune(Base):
                 """)
             bk=opts.pop("backend")
 
-        if skip:
+        if not skip:
             argus= dict(backend=bk)
             middbk=midd(bk)
             obj = SimpleoptCV(model, hyper_params, 
@@ -197,6 +207,7 @@ class HyperTune(Base):
                          **argus,
                          **opts                     # hyperopt,bayesopt, gaopt or randomopt.
                          )
+            # print("ici")
             argsALL=dict(model=model,hyper_params_=hyper_params_,hyper_params= hyper_params, 
                          scoring=scoring,              # Objective of search
                          cv=cv,                          # Cross validation setting
@@ -210,11 +221,16 @@ class HyperTune(Base):
                          **opts                     # hyperopt,bayesopt, gaopt or randomopt.
                          )
             argsALL["optsFit"]=optsFit
-            obj.fit(
-                    X_train, y_train, validation_data=(X_test, y_test),
-                    **optsFit)
+            # print(y_train,y_test)
+            try:
+                obj.fit(
+                        X_train, y_train, validation_data=(X_test, y_test),
+                        **optsFit)
+            except Exception as e:
+                print("fitErr",e)
 
         res=Tuned()
+        resultat=obj.cv_results_
         res.resultat=pd.DataFrame(resultat)
         res.obj=obj
         res.logdir=logdir
@@ -229,9 +245,9 @@ class HyperTune(Base):
         # res.scorer_=scorer_
         # res.n_splits_=n_splits_
         self._modelCurr=modelName
-        self.tuned[modelName][res.ID]=res
+        self.tuned.__addKeyDefault__(modelName)[res.ID]=res
         self._namesCurr=res.ID
-        if logdir is not None:
-            self._tmpToSave.append(logdir)
+        # if logdir is not None:
+            # self._tmpToSave.append(logdir)
 
 factoryCls.register_class(HyperTune)

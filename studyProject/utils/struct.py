@@ -19,6 +19,11 @@ class StudyClass:
         if k!="items":
             self.items[k]=v
 
+    def __iter__(self):
+        return iter(self.items)
+
+    def __len__(self):
+        return len(self.items)
     def __repr__(self):
         a=""
         for k,v in self.items.items():
@@ -34,6 +39,7 @@ class StudyDict(UserDict,dict):
         if hasattr(self,"noInit") and self.noInit:
             return
         super().__init__(*args, **kwargs)
+        object.__setattr__(self,"default",default)
 
     def __new__(cls,*args, default=None,force=False, **kwargs):
         # print(args[0])
@@ -74,7 +80,11 @@ class StudyDict(UserDict,dict):
                 return rep
         if hasattr(self.__class__, "__missing__"):
             return self.__class__.__missing__(self, key)
-        raise KeyError(key)
+
+        if self.default is not None:
+            return self.default
+        return self.data[key]
+        # raise KeyError(key)
     def __reduce__(self):
         return (StudyDict, (), self.__getstate__())
     def __getstate__(self):
@@ -82,6 +92,10 @@ class StudyDict(UserDict,dict):
     def __setstate__(self, state):
         data = state
         self.update(data)  # will *not* call __setitem__
+    def __addKeyDefault__(self,a):
+        if a not in self.data:
+            self.data[a]=self.default
+        return self.data[a]
     def __getattr__(self, key):
         from .util2 import getPrivateAttr
         #key=list(self.keys())[key] if isInt(key) else key
@@ -89,7 +103,7 @@ class StudyDict(UserDict,dict):
         if key.startswith('__') and key.endswith('__'):
             return super().__getattr__(key)
         # print(key)
-        if key=="data":
+        if key=="data" or key == "default":
             d=super(UserDict,self).__getattribute__(key)
         else:
             d=self.data

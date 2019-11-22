@@ -22,7 +22,7 @@ from plotly.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
-from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile
+from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, studyList
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -47,6 +47,7 @@ class BaseSupFactory:
         if not class_:
             raise ValueError(class_name)
         return class_
+
 factoryCls= BaseSupFactory()
 
 def str2Class(str):
@@ -274,11 +275,15 @@ class Base(object):
     @staticmethod
     def __listFilesAndTar(dirFiles,sv,patho=None):
         ooo=[sv]
+        print(dirFiles)
+        print(sv)
         if dirFiles is not None:
             ooo=[sv]+[dirFiles]
             tt="\n".join(dirFiles)
             io=TMP_DIR()
             iof=io.get()
+            print(iof)
+            print(iof+"/"+Base.DEFAULT_DIRS)
             with open(iof+"/"+Base.DEFAULT_DIRS,"w") as f:
                 f.write(tt)
             u=iof+"/"+Base.DEFAULT_DIRS
@@ -403,7 +408,7 @@ class Base(object):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
-                print(gg2)
+                # print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
@@ -411,9 +416,9 @@ class Base(object):
                     hu.append(uu)
                     print(res+"/"+j)
                     shutil.move(res+"/"+j, uu) 
-                print(gg2)
+                # print(gg2)
                 gg4=dict(zip(gg2,hu))
-                print(gg4)
+                # print(gg4)
             filo=res+"/"+os.path.basename(yyy)+".partial"
             # print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
@@ -658,10 +663,16 @@ class Base(object):
         # print(type(obj))
         # print(isinstance(type(obj),Base))
         if isinstance(obj,list) or isinstance(obj,tuple):
-            return [ cls.__export(i) for i in obj ]
+            return [ cls.__export(i,dirAdded=dirAdded) for i in obj ]
         elif isinstance(obj,dict):
-            return {k:cls.__export(v) for k,v in obj.items()}
+            return {k:cls.__export(v,dirAdded=dirAdded) for k,v in obj.items()}
         if isinstance(obj,Base):
+            print(type(dirAdded))
+            # print(obj)
+            dirAdded.extend( obj.addFileToSave() )
+            dirAdded.extend(  obj.addDirToSave() )
+            print(dirAdded)
+            print(obj.__class__.__name__)
             rep=obj.export(save=False,dirAdded=dirAdded)
             rep["____cls"]=obj.__class__.__name__
             # rep.update({"____cls":obj.__class__.__name__})
@@ -691,6 +702,7 @@ class Base(object):
         if len(self.__class__.EXPORTABLE)>0 and "underscore" in self.__class__.EXPORTABLE_ARGS and self.__class__.EXPORTABLE_ARGS["underscore"]:
             rep=self.__class__.EXPORTABLE+rep
         return rep
+
     @staticmethod
     def Export___(cls,obj,save=True,version=None,papaExport=[],dirAdded=[]):
         kk=False
@@ -722,7 +734,7 @@ class Base(object):
             #     print(obj)
             #     raise e
 
-        # print(cls.__name__)
+        # print(\cls/\__name__)
         rep  = cls._export(obj,papaExport=papaExport,dirAdded=dirAdded)
         rep  = merge_two_dicts(papa,rep)
         return rep
@@ -733,9 +745,9 @@ class Base(object):
         if version is not None:
             rep["__version__"]=version
         # print(rep.keys())
-
+        print(dirAdded)
         if save:
-            # print(rep)
+
             dirAdded=set(dirAdded)
 
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
@@ -745,7 +757,7 @@ class Base(object):
     def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[],dirAdded=[]):
         return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport,dirAdded=dirAdded)
 
-    def export(self,save=True,dirAdded=[],*args,**xargs):
+    def export(self,save=True,dirAdded=studyList([]),*args,**xargs):
         # print(self.__class__.__name__)
         # print(self)
         return self.__class__.Export(self,save,version=__version__,dirAdded=dirAdded,*args,**xargs)
@@ -1356,6 +1368,7 @@ class BaseSupervise(Base):
                             clone=False,
                             deep=True,
                             cls_xargs=dict(),
+                            imported=True,
                             *args,**xargs):
         # cls=self.__class__
         def clonee(rrt):
@@ -1374,7 +1387,10 @@ class BaseSupervise(Base):
         if recreate:
             res=recreatee()
         else:
-            res=cls.Load(id_,*args,**xargs)
+            if imported:
+                res = cls.Import(id_,*args,**xargs)
+            else:
+                res=cls.Load(id_,*args,**xargs)
             if res is None:
                 res=recreatee()
             else:
