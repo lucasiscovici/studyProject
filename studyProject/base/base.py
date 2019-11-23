@@ -18,7 +18,7 @@ from ..version import __version__
 from studyPipe.pipes import *
 from studyPipe import config
 config.globalsFn=lambda:globals()
-from plotly.subplots import make_subplots
+from plotly_study.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict

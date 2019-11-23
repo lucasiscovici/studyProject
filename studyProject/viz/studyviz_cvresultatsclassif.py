@@ -1,4 +1,4 @@
-import plotly.figure_factory as ff
+import plotly_study.figure_factory as ff
 import numpy as np
 from ..utils import StudyClass, F, T, merge
 from . import Viz

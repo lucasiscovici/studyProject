@@ -13,9 +13,9 @@ from sklearn.pipeline import Pipeline
 import pandas as pd
 import numpy as np
 # from evolutionary_search import EvolutionaryAlgorithmSearchCV
-from cvopt.model_selection import SimpleoptCV
-from cvopt.search_setting import search_category, search_numeric
-from cvopt.search_setting._base import ParamDist
+from cvopt_study.model_selection import SimpleoptCV
+from cvopt_study.search_setting import search_category, search_numeric
+from cvopt_study.search_setting._base import ParamDist
 
 from bokeh.io import output_notebook
 from bokeh.resources import INLINE

@@ -11,7 +11,7 @@ def profile_that(blabla,gl=lambda : globals(),l=lambda:locals()):
     f.delete()
     return stats_
 
-def profile_that_snake(balblabla,hidePrint_=True,tg=False,pkg="snakeviz2",port="6006"):
+def profile_that_snake(balblabla,hidePrint_=True,tg=False,pkg="snakeviz_study",port="6006"):
     ip=get_ipython()
     try:
         if hidePrint_ or tg:
@@ -28,7 +28,7 @@ def addToPath(path,opts,o,rep=False):
     if o in opts:
         return "-"+o+" "+("" if not rep else opts[o]+" ")+path
     return path
-config = StudyClass(pkg="snakeviz",port="6006",magicName="snakeviz")
+config = StudyClass(pkg="snakeviz_study",port="6006",magicName="snakeviz")
 try:
     from IPython.core.magic import Magics, magics_class, line_cell_magic
     from IPython.display import display, HTML

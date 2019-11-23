@@ -1,19 +1,19 @@
 from . import Viz
-import plotly.figure_factory as ff
+import plotly_study.figure_factory as ff
 # from studyPipe import df_
-import plotly.colors as pcol
-# import plotly.figure_factory as ff
+import plotly_study.colors as pcol
+# import plotly_study.figure_factory as ff
 from studyPipe import df_,X_
 import numpy as np
-from plotly import graph_objs as go
+from plotly_study import graph_objs as go
 from ..utils import T,F,namesEscape, merge, zipl
 import pandas as pd
 from itertools import combinations
-from plotly.subplots import make_subplots
-import plotly.express as px
+from plotly_study.subplots import make_subplots
+import plotly_study.express as px
 import numpy as np
-import plotly.colors as pcol
-import plotly.express as pe
+import plotly_study.colors as pcol
+import plotly_study.express as pe
 # def from
 from copy import copy
 def unique(array):
@@ -526,7 +526,7 @@ class Study_Tuned_Viz(Viz):
 #                        marker=dict(color=yy.mean_test_score.values.tolist()),x=yy.param_max_depth,y=yy.param_max_features,
 #                        z=yy.param_min_samples_leaf,mode="markers")]
 # go.Figure(data=data+[go.Mesh3d(x=yy.param_max_depth,y=yy.param_max_features,z=yy.param_min_samples_leaf,intensity=yy.mean_test_score.values.tolist())])
-# import plotly.express as px
+# import plotly_study.express as px
 # px.scatter_3d(yy,x="param_n_estimators",y="param_min_samples_split",z="param_min_samples_leaf",
 #          color="mean_test_score",
 #          color_continuous_scale="BlueRed")

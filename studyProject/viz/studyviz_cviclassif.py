@@ -1,13 +1,13 @@
-import plotly.figure_factory as ff
+import plotly_study.figure_factory as ff
 import numpy as np
 from ..utils import StudyClass,namesEscape
 from . import Viz
 from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
-from plotly.subplots import make_subplots
+from plotly_study.subplots import make_subplots
 import cufflinks as cf
 from cufflinks.tools import get_len
-from plotly.offline import iplot
-import plotly.graph_objs as go
+from plotly_study.offline import iplot
+import plotly_study.graph_objs as go
 from functools import reduce
 import operator
 from ..utils import isStr, T, F, merge, IMG_GRID

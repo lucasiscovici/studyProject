@@ -1,4 +1,4 @@
-import plotly
+import plotly_study
 from ..utils import F, merge
 from ..utils import setattrAndReturnSelf
 
@@ -8,8 +8,8 @@ from ..utils import setattrAndReturnSelf
 #     return self.update_layout(title=title,
 #                        margin=dict(t=marginT))
 
-# plotly.graph_objs._figure.Figure.add_title=addT
-# import plotly.graph_objs as go
+# plotly_study.graph_objs._figure.Figure.add_title=addT
+# import plotly_study.graph_objs as go
 # import copy as _copy
 # def __init3__(
 #         self,
@@ -68,15 +68,15 @@ from ..utils import setattrAndReturnSelf
 #     if arg is None:
 #         arg = {}
 #     elif isinstance(arg, self.__class__):
-#         arg = arg.to_plotly_json()
+#         arg = arg.to_plotly_study_json()
 #     elif isinstance(arg, dict):
 #         arg = _copy.copy(arg)
 #     else:
 #         raise ValueError(
 #             """\
-# The first argument to the plotly.graph_objs.heatmap.ColorBar 
+# The first argument to the plotly_study.graph_objs.heatmap.ColorBar 
 # constructor must be a dict or 
-# an instance of plotly.graph_objs.heatmap.ColorBar"""
+# an instance of plotly_study.graph_objs.heatmap.ColorBar"""
 #         )
 
 #     # Handle skip_invalid
@@ -85,7 +85,7 @@ from ..utils import setattrAndReturnSelf
 
 #     # Import validators
 #     # -----------------
-#     from plotly.validators.heatmap import colorbar as v_colorbar
+#     from plotly_study.validators.heatmap import colorbar as v_colorbar
 
 #     # Initialize validators
 #     # ---------------------
@@ -242,14 +242,14 @@ from ..utils import setattrAndReturnSelf
 # uu=uu.setter(lambda self,val:setattr(self,"ticktextside",val))
 # go.heatmap.ColorBar.ticktextside=uu
 # go.heatmap.ColorBar.__init__=__init3__
-# import _plotly_utils.basevalidators
-# import plotly
-# class TickTextSideValidator(_plotly_utils.basevalidators.EnumeratedValidator):
+# import _plotly_study_utils.basevalidators
+# import plotly_study
+# class TickTextSideValidator(_plotly_study_utils.basevalidators.EnumeratedValidator):
 #     def __init__(
-#         self, plotly_name="ticktextside", parent_name="heatmap.colorbar", **kwargs
+#         self, plotly_study_name="ticktextside", parent_name="heatmap.colorbar", **kwargs
 #     ):
 #         super(TickTextSideValidator, self).__init__(
-#             plotly_name=plotly_name,
+#             plotly_study_name=plotly_study_name,
 #             parent_name=parent_name,
 #             edit_type=kwargs.pop("edit_type", "colorbars"),
 #             implied_edits=kwargs.pop("implied_edits", {}),
@@ -257,7 +257,7 @@ from ..utils import setattrAndReturnSelf
 #             values=kwargs.pop("values", ["right", "left"]),
 #             **kwargs
 # #         )
-# from plotly.validators.heatmap import colorbar as vCol
+# from plotly_study.validators.heatmap import colorbar as vCol
 # vCol.TickTextSideValidator= TickTextSideValidator
 # def __init2__(
 #         self,
@@ -315,15 +315,15 @@ from ..utils import setattrAndReturnSelf
 #         if arg is None:
 #             arg = {}
 #         elif isinstance(arg, self.__class__):
-#             arg = arg.to_plotly_json()
+#             arg = arg.to_plotly_study_json()
 #         elif isinstance(arg, dict):
 #             arg = _copy.copy(arg)
 #         else:
 #             raise ValueError(
 #                 """\
-# The first argument to the plotly.graph_objs.scatter.marker.ColorBar 
+# The first argument to the plotly_study.graph_objs.scatter.marker.ColorBar 
 # constructor must be a dict or 
-# an instance of plotly.graph_objs.scatter.marker.ColorBar"""
+# an instance of plotly_study.graph_objs.scatter.marker.ColorBar"""
 #             )
 
 #         # Handle skip_invalid
@@ -332,7 +332,7 @@ from ..utils import setattrAndReturnSelf
 
 #         # Import validators
 #         # -----------------
-#         from plotly.validators.scatter.marker import colorbar as v_colorbar
+#         from plotly_study.validators.scatter.marker import colorbar as v_colorbar
 
 #         # Initialize validators
 #         # ---------------------
@@ -490,14 +490,14 @@ from ..utils import setattrAndReturnSelf
 # uu=uu.setter(lambda self,val:setattr(self,"ticktextside",val))
 # go.scatter.marker.ColorBar.ticktextside=uu
 # go.scatter.marker.ColorBar.__init__=__init2__
-# # import _plotly_utils.basevalidators
-# # import plotly
-# # class TickTextSideValidator2(_plotly_utils.basevalidators.EnumeratedValidator):
+# # import _plotly_study_utils.basevalidators
+# # import plotly_study
+# # class TickTextSideValidator2(_plotly_study_utils.basevalidators.EnumeratedValidator):
 # #     def __init__(
-# #         self, plotly_name="ticktextside", parent_name="scatter.marker.colorbar", **kwargs
+# #         self, plotly_study_name="ticktextside", parent_name="scatter.marker.colorbar", **kwargs
 # #     ):
 # #         super(TickTextSideValidator2, self).__init__(
-# #             plotly_name=plotly_name,
+# #             plotly_study_name=plotly_study_name,
 # #             parent_name=parent_name,
 # #             edit_type=kwargs.pop("edit_type", "colorbars"),
 # #             implied_edits=kwargs.pop("implied_edits", {}),
@@ -505,7 +505,7 @@ from ..utils import setattrAndReturnSelf
 # #             values=kwargs.pop("values", ["right", "left"]),
 # #             **kwargs
 # #         )
-# # from plotly.validators.scatter.marker import colorbar as vCol
+# # from plotly_study.validators.scatter.marker import colorbar as vCol
 # # vCol.TickTextSideValidator= TickTextSideValidator2
 # go.scatter.marker.ColorBar.OLD__INIT__=go.scatter.marker.ColorBar.__init__
 # function ttt(l, tab=""){

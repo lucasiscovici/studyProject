@@ -1,5 +1,5 @@
-import plotly.figure_factory as ff
-from plotly import offline
+import plotly_study.figure_factory as ff
+from plotly_study import offline
 from ..utils import F, merge
 import pandas as pd
 def table_plot(self,filename="table_plot",

@@ -174,13 +174,13 @@ def disable_plotly_in_cell():
 
 def enable_plotly_in_cell():
     import IPython
-    from plotly.offline import init_notebook_mode
+    from plotly_study.offline import init_notebook_mode
     display(IPython.core.display.HTML('''<script src="/static/components/requirejs/require.js"></script>'''))
     init_notebook_mode(connected=False)
 def plotly_google_colab():
     get_ipython().events.register('pre_run_cell', enable_plotly_in_cell)
 
-import plotly.figure_factory as ff
+import plotly_study.figure_factory as ff
 def pdViz(self):
     def to_heatmap(colorscale="Greys",reversescale=False):
         mat=ff.create_annotated_heatmap(z=self.values,x=self.columns.tolist(),y=self.index.tolist(),
