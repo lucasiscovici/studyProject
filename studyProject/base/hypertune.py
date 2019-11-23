@@ -1,6 +1,6 @@
-from skopt import BayesSearchCV
-import skopt
-from skopt.plots import plot_convergence, plot_regret, plot_evaluations, plot_objective
+# from skopt import BayesSearchCV
+# import skopt
+# from skopt.plots import plot_convergence, plot_regret, plot_evaluations, plot_objective
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from ..base.base import Base, factoryCls
