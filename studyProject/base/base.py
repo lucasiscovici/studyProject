@@ -331,6 +331,8 @@ class Base(object):
             filo=filos+".partial"
             patho=SaveLoad.save(self,filo,chut=chut,addExtension=False,**xargs)
             # print(patho)
+            if patho is None:
+                raise Exception("ERROR patho")
             Base.__listFilesAndTar(dirTmp,patho,filos)
             os.remove(patho)
     

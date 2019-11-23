@@ -237,6 +237,7 @@ class HyperTune(Base):
                         **optsFit)
             except Exception as e:
                 print("fitErr",e)
+                raise e
 
         res=Tuned()
         resultat=obj.cv_results_

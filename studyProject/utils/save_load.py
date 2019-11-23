@@ -67,4 +67,5 @@ class SaveLoad:
                     ty="[SaveLoad load] Saving OLD FileName {}".format(name)
                     with showWarningsTmp:
                         warnings.warn(ty)
+            if not chut:
                 raise e
