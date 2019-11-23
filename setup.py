@@ -34,10 +34,10 @@ setup(
         'scikit-learn==0.20.3',
         'numpy==1.16.2',
         'python-interface==1.5.1',
-        'plotly_study @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly_study',
-        'cvopt_study @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt_study',
+        'plotly-study @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly_study',
+        'cvopt-study @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt_study',
         'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
-        'snakeviz_study @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz_study',
+        'snakeviz-study @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz_study',
 
     ]
 )
