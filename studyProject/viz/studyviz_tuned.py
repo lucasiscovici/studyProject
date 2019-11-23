@@ -3,7 +3,7 @@ import plotly.figure_factory as ff
 # from studyPipe import df_
 import plotly.colors as pcol
 # import plotly.figure_factory as ff
-from studyPipeGit import df_,X_
+from studyPipe import df_,X_
 import numpy as np
 from plotly import graph_objs as go
 from ..utils import T,F,namesEscape, merge, zipl
