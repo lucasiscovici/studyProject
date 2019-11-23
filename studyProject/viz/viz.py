@@ -10,7 +10,7 @@ import cufflinks_study as cf
 #     # print(plotlyjs)
 #     return plotlyjs
 
-# from plotly import offline
+# from plotly_study  import offline
 # import plotly
 # plotly.offline.offline.get_plotlyjs=get_plotlyjs2
 # offline.get_plotlyjs=get_plotlyjs2
