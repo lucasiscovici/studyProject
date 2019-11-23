@@ -32,7 +32,7 @@ setup(
     packages=find_packages(exclude=[]),
     install_requires=[
         'scikit-learn==0.20.3',
-        'numpy==1.16.2',
+        'numpy==1.17.4',
         'python-interface==1.5.1',
         'cufflinks-study @ git+git://github.com/lucasiscovici/cufflinks#egg=cufflinks_study',
         'plotly-study @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly_study',
