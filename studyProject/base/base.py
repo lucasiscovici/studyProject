@@ -613,7 +613,7 @@ class Base(object):
         # if normalNEW:
         rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,dirs=dirs,*args,**xargs)
         # rep=cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
-        if rep is not None:
+        if rep is not None and isinstance(rep,Base):
             rep.restoreDir(dirs)
         return cls._import(rep)
 

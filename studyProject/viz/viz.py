@@ -1,4 +1,4 @@
-import cufflinks as cf
+import cufflinks_study as cf
 # import plotly_express as pe
 # import os
 # import pkgutil

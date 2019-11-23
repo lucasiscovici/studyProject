@@ -4,8 +4,8 @@ from ..utils import StudyClass,namesEscape
 from . import Viz
 from .studyviz_crossvaliditem import Study_CrossValidItem_Viz
 from plotly_study.subplots import make_subplots
-import cufflinks as cf
-from cufflinks.tools import get_len
+import cufflinks_study as cf
+from cufflinks_study.tools import get_len
 from plotly_study.offline import iplot
 import plotly_study.graph_objs as go
 from functools import reduce
