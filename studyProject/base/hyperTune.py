@@ -79,10 +79,11 @@ class Tuned(Base):
         self.middbk=middbk
 
     def addDirToSave(self):
-        # print(self.logdir)
+        # print("addDirToSave",self.logdir)
         return [self.logdir]
 
-    def restoreDir(logdir):
+    def restoreDir(self,logdir):
+        print(logdir,self.logdir)
         if len(logdir) >0 and self.logdir in logdir:
             self.logdir=logdir[self.logdir]
 
@@ -105,10 +106,18 @@ class TunedL(Base):
 factoryCls.register_class(Tuned)
 class HyperTune(Base):
     EXPORTABLE=["tuned","_namesCurr","_modelCurr"]
-    TYPES_=["random","grid","bayes","bayesopt","bayes_rf","bayes_gp","bayes_dummy","bayes_et","bayes_gbrt"]
+    TYPES_GRID=["grid"]
+    TYPES_RANDOM=["random","randomopt","dummy"]
+    TYPES_BAYES_GP=["bayes","bayesopt","bayes_gp","bayesopt_gp"]
+    TYPES_BAYES=TYPES_BAYES_GP
+    TYPES_GA=["ga","gaopt","evo","genetic"]
+    TYPES_HYPER=["hyper","hyperopt","tpe"]
+    TYPES_SIMPLE=["simple"]
+    TYPES_=TYPES_RANDOM+TYPES_GRID+TYPES_BAYES+TYPES_GA+TYPES_HYPER+TYPES_SIMPLE
+
     def __init__(self, tuned:Dict[str,TunedL]=None,ID=None):
         super().__init__(ID=ID)
-        self.tuned=studyDico({},default=TunedL(),papa=self,addPapaIf=lambda c:instance(c,Base),attr="tuned") if tuned is None else tuned
+        self.tuned=studyDico({},default=TunedL(),papa=self,addPapaIf=lambda c:isinstance(c,Base),attr="tuned") if tuned is None else tuned
         self._namesCurr=None
         self._modelCurr=None
 
@@ -159,7 +168,7 @@ class HyperTune(Base):
         y_test=np.array(self.papa.y_test.tolist())
         obj=None
         # print("typeOfTune",typeOfTune)
-        if typeOfTune == "grid":
+        if typeOfTune in HyperTune.TYPES_GRID:
             deff=dict(n_jobs=-1,return_train_score=True)
             opts=merge(deff,opts,add=False)
             obj=GridSearchCV(model,hyper_params_,**opts)
@@ -168,25 +177,25 @@ class HyperTune(Base):
             argsALL=dict(model=model,hyper_params=hyper_params,hyper_params_=hyper_params_,**opts)
             argsALL["optsFit"]=optsFit
 
-        elif typeOfTune in ["bayes","bayes_gp","bayesopt","bayesopt_gp"]:
+        elif typeOfTune in HyperTune.TYPES_BAYES:
             bk="bayesopt"
             argus= dict(model_type="GP")
 
-        elif typeOfTune in ["random","randomopt"]:
+        elif typeOfTune in HyperTune.TYPES_RANDOM:
             bk="randomopt"
 
-        elif typeOfTune in  ["gaopt", "ga", "genetic", "evo"]:
+        elif typeOfTune in  HyperTune.TYPES_GA:
             bk="gaopt"
 
-        elif typeOfTune in  ["hyperopt","hyper","tpe"]:
+        elif typeOfTune in  HyperTune.TYPES_HYPER:
             bk="hyperopt"
-        elif typeOfTune in ["simple"] and "backend" not in opts:
+        elif typeOfTune in HyperTune.TYPES_SIMPLE and "backend" not in opts:
             warnings.warn("""
                 when typeOfTune is simple-> backend must be set (default: random)
                 """)
             bk="randomopt"
 
-        elif typeOfTune in ["simple"] and "backend" in opts:
+        elif typeOfTune in Base.TYPES_SIMPLE and "backend" in opts:
             warnings.warn("""
                 when typeOfTune is simple-> backend must be set (default: random)
                 """)

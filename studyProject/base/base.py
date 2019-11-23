@@ -22,7 +22,7 @@ from plotly.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
-from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, studyList
+from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, studyList, TMP_DIR
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -278,7 +278,7 @@ class Base(object):
         print(dirFiles)
         print(sv)
         if dirFiles is not None:
-            ooo=[sv]+[dirFiles]
+            ooo=[sv]+list(dirFiles)
             tt="\n".join(dirFiles)
             io=TMP_DIR()
             iof=io.get()
@@ -291,7 +291,7 @@ class Base(object):
         patho=Base.DEFAULT_PATH+"/"+Base.DEFAULT_PATH_FTS+"/"+randomString() if patho is None else patho
         print(patho)
         print(ooo)
-        pathoTar=make_tarfile(patho,ooo)
+        pathoTar=make_tarfile(patho,ooo,ext="bz2")
         if dirFiles is not None:
             io.delete()
         return pathoTar
@@ -332,7 +332,7 @@ class Base(object):
             patho=SaveLoad.save(self,filo,chut=chut,addExtension=False,**xargs)
             # print(patho)
             Base.__listFilesAndTar(dirTmp,patho,filos)
-            # os.remove(patho)
+            os.remove(patho)
     
     def save(self,
              repertoire=None,
@@ -400,7 +400,7 @@ class Base(object):
             # print(filo)
             # yyy=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
             yyy=filo
-            res=read_tarfile(yyy)
+            res=read_tarfile(yyy,ext="bz2")
             gg4={}
             # print(res)
             # print(os.path.isfile(res+"/dirs.txt"))
@@ -408,19 +408,20 @@ class Base(object):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
-                # print(gg2)
+                print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
                     uu=u.get()
                     hu.append(uu)
-                    print(res+"/"+j)
-                    shutil.move(res+"/"+j, uu) 
+                    # print(res+"/"+j)
+                    j2=os.path.basename(j)
+                    shutil.move(res+"/"+j2, uu) 
                 # print(gg2)
                 gg4=dict(zip(gg2,hu))
-                # print(gg4)
+                print(gg4)
             filo=res+"/"+os.path.basename(yyy)+".partial"
-            # print(filo)
+            print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
             return (resu,gg4)
         except Exception as e:
@@ -662,17 +663,19 @@ class Base(object):
     def __export(cls,obj,dirAdded=[]):
         # print(type(obj))
         # print(isinstance(type(obj),Base))
+        # print("ici2",dirAdded,cls)
         if isinstance(obj,list) or isinstance(obj,tuple):
             return [ cls.__export(i,dirAdded=dirAdded) for i in obj ]
         elif isinstance(obj,dict):
             return {k:cls.__export(v,dirAdded=dirAdded) for k,v in obj.items()}
         if isinstance(obj,Base):
-            print(type(dirAdded))
+            # print("__export",type(dirAdded))
             # print(obj)
             dirAdded.extend( obj.addFileToSave() )
             dirAdded.extend(  obj.addDirToSave() )
-            print(dirAdded)
-            print(obj.__class__.__name__)
+            # print(dirAdded)
+            # print(obj.__class__.__name__)
+            # print("__export END")
             rep=obj.export(save=False,dirAdded=dirAdded)
             rep["____cls"]=obj.__class__.__name__
             # rep.update({"____cls":obj.__class__.__name__})
@@ -691,6 +694,7 @@ class Base(object):
             print(cls.__name__)
             print(obj)
             raise e
+        # print("ici",dirAdded,cls)
         rep={ k:cls.__export(v,dirAdded=dirAdded) 
                 for k,v in rep.items() if k not in papaExport
             }
@@ -725,6 +729,7 @@ class Base(object):
                     #         continue
                     jj=i.EXPORTABLE==cls.EXPORTABLE
                     sameExport|=jj
+                    # print("export",i)
                     op=i.Export(obj,save=False,papaExport=cls.EXPORTABLE if not jj else [],dirAdded=dirAdded)
                     papa=merge_two_dicts(papa,op)
             # except Exception as e:
@@ -735,8 +740,11 @@ class Base(object):
             #     raise e
 
         # print(\cls/\__name__)
+        # print(dirAdded,cls)
         rep  = cls._export(obj,papaExport=papaExport,dirAdded=dirAdded)
         rep  = merge_two_dicts(papa,rep)
+        dirAdded.extend(  obj.addDirToSave() )
+        dirAdded.extend(  obj.addFileToSave() )
         return rep
 
     @staticmethod
@@ -745,7 +753,7 @@ class Base(object):
         if version is not None:
             rep["__version__"]=version
         # print(rep.keys())
-        print(dirAdded)
+        # print(dirAdded)
         if save:
 
             dirAdded=set(dirAdded)
