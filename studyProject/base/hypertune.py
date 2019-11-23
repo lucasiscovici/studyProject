@@ -86,6 +86,7 @@ class Tuned(Base):
         print(logdir,self.logdir)
         if len(logdir) >0 and self.logdir in logdir:
             self.logdir=logdir[self.logdir]
+factoryCls.register_class(Tuned)
 
 class TunedL(Base):
     EXPORTABLE=["dico"]
@@ -103,7 +104,8 @@ class TunedL(Base):
             self.dico=studyDico({},papa=self,addPapaIf=lambda c:isinstance(c,Base),attr="dico")
         self.dico[n]=v
 
-factoryCls.register_class(Tuned)
+factoryCls.register_class(TunedL)
+
 class HyperTune(Base):
     EXPORTABLE=["tuned","_namesCurr","_modelCurr"]
     TYPES_GRID=["grid"]
