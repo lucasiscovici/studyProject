@@ -510,7 +510,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             classif = self.isClassif
             super().setDataTrainTest(X_train,y_train,X_test,y_test,classif=classif)
 
-    def proprocessDataFromProject(self,fn=None,force=False):
+    def proprocessDataFromProject(self,fn=None,force=False,pipeline=None):
         classif = self.isClassif
         if self.isProcessedDataFromProject and not force:
             raise Exception("[BaseSuperviseProject proprocessDataFromProject] processing deja fait pour les données du projet (et force est à False)")
@@ -520,6 +520,8 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             # self._proprocessDataFromProjectFnOpts=dict(classif=classif)
             super().setDataTrainTest(*fn(*self._datas.get(deep=True,optsTrain=dict(withNamesY=False))),classif=classif)
             self._isProcessedDataFromProject = True
+        if pipeline is not None:
+            super().setPipeline(pipeline)
 
     def check(self):
          if not self.isProcessedDataFromProject and self.proprocessDataFromProjectFn is not None:

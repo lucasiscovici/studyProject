@@ -1199,11 +1199,11 @@ class BaseSupervise(Base):
     isClassif=False
     cvrCls=CvResultats
     cviCls=CrossValidItem
-    EXPORTABLE=["datas","models","metric","cv","nameCvCurr","hypertune"]
+    EXPORTABLE=["datas","models","metric","cv","nameCvCurr","hypertune","pipeline"]
     EXPORTABLE_ARGS=dict(underscore=True)
     def __init__(self,ID=None,datas:DatasSupervise=None,
                     models:Models=None,metric:Metric=None,hypertune:HyperTune=None,
-                    cv:Dict[str,CrossValidItem]=studyDico({}),nameCvCurr=None,
+                    cv:Dict[str,CrossValidItem]=studyDico({}),nameCvCurr=None,pipeline=None,
                     *args,**xargs):
         super().__init__(ID)
         self._datas=datas
@@ -1213,6 +1213,7 @@ class BaseSupervise(Base):
         self._nameCvCurr=nameCvCurr
         self._hypertune=HyperTune() if hypertune is None else hypertune
         # self._isClassif=False
+        self._pipeline=pipeline
         self.init()
     
     # @property
@@ -1428,6 +1429,8 @@ class BaseSupervise(Base):
         cl._cv=studyDico(cl.cv,papa=self,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
         return cl
 
+    def setPipeline(self,pipeline):
+        self._pipeline=pipeline
 
 
 def getDecFn(l,X):
