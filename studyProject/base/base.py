@@ -22,7 +22,7 @@ from plotly_study.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
-from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, studyList, TMP_DIR
+from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, StudyList,studyList, TMP_DIR
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -333,8 +333,10 @@ class Base(object):
             # print(patho)
             if patho is None:
                 raise Exception("ERROR patho")
-            Base.__listFilesAndTar(dirTmp,patho,filos)
-            os.remove(patho)
+            try:
+                Base.__listFilesAndTar(dirTmp,patho,filos)
+            finally:
+                os.remove(patho)
     
     def save(self,
              repertoire=None,
@@ -410,7 +412,7 @@ class Base(object):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
-                print(gg2)
+                # print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
@@ -421,9 +423,9 @@ class Base(object):
                     shutil.move(res+"/"+j2, uu) 
                 # print(gg2)
                 gg4=dict(zip(gg2,hu))
-                print(gg4)
+                # print(gg4)
             filo=res+"/"+os.path.basename(yyy)+".partial"
-            print(filo)
+            # print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
             return (resu,gg4)
         except Exception as e:
@@ -767,7 +769,8 @@ class Base(object):
     def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[],dirAdded=[]):
         return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport,dirAdded=dirAdded)
 
-    def export(self,save=True,dirAdded=studyList([]),*args,**xargs):
+    def export(self,save=True,dirAdded=[],*args,**xargs):
+        dirAdded=studyList(dirAdded) if not isinstance(dirAdded,StudyList) else dirAdded
         # print(self.__class__.__name__)
         # print(self)
         return self.__class__.Export(self,save,version=__version__,dirAdded=dirAdded,*args,**xargs)

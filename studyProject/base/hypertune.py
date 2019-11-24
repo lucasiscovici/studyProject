@@ -37,16 +37,16 @@ def check_dimension(dimension,name):
     # to define subspaces that fix one value, e.g. to choose the
     # model type, see "sklearn-gridsearchcv-replacement.ipynb"
     # for examples.
-    if len(dimension) == 1:
+    if len(dimension) == 1 and isinstance(dimension,list):
         return search_category(dimension)
 
     if len(dimension) == 2:
         if any([isinstance(d, (str, bool)) or isinstance(d, np.bool_)
-                for d in dimension]):
+                for d in dimension]) and isinstance(dimension,list):
             return search_category(dimension)
-        elif all([isinstance(dim, numbers.Integral) for dim in dimension]):
+        elif all([isinstance(dim, numbers.Integral) for dim in dimension]) and isinstance(dimension,tuple):
             return search_numeric(dimension[0],dimension[1],"integer")
-        elif any([isinstance(dim, numbers.Real) for dim in dimension]):
+        elif any([isinstance(dim, numbers.Real) for dim in dimension]) and isinstance(dimension,tuple):
             return search_numeric(dimension[0],dimension[1],"float")
         else:
             raise ValueError("Invalid dimension {}. Read the documentation for"
@@ -54,15 +54,16 @@ def check_dimension(dimension,name):
 
     if len(dimension) == 3:
         if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and
-            dimension[2] in ["uniform", "log-uniform"]):
+            dimension[2] in ["uniform", "log-uniform"]) and isinstance(dimension,tuple):
             warnings.warn("""
                 not Implemented [uniform,log-uniform]
                 """)
             return search_numeric(dimension[0],dimension[1],"float")
         else:
-            return search_category(dimension)
+            if isinstance(dimension,list):
+                return search_category(dimension)
 
-    if len(dimension) > 3:
+    if len(dimension) > 3 and isinstance(dimension,list):
         return search_category(dimension)
 
     raise ValueError("Invalid dimension {}. Read the documentation for "
@@ -135,8 +136,8 @@ class HyperTune(Base):
         return self.tuned[self._modelCurr][self._namesCurr]
     
     def tune(self,mod,hyper_params,typeOfTune="random",cv=3,scoring="accuracy",
-                    max_iter=20,n_jobs=-1,verbose=0,logdir=None, #logdir = False if not save 
-                    save_estimator=2,opts={},optsFit={}):
+                    max_iter=20,n_jobs=-1,verbose=2,logdir=None, #logdir = False if not save 
+                    save_estimator=0,opts={},optsFit={}):
         """
         typeOfTune: "random" RandomizedSearchCV, "grid" GridSearchCV, "bayes" or "bayes_gp" BayesSearchCV ["Gaussian Process"], "bayes_rf" BayesSearchCV ["Random Forest"], "bayes_dummy" BayesSearchCV ["Dummy"], "bayes_et" BayesSearchCV ["Extra Trees"], "bayes_gbrt" BayesSearchCV ["gradient boosted trees"]
         """

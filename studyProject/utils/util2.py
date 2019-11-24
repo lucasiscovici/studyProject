@@ -192,6 +192,7 @@ def removeDefaults(destination,defaults):
     return destination2
 def randomString(stringLength=10):
     """Generate a random string of fixed length """
+    import string, random
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
 

@@ -7,7 +7,7 @@ import cufflinks_study as cf
 #     path = os.path.join("package_data", "plotly.min.js")
 #     plotlyjs = pkgutil.get_data("studyProjectGit", path).decode("utf-8")
 #     # print("icicicici")
-#     # print(plotlyjs)
+#     # print(plotlyjs) 
 #     return plotlyjs
 
 # from plotly_study  import offline

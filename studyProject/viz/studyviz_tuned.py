@@ -286,7 +286,7 @@ class Study_Tuned_Viz(Viz):
                     if len(comb) == iio:
                         lay["coloraxis"]=ip
                         fig["layout"]= merge(fig["layout"].to_plotly_json(),lay,add=False)
-                        return fromCombiToplot(fig.update_layout(showlegend=False),comb,nbCols)
+                        return fromCombiToplot(fig.update_layout(showlegend=False),comb,nbCols).update_layout(width=1500,height=1500,margin=dict(t=300))
             # return fig
             # raise NotImplementedError() 
         else:
