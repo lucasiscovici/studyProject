@@ -176,7 +176,7 @@ class StudyProject(Base):
         # repos=cls.build_repertoire(repertoire,path=os.getcwd(),dp=cls.DEFAULT_PATH if not noDefaults else "",delim="/",
                             # fn=lambda: StudyProject(ID),returnFn=True)
         repos,(ok,filo)=cls.build_rep_ext(repertoire,ext,ID,dp=cls.DEFAULT_PATH if not noDefaults else "",
-                                            chut=chut,recreate=recreate,returnFn=True,fn=lambda: StudyProject(ID))
+                                            chut=chut,recreate=recreate,returnFn=True,fn=lambda repo: StudyProject(ID))
         # print(repos)
         # print(ok)
         # print(filo)
