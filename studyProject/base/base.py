@@ -406,24 +406,24 @@ class Base(object):
             yyy=filo
             res=read_tarfile(yyy,ext="bz2")
             gg4={}
-            # print(res)
-            # print(os.path.isfile(res+"/dirs.txt"))
+            print(res)
+            print(os.path.isfile(res+"/dirs.txt"))
             if os.path.isfile(res+"/dirs.txt"):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
-                # print(gg2)
+                print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
                     uu=u.get()
                     hu.append(uu)
-                    # print(res+"/"+j)
+                    print(res+"/"+j)
                     j2=os.path.basename(j)
                     shutil.move(res+"/"+j2, uu) 
                 # print(gg2)
                 gg4=dict(zip(gg2,hu))
-                # print(gg4)
+                print(gg4)
             filo=res+"/"+os.path.basename(yyy)+".partial"
             # print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
@@ -637,7 +637,7 @@ class Base(object):
         loaded,dirs=cls.Load(ID,repertoire,
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
-        # print("ici")
+        print("dirs",dirs)
         if "__version__" in loaded:
             if loaded["__version__"] != __version__:
                 warnings.warn(
@@ -767,6 +767,7 @@ class Base(object):
         return rep
     @classmethod
     def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[],dirAdded=[]):
+        dirAdded=studyList(dirAdded) if not isinstance(dirAdded,StudyList) else dirAdded
         return cls.Export__(cls,obj,save=save,version=version,saveArgs=saveArgs,papaExport=papaExport,dirAdded=dirAdded)
 
     def export(self,save=True,dirAdded=[],*args,**xargs):

@@ -137,7 +137,7 @@ class HyperTune(Base):
     
     def tune(self,mod,hyper_params,typeOfTune="random",cv=3,scoring="accuracy",
                     max_iter=20,n_jobs=-1,verbose=2,logdir=None, #logdir = False if not save 
-                    save_estimator=0,opts={},optsFit={}):
+                    save_estimator=0,opts={},optsFit={},ID=None):
         """
         typeOfTune: "random" RandomizedSearchCV, "grid" GridSearchCV, "bayes" or "bayes_gp" BayesSearchCV ["Gaussian Process"], "bayes_rf" BayesSearchCV ["Random Forest"], "bayes_dummy" BayesSearchCV ["Dummy"], "bayes_et" BayesSearchCV ["Extra Trees"], "bayes_gbrt" BayesSearchCV ["gradient boosted trees"]
         """
@@ -242,7 +242,7 @@ class HyperTune(Base):
                 print("fitErr",e)
                 raise e
 
-        res=Tuned()
+        res=Tuned(ID)
         resultat=obj.cv_results_
         res.resultat=pd.DataFrame(resultat)
         res.obj=obj
