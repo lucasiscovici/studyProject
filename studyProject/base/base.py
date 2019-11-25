@@ -16,9 +16,8 @@ import pandas as pd
 from interface import implements, Interface
 from abc import ABCMeta, abstractmethod, ABC
 from ..version import __version__
-from studyPipe.pipes import *
-from studyPipe import config
-config.globalsFn=lambda:globals()
+from studyPipe import *
+
 from plotly_study.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
@@ -638,7 +637,7 @@ class Base(object):
         loaded,dirs=cls.Load(ID,repertoire,
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
-        print("dirs",dirs)
+        # print("dirs",dirs)
         if "__version__" in loaded:
             if loaded["__version__"] != __version__:
                 warnings.warn(
@@ -828,18 +827,19 @@ class Base(object):
 
     #         s.replace(self.namesY)
             # {False:"Pas5",True:"5"}
-
+import pandas_profiling_study as pdp
 class Datas(Base):
-    EXPORTABLE=["X","y"]
+    EXPORTABLE=["X","y","eda"]
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,ID=None):
+    def __init__(self,X=None,y=None,eda=None,ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
+        self.eda=eda
 
-    def get(self,withNamesY=False):
-        return [self.X,self.y]
+    def get(self,withNamesY=False,concat=False):
+        return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
 
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
@@ -848,6 +848,10 @@ class Datas(Base):
         stri=txt[:-1]+nt+"X : {},"+nt+"y : {}]"
         return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None)
 
+    def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
+        if self.eda is None:
+            self.eda=pdp.ProfileReport(self.get(concat=concat),sections=sections)
+        return self.eda.change_sections(sections)
 
 factoryCls.register_class(Datas)
 

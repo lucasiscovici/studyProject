@@ -39,6 +39,6 @@ setup(
         'cvopt-study @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt_study',
         'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
         'snakeviz-study @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz_study',
-
+        'pandas-profiling-study @ git+git://github.com/lucasiscovici/pandas-profiling-study#egg=pandas_profiling_study'
     ]
 )

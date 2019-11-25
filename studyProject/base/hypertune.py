@@ -155,10 +155,10 @@ class HyperTune(Base):
         hyper_params=self.hyper_params
         modsN=self.papa._models.mappingNamesModelsInd
         mid=self.papa._models.ID
-        midd=lambda bk:str(mid)+"_"+bk+"_"+randomString()
         modsN2=self.papa._models.namesModels
         mod=modsN[mod] if isStr(mod) else mod
         modelName=mod if isStr(mod) else modsN2[mod]
+        midd=lambda bk:str(mid)+"_"+modelName+"_"+bk+"_"+randomString()
         skip=False
         ## TUNINSSS
         if typeOfTune not in self.TYPES_:
