@@ -276,22 +276,22 @@ class Base(object):
     @staticmethod
     def __listFilesAndTar(dirFiles,sv,patho=None):
         ooo=[sv]
-        print(dirFiles)
-        print(sv)
+        # print(dirFiles)
+        # print(sv)
         if dirFiles is not None:
             ooo=[sv]+list(dirFiles)
             tt="\n".join(dirFiles)
             io=TMP_DIR()
             iof=io.get()
-            print(iof)
-            print(iof+"/"+Base.DEFAULT_DIRS)
+            # print(iof)
+            # print(iof+"/"+Base.DEFAULT_DIRS)
             with open(iof+"/"+Base.DEFAULT_DIRS,"w") as f:
                 f.write(tt)
             u=iof+"/"+Base.DEFAULT_DIRS
             ooo=[u]+ooo
         patho=Base.DEFAULT_PATH+"/"+Base.DEFAULT_PATH_FTS+"/"+randomString() if patho is None else patho
-        print(patho)
-        print(ooo)
+        # print(patho)
+        # print(ooo)
         pathoTar=make_tarfile(patho,ooo,ext="bz2")
         if dirFiles is not None:
             io.delete()
@@ -407,24 +407,24 @@ class Base(object):
             yyy=filo
             res=read_tarfile(yyy,ext="bz2")
             gg4={}
-            print(res)
-            print(os.path.isfile(res+"/dirs.txt"))
+            # print(res)
+            # print(os.path.isfile(res+"/dirs.txt"))
             if os.path.isfile(res+"/dirs.txt"):
                 with open(res+"/dirs.txt","r") as f:
                     gg=f.readlines()
                 gg2=set([i.rstrip("\n\r") for i in gg])
-                print(gg2)
+                # print(gg2)
                 hu=[]
                 for j in gg2:
                     u=TMP_DIR()
                     uu=u.get()
                     hu.append(uu)
-                    print(res+"/"+j)
+                    # print(res+"/"+j)
                     j2=os.path.basename(j)
-                    shutil.move(res+"/"+j2, uu) 
+                    shutil.move(res+"/"+j2+"/*", uu) 
                 # print(gg2)
                 gg4=dict(zip(gg2,hu))
-                print(gg4)
+                # print(gg4)
             filo=res+"/"+os.path.basename(yyy)+".partial"
             # print(filo)
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)

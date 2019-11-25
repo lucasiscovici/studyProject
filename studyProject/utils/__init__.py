@@ -22,3 +22,7 @@ from .format import format_perc
 from .progress_bar import LogProgress, ProgressBarCalled
 from .tempdir import TMP_DIR
 from .tgz import make_tarfile, read_tarfile
+
+import operator
+import functools
+import itertools
