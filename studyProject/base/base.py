@@ -836,7 +836,8 @@ class Datas(Base):
         super().__init__(ID)
         self.X=X
         self.y=y
-        self.eda=eda
+        self.eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"]))
+
 
     def get(self,withNamesY=False,concat=True):
         return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
@@ -851,7 +852,7 @@ class Datas(Base):
     #TODO: plotly chart in pdp
     def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
         if self.eda is None:
-            self.eda=pdp.ProfileReport(self.get(concat=concat),sections=sections)
+            self.eda=pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"])
         return self.eda.change_sections(sections)
 
 factoryCls.register_class(Datas)
