@@ -838,7 +838,7 @@ class Datas(Base):
         self.y=y
         self.eda=eda
 
-    def get(self,withNamesY=False,concat=False):
+    def get(self,withNamesY=False,concat=True):
         return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
 
     def __repr__(self,ind=1):
@@ -848,6 +848,7 @@ class Datas(Base):
         stri=txt[:-1]+nt+"X : {},"+nt+"y : {}]"
         return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None)
 
+    #TODO: plotly chart in pdp
     def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
         if self.eda is None:
             self.eda=pdp.ProfileReport(self.get(concat=concat),sections=sections)
