@@ -206,7 +206,7 @@ class HyperTune(Base):
 
         if not skip:
             argus= dict(backend=bk)
-            middbk=midd(bk)
+            middbk=midd(bk) if ID is None else ID
             obj = SimpleoptCV(model, hyper_params, 
                          scoring=scoring,              # Objective of search
                          cv=cv,                          # Cross validation setting

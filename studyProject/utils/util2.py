@@ -263,20 +263,35 @@ class changeTmpObj:
     def __exit__(self, type, value, traceback):
         setattr(self.obj,self.attr,self.v)
 
+def fnRien(*args,**xargs):
+    return 
 
+def fnReturn(a):
+    return lambda *args,**xargs : a
 
 class ShowWarningsTmp:
+
+    def __init__(self):
+        self.o=warnings.catch_warnings()
     def __enter__(self):
-        self.w=getWarnings()
+        u=self.o.__enter__()
         onWarnings()
+        return u
     def __exit__(self, type, value, traceback):
-        setWarnings(self.w)
+        op=self.o.__exit__(type,value,traceback)
+        self.o=warnings.catch_warnings()
+        return op
 class HideWarningsTmp:
+    def __init__(self):
+        self.o=warnings.catch_warnings()
     def __enter__(self):
-        self.w=getWarnings()
+        u=self.o.__enter__()
         offWarnings()
+        return u
     def __exit__(self, type, value, traceback):
-        setWarnings(self.w)
+        op=self.o.__exit__(type,value,traceback)
+        self.o=warnings.catch_warnings()
+        return op
 
 hideWarningsTmp=HideWarningsTmp()
 showWarningsTmp=ShowWarningsTmp()

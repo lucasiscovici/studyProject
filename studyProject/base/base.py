@@ -9,6 +9,7 @@ from sklearn.model_selection import cross_validate
 import numpy as np
 import copy
 import os
+from tqdm import tqdm
 import shutil 
 import warnings
 import pandas as pd
@@ -22,7 +23,7 @@ from plotly_study.subplots import make_subplots
 from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
-from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, StudyList,studyList, TMP_DIR
+from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, StudyList,studyList, TMP_DIR, showWarningsTmp
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -801,7 +802,7 @@ class Base(object):
         if key.startswith('__') and key.endswith('__'):
             return super().__getattr__(key)
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
-        else: raise AttributeError()
+        else: raise AttributeError(a)
 # factoryCls.register_class(Base)
 
 # class NamesY(Base):
@@ -863,7 +864,7 @@ class DatasSupervise(Base):
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):
         return cls(cls.D(X_train,y_train),
                               cls.D(X_test,y_test),ID)
-    def get(self,deep=False,optsTrain={},optsTest={}):
+    def get(self,deep=True,optsTrain={},optsTest={}):
         if deep:
             return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
         return [self.dataTrain,self.dataTest]
@@ -968,6 +969,15 @@ class CvResultatsTrVal(Base):
         self.Tr=Tr
         self.Val=Val
 factoryCls.register_class(CvResultatsTrVal)
+
+class addPbToData():
+    def __init__(self, data):
+        self.data = data
+
+    def __iter__(self):
+        for train, test in tqdm(self.data):
+            yield train, test
+
 class CvSplit(Base):
     """docstring for CvSplit"""
     EXPORTABLE=["train","validation","all_"]
@@ -1131,18 +1141,18 @@ class CrossValid(Base):
             if a=="y":
                 return True
             else:
-                nn=newStringUniqueInDico(name,dict(zip(names,[None]*len(names))))
+                nn=newStringUniqueInDico(names,dict(zip(names,[None]*len(names))))
                 with ShowWarningsTmp():
                     warnings.warn("[CrossValid checkOK] name '{}' is already take, mtn c'est '{}'".format(self.nameCV,nn))
                 self.nameCV=nn
         return True
             
-    def computeCV(self,X,y,**xargs):
+    def computeCV(self,X,y,verbose=0,**xargs):
         if not isinstance(self.cv,CvSplit):
             self.cv = self.cv.split(X,y)
             self.cv=CvSplit.fromCvSplitted(self.cv)
         cv=self.cv
-        cvo=self.crossV(X,y,**xargs)
+        cvo=self.crossV(X,y,verbose=verbose,**xargs)
         cl=self.cviCls
         ki=cl(self.nameCV,cv,cvo,self.argu)
         return (self.nameCV,ki)
@@ -1164,9 +1174,11 @@ class CrossValid(Base):
                            
         cvvTrCon=np.argsort(np.concatenate(cvvTr))
         cvvValCon=np.argsort(np.concatenate(cvvVal))
-        
+        cvvAll=cvv.all_
+        cvvAll=addPbToData(cvvAll) if verbose >0 else cvvAll
+        verbose = verbose if  verbose >1 else 0
         resu2=[cross_validate(mod ,X,y,return_train_score=True,
-                            return_estimator=True,cv=cvv.all_,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
+                            return_estimator=True,cv=cvvAll,n_jobs=ifelse(parallel,n_jobs),verbose=verbose,scoring=metric) for mod in models]
 
         preduVal=[[i.predict(X[k,:]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
                            
@@ -1243,7 +1255,15 @@ class BaseSupervise(Base):
         self._datas=D.from_XY_Train_Test(X_train,y_train,
                                           X_test,y_test)
 
-    def setModels(self,models,*args,**xargs):
+    def setModels(self,models,force=False,*args,**xargs):
+        if self._models is not None and not force:
+            with showWarningsTmp:
+                warnings.warn("""
+                        Models are alreary present in the study.
+                        If you want to add models and computeCv -> addModelsToCurrCV(models)
+                        If you want to force, set force=True (warnings CVs are based on this models)
+                    """)
+            return
         self._models=Models(models,*args,**xargs)
 
     def setMetric(self,metric):
@@ -1251,7 +1271,7 @@ class BaseSupervise(Base):
 
     def computeCV(self,cv=5,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=None,
-                 models=None,**xargs):
+                 models=None,verbose=0,**xargs):
         _models=models
         _metric=metric
         if models is not None:
@@ -1268,7 +1288,7 @@ class BaseSupervise(Base):
                  models=models,namesMod=namesMod,_models=_models,_metric=_metric,cviCls=self.cviCls,
                  cvrCls=self.cvrCls,papa=self)
         cv.checkOK(list(self.cv.keys()))
-        resu=cv.computeCV(self.X_train,self.y_train)
+        resu=cv.computeCV(self.X_train,self.y_train,verbose=verbose,**xargs)
         self._cv[resu[0]]=resu[1]
         self._nameCvCurr=resu[0]
         

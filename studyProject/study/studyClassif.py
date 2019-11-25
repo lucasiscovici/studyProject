@@ -340,7 +340,16 @@ class BSClassif:
             r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in cv_res.items()}) 
 
         return r
-   
+    def addDummiesModels(self,verbose=1,names=None,*args,**xargs):
+        from sklearn.dummy import DummyClassifier
+        m=[DummyClassifier(),DummyClassifier(strategy="most_frequent"),DummyClassifier(strategy="uniform")]
+        n=["DummyStratified","DummyMostFreq","DummyUniform"] if names is None else names
+        if self._nameCvCurr is None:
+            self.setModels(m,
+                          names=n)
+            self.computeCV(verbose=verbose,*args,**xargs)
+        else:
+            self.addModelsToCurrCV(m,names=n,*args,**xargs)
 class BaseSuperviseClassif(StudyClassif_,BaseSupervise,BSClassif):
     # @abstractmethod
     EXPORTABLE=["datas","cv"]

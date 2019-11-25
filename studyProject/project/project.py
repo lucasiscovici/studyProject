@@ -5,7 +5,7 @@ import os
 from . import IProject
 from typing import *
 from interface import implements
-from ..utils import isinstanceBase, isinstance
+from ..utils import isinstanceBase, isinstance, fnReturn
 from ..viz import vizGet
 # from ..study import DatasSuperviseClassif
 
@@ -510,7 +510,7 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             classif = self.isClassif
             super().setDataTrainTest(X_train,y_train,X_test,y_test,classif=classif)
 
-    def proprocessDataFromProject(self,fn=None,force=False,pipeline=None):
+    def proprocessDataFromProject(self,fn=None,force=False,pipelineX=None, pipelineY=None):
         classif = self.isClassif
         if self.isProcessedDataFromProject and not force:
             raise Exception("[BaseSuperviseProject proprocessDataFromProject] processing deja fait pour les données du projet (et force est à False)")
@@ -520,8 +520,19 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
             # self._proprocessDataFromProjectFnOpts=dict(classif=classif)
             super().setDataTrainTest(*fn(*self._datas.get(deep=True,optsTrain=dict(withNamesY=False))),classif=classif)
             self._isProcessedDataFromProject = True
-        if pipeline is not None:
-            super().setPipeline(pipeline)
+            if pipelineX is not None:
+                self.pipelineX=pipelineX
+            if pipelineY is not None:
+                self.pipelineY=pipelineY
+        elif fn is None:
+            X_train,y_train,X_test,y_test=self.datas.get()
+            if pipelineX is not None:
+                X_train=pipelineX.fit_transform(X_train)
+                X_test=pipelineX.fit_transform(X_test)
+            if pipelineY is not None:
+                y_train=pipelineY.fit_transform(y_train)
+                y_test=pipelineY.fit_transform(y_test)
+            return self.proprocessDataFromProject(fnReturn((X_train,y_train,X_test,y_test)),pipelineX=pipelineX,pipelineY=pipelineY,force=force)
 
     def check(self):
          if not self.isProcessedDataFromProject and self.proprocessDataFromProjectFn is not None:
@@ -577,26 +588,27 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         return rep
 
 
-    def addModelsToCurrCV(self,models:List,namesM=None):
+    def addModelsToCurrCV(self,models:List,names=None ,nameCV=None,*args,**xargs):
         cvCurr=self.currCV
         li=cvCurr.ID
         cloneE=self.clone()
-        cloneE.setModels(self.models+models,)
+        cloneE.setModels(self.models+models,force=True)
         # return cloneE
         namesM=cloneE.namesModels[-len(models):]
-        cloneE.setModels(models,names=namesM if namesM is None else namesM)
+        cloneE.setModels(models,names=namesM if names is None else names,force=True)
         params=cvCurr.args
         params["cv"]=cvCurr.cv
-        params["nameCV"]=randomString()
+        # params["nameCV"]=randomString()
         if "namesMod" in params: del params["namesMod"]
         params["noAddCv"]=True
-        cloneE.computeCV(**params)
+        params["recreate"]=True
+        cloneE.computeCV(*args,**params,**xargs)
         res=cloneE.currCV.resultats
-        cvCurr.ID=randomString()
+        cvCurr.ID=randomString() if nameCV is None else nameCV
         for k,v in res.items():
             cvCurr.resultats[k]=v
         cvCurr._based = li
-        self.setModels(self.models+models)
+        self.setModels(self.models+models,force=True)
         self._nameCvCurr=cvCurr.ID
         self._cv[cvCurr.ID]=self._cv[li]
         del self._cv[li]
@@ -607,10 +619,10 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
 
     def computeCV(self,cv=5,random_state=42,shuffle=True,classifier=True,
                  nameCV=None,recreate=False,parallel=True,metric=None,
-                 models=None,noAddCv=False):
+                 models=None,noAddCv=False,**xargs):
         rep=super().computeCV(cv=cv,random_state=random_state,shuffle=shuffle,classifier=classifier,
                  nameCV=nameCV,recreate=recreate,parallel=parallel,metric=metric,
-                 models=models)
+                 models=models,**xargs)
         # print(rep)
         classif=self.isClassif
         D= self.cviCls
