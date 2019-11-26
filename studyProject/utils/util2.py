@@ -263,6 +263,18 @@ class changeTmpObj:
     def __exit__(self, type, value, traceback):
         setattr(self.obj,self.attr,self.v)
 
+class changeTmpVar:
+    def __init__(self,obj,attr):
+        self.obj=obj
+        self.attr=attr
+        self.v=self.obj[self.attr]
+
+    def __enter__(self):
+        return self.obj
+
+    def __exit__(self, type, value, traceback):
+        self.obj[self.attr]=self.v
+
 def fnRien(*args,**xargs):
     return 
 

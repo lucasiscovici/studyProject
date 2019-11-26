@@ -828,16 +828,17 @@ class Base(object):
     #         s.replace(self.namesY)
             # {False:"Pas5",True:"5"}
 import pandas_profiling_study as pdp
+from dora_study import Dora
 class Datas(Base):
-    EXPORTABLE=["X","y","eda"]
+    EXPORTABLE=["X","y","eda","dora"]
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,eda=None,ID=None):
+    def __init__(self,X=None,y=None,eda=None,dora=None,ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
         self.eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"]))
-
+        self.dora=dora
 
     def get(self,withNamesY=False,concat=True):
         return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
@@ -848,6 +849,12 @@ class Datas(Base):
         nt="\n"+t
         stri=txt[:-1]+nt+"X : {},"+nt+"y : {}]"
         return stri.format(np.shape(self.X) if self.X is not None else None,np.shape(self.y) if self.y is not None else None)
+
+    @property
+    def prep(self):
+        if self.dora is None:
+            self.dora=Dora(self.get(),output=self.y.name)
+        return self.dora
 
     #TODO: plotly chart in pdp
     def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
