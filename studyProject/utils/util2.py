@@ -20,6 +20,16 @@ F=False
 from .struct import isinstanceBase, isinstance
 import sys, os
 
+
+def createFunctionFromString(string):
+    com=compile(string,"<string>","exec")
+    gl={}
+    ll={}
+    eval(com,gl,ll)
+    fn=com.co_names[0]
+    ggg=gl[fn]
+    ggg.__codeString__=string
+    return ggg
 def indexOfMinForValueInArray(val,arr):
     i=0
     curr=arr[i]
