@@ -19,11 +19,15 @@ class Study_DatasSuperviseClassif_Viz(Viz):
                             showFig=True,
                             outside=False,
                             filename="class_balance",
+                            xTitle=None,
+                            yTitle=None,
                             addLabels_kwargs=dict(),
                             class_balance_kwargs=dict(),
                             plot_kwargs=dict()):
         
         self=selfo.obj
+        nam=self.y.name if xTitle is None else xTitle
+        namy="Nombre" if yTitle is None else yTitle
         _addLabels_kwargs=dict(textposition="auto",textfont=dict(color="white",size=allsize))
         if outside:
             _addLabels_kwargs=dict(textposition="outside",textfont=dict(color="black",size=allsize))
@@ -36,8 +40,8 @@ class Study_DatasSuperviseClassif_Viz(Viz):
         dio=dicoAuto[["xaxis","yaxis"]][['tickfont','titlefont']].size==allsize
         dio["font"]=dict(size=allsize+titlesizeplus)
         _plot_kwargs=dict(layout_update=dio,
-                                                                      title=title,xTitle="Y names",
-                         yTitle="Nombre")
+                                                                      title=title,xTitle=nam,
+                         yTitle=namy)
         data=StudyClass()
         plot_kwargs=merge(_plot_kwargs,plot_kwargs,add=F)
         cb=self.class_balance(**class_balance_kwargs)
@@ -66,6 +70,7 @@ class Study_DatasSuperviseClassif_Viz(Viz):
             for k,v in addLabels_kwargs.items():
                 setattr(fig.data[0],k,v)
                 setattr(fig.data[1],k,v)
+        fig.update_layout(margin=dict(t=60))
         if asImg:
             fig=cb.iplot(data=fig,filename=filename,asImage=True)
             return fig
@@ -75,3 +80,21 @@ class Study_DatasSuperviseClassif_Viz(Viz):
             return StudyClass(data=data,fig=fig)
         return fig if showFig else StudyClass(fig=fig)
 
+from functools import wraps
+def embedPrep(func):
+  @wraps(func)
+  def with_logging(self,*args, **kwargs):
+      return func(self.obj.prep,*args,**kwargs)
+  return with_logging
+
+def addMethodsFromSpeedMLPlot():
+    from speedml import Plot
+    fd=Plot.__dict__
+    n=[i for i in list(fd.keys()) if not i.startswith("_")] 
+    for i in n:
+        # print(i)
+        setattr(Study_DatasSuperviseClassif_Viz,"plot_"+i,embedPrep(fd[i]))
+
+addMethodsFromSpeedMLPlot()
+
+# print("ici")

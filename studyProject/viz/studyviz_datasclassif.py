@@ -5,10 +5,9 @@ import pandas as pd
 import numpy as np
 
 
-# from ..utils import T,F
 class Study_DatasClassif_Viz(Viz):
     # @staticmethod
-    def plot_class_balance(selfo,title="Répartition des labels",percent=False,
+    def plot_class_balance(self,title="Répartition des labels",percent=False,
                             allsize=16,
                             titlesizeplus=2,
                             addLabels=True,
@@ -18,60 +17,33 @@ class Study_DatasClassif_Viz(Viz):
                             asImg=False,
                             showFig=True,
                             outside=True,
+                            xTitle=None,
+                            yTitle=None,
                             filename="class_balance",
                             addLabels_kwargs=dict(),
                             class_balance_kwargs=dict(),
-                            plot_kwargs=dict()):
+                            plot_kwargs=dict(),*args,**xargs):
+        vars_=locals().copy()
+        del vars_["self"]
+        vars_["fn_kwargs"]=vars_["class_balance_kwargs"]
+        del vars_["class_balance_kwargs"]
+        vars_["fnCount"]=self.obj.class_balance
+
+        yn=self.obj.y.name
+        vars_["xTitle"]= yn if xTitle is None else xTitle
+
+        del vars_["args"]
+        del vars_["xargs"]
+        return self.plot_bar_count(*args,**vars_,**xargs)
         
-        self=selfo.obj
-        _addLabels_kwargs=dict(textposition="auto",textfont=dict(color="white",size=allsize))
-        if outside:
-            _addLabels_kwargs=dict(textposition="outside",textfont=dict(color="black",size=allsize))
-        addLabels_kwargs=merge(_addLabels_kwargs,addLabels_kwargs,add=F)
-    
-        _class_balance_kwargs=dict(normalize=percent)
-        class_balance_kwargs=merge(_class_balance_kwargs,class_balance_kwargs,add=F)
 
+from functools import wraps
+def embedPrep(func):
+  @wraps(func)
+  def with_logging(self,*args, **kwargs):
+      return func(self.obj.prep,*args,**kwargs)
+  return with_logging
 
-        dio=dicoAuto[["xaxis","yaxis"]][['tickfont','titlefont']].size==allsize
-        dio["font"]=dict(size=allsize+titlesizeplus)
-        _plot_kwargs=dict(layout_update=dio,
-                                                                      title=title,xTitle="Y names",
-                         yTitle="Nombre")
-        data=StudyClass()
-        plot_kwargs=merge(_plot_kwargs,plot_kwargs,add=F)
-        cb=self.class_balance(**class_balance_kwargs)
-        fig=cb.iplot(kind="bar",asFigure=True,filename=filename,**plot_kwargs)
-        setattr(data,"class_balance_percent" if percent else "class_balance",cb)
-        if addLabels:
-            if addLabelsPercent and not percent:
-                class_balance_kwargs2=merge(class_balance_kwargs,dict(normalize=True),add=F)
-                cb2=self.class_balance(**class_balance_kwargs2)
-                #print(zipl(cb.values,cb2.values) | _ftools_.mapl(  [__[0],__[1]] %_fun_% list))
-                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb.values,cb2.values))) 
-                setattr(data,"class_balance_percent",cb2)
-            elif addLabelsBrut and percent:
-                class_balance_kwargs2=merge(class_balance_kwargs,dict(normalize=False),add=F)
-                cb2=self.class_balance(**class_balance_kwargs2)
-                # print(cb)
-                #print(zipl(cb.values,cb2.values) | _ftools_.mapl(  [__[0],__[1]] %_fun_% list))
-                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),2)),zipl(cb2.values,cb.values))) 
-                setattr(data,"class_balance",cb2)
-            else:
-                fig.data[0].text=cb
-            for k,v in addLabels_kwargs.items():
-                setattr(fig.data[0],k,v)
-        fig.update_config(editable=T,
-                       displayModeBar=T,
-                       displaylogo=F,
-                       filename=filename)
-        if asImg:
-            fig=cb.iplot(data=fig,filename=filename,asImage=True)
-            return fig
-        if returnData:
-            if showFig:
-                fig.show()
-            return StudyClass(data=data,fig=fig)
-
-        return fig if showFig else StudyClass(fig=fig)
-
+from dora_study import Dora
+for i in ["plot_feature","explore"]:
+    setattr(Study_DatasClassif_Viz,i,embedPrep(getattr(Dora,i)))

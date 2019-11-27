@@ -1,35 +1,89 @@
 import cufflinks_study as cf
-# import plotly_express as pe
-# import os
-# import pkgutil
-# def get_plotlyjs2():
-#     # print("iicie")
-#     path = os.path.join("package_data", "plotly.min.js")
-#     plotlyjs = pkgutil.get_data("studyProjectGit", path).decode("utf-8")
-#     # print("icicicici")
-#     # print(plotlyjs) 
-#     return plotlyjs
-
-# from plotly_study  import offline
-# import plotly
-# plotly.offline.offline.get_plotlyjs=get_plotlyjs2
-# offline.get_plotlyjs=get_plotlyjs2
-# if cf.offline.run_from_ipython():
-#     try:
-#         offline.init_notebook_mode(False)
-#     except TypeError:
-#         #For older versions of plotly
-#         offline.init_notebook_mode()
-#     offline.__PLOTLY_OFFLINE_INITIALIZED=True
 cf.go_offline(connected=False)
 
 import pandas as pd
-from interface import Interface
+from interface import Interface,implements
 from ..utils import get_args, isinstanceBase, isinstance
-
+from ..utils import merge,  T,F, dicoAuto, zipl, StudyClass
+import numpy as np
+import plotly_study.express as pex
 class Viz:
     def __init__(self,obj):
         self.obj=obj
+
+    #fnCount (normalize:Boolean)
+    def plot_bar_count(self,fnCount,title="Répartition des labels",percent=False,
+                                allsize=16,
+                                titlesizeplus=2,
+                                roundVal=2,
+                                maxBars=20,
+                                addLabels=True,
+                                addLabelsPercent=True,
+                                addLabelsBrut=True,
+                                returnData=False,
+                                asImg=False,
+                                showFig=True,
+                                outside=True,
+                                xTitle=None,
+                                yTitle=None,
+                                filename="class_balance",
+                                addLabels_kwargs=dict(),
+                                fn_kwargs=dict(),
+                                plot_kwargs=dict()):
+
+        _addLabels_kwargs=dict(textposition="auto",textfont=dict(color="white",size=allsize))
+        if outside:
+            _addLabels_kwargs=dict(textposition="outside",textfont=dict(color="black",size=allsize))
+        addLabels_kwargs=merge(_addLabels_kwargs,addLabels_kwargs,add=F)
+
+        _fn_kwargs=dict(normalize=percent)
+        fn_kwargs=merge(_fn_kwargs,fn_kwargs,add=F)
+
+
+        nam="x" if xTitle is None else xTitle
+        namy="Nombre" if yTitle is None else yTitle
+
+        dio=dicoAuto[["xaxis","yaxis"]][['tickfont','titlefont']].size==allsize
+        dio["font"]=dict(size=allsize+titlesizeplus)
+        _plot_kwargs=dict()
+
+        data=StudyClass()
+        plot_kwargs=merge(_plot_kwargs,plot_kwargs,add=F)
+        cb=fnCount(**fn_kwargs)[:maxBars]
+        fig=pex.bar(cb.to_frame(),y=cb.name,**plot_kwargs).update_layout(title=title,xaxis_title=nam,
+                         yaxis_title=namy,**dio).update_config(toImageButtonOptions=dict(filename=filename))
+        setattr(data,"bar_count_percent" if percent else "bar_count",cb)
+
+        if addLabels:
+            if addLabelsPercent and not percent:
+                fn_kwargs2=merge(fn_kwargs,dict(normalize=True),add=F)
+                cb2=fnCount(**fn_kwargs2)[:maxBars]
+                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),roundVal)),zipl(cb.values,cb2.values))) 
+                setattr(data,"bar_count_percent",cb2)
+            elif addLabelsBrut and percent:
+                fn_kwargs2=merge(fn_kwargs,dict(normalize=False),add=F)
+                cb2=fnCount(**fn_kwargs2)[:maxBars]
+                fig.data[0].text= list(map(lambda x:"{} ({}%)".format(x[0], np.round((x[1]*100),roundVal)),zipl(cb2.values,cb.values))) 
+                setattr(data,"bar_count",cb2)
+            else:
+                fig.data[0].text=cb
+            for k,v in addLabels_kwargs.items():
+                setattr(fig.data[0],k,v)
+
+        fig.update_layout(margin=dict(t=60))
+        fig.update_config(editable=T,
+                       displayModeBar=T,
+                       displaylogo=F,
+                       filename=filename)
+        if asImg:
+            fig=cb.iplot(data=fig,filename=filename,asImage=True)
+            return fig
+        if returnData:
+            if showFig:
+                fig.show()
+            return StudyClass(data=data,fig=fig)
+
+        return fig if showFig else StudyClass(fig=fig)
 
 import functools
 
@@ -177,6 +231,7 @@ def enable_plotly_in_cell():
     from plotly_study.offline import init_notebook_mode
     display(IPython.core.display.HTML('''<script src="/static/components/requirejs/require.js"></script>'''))
     init_notebook_mode(connected=False)
+
 def plotly_google_colab():
     get_ipython().events.register('pre_run_cell', enable_plotly_in_cell)
 
@@ -188,7 +243,7 @@ def pdViz(self):
         return heatmap_to_grid(mat)
     return StudyClass(to_heatmap=to_heatmap)
         
-pd.DataFrame.viz = property(lambda self: pdViz(self))
+#pd.DataFrame.viz = property(lambda self: pdViz(self))
 def heatmap_to_grid(hm,paper_bgcol="#F5F6F9",plot_bgcolor="black",linewidth=2,linecolor="black"):
     hm.update_layout(paper_bgcolor= paper_bgcol,
                           plot_bgcolor= plot_bgcolor,

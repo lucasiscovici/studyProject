@@ -23,6 +23,7 @@ from ..viz.viz import vizHelper
 import inspect
 from typing import Dict
 from ..utils import isinstanceBase, isinstance, make_tarfile, read_tarfile, StudyList,studyList, TMP_DIR, showWarningsTmp
+from ..utils.speedMLNewMethods import create_speedML
 # from ..viz import StudyViz_Datas
 # from typing import get_origin
 # class ImportExportLoadSaveClone(Interface):
@@ -828,19 +829,36 @@ class Base(object):
     #         s.replace(self.namesY)
             # {False:"Pas5",True:"5"}
 import pandas_profiling_study as pdp
-from dora_study import Dora
+
 class Datas(Base):
-    EXPORTABLE=["X","y","eda","dora"]
+    EXPORTABLE=["X","y","_eda","_prep"]
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,eda=None,dora=None,ID=None):
+    def __init__(self,X=None,y=None,_eda=None,_prep=None,ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
-        self.eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"]))
-        self.dora=dora
+        self._eda=_eda
+        self._prep=_prep
+        self.init()
 
-    def get(self,withNamesY=False,concat=True):
+    def initEda(self):
+        eda=self._eda
+        self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(initial=True),sections=["overview","variables","correlations","missing","sample"]))
+
+    def initPrep(self):
+        _prep=self._prep
+        self._prep=_prep if _prep is not None else (None if self.X is None else prep(self))
+
+    def init(self):
+        self.initEda()
+        self.initEda()
+
+    def get(self,prep=True,withNamesY=False,concat=True,initial=False):
+        if initial:
+            return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
+        if self._prep is not None:
+            return self.prep.data
         return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
 
     def __repr__(self,ind=1):
@@ -852,31 +870,87 @@ class Datas(Base):
 
     @property
     def prep(self):
-        if self.dora is None:
-            self.dora=Dora(self.get(),output=self.y.name)
-        return self.dora
+        if self._prep is None:
+            self.initPrep()
+        if self._prep is None:
+            raise Exception("prep not set")
+        return self._prep
+
+    @property
+    def eda(self):
+        if self._eda is None:
+            self.initEda()
+        if self._eda is None:
+            raise Exception("eda not set")
+        return self._eda
 
     #TODO: plotly chart in pdp
     def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
         if self.eda is None:
+            with showWarningsTmp:
+                warnings.warn("""
+                    creating ProfileReport...""")
             self.eda=pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"])
         return self.eda.change_sections(sections)
 
+    def getEDA_Clues(self):
+        d=self.papa.getEDA()
+        return d
+
+    def export(self,save=True,dirAdded=[],*args,**xargs):
+        rep=super().export(save,dirAdded,*args,**xargs)
+        rep['_prep']= copy.deepcopy(self.prep.dora)
+        return rep
+
+    @classmethod 
+    def _import(cls,loaded):
+        rep = cls.__base__._import(loaded)
+        rep._prep = prep(rep,rep._prep)
+        return rep
+
 factoryCls.register_class(Datas)
 
+from dora_study import Dora as Dora2
+
+class Dora(Dora2):
+    def __init__(self, data = None, output = None):
+        super().__init__(data,output)
+        # for i in ["plot_feature","explore"]:
+            # delattr(self,i)
+
+
+class prep:
+    def __init__(self,l:Datas,dora=None):
+        self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
+        #self.speedML = l.
+    def __dir__(self):
+        return ["dora"]+dir(self.dora)
+
+    def __getattr__(self,b):
+        if b=="dora" or (b.startswith('__') or b.endswith('__')):
+            return object.__getattribute__(self,b)
+        return getattr(self.dora,b)
 
 class DatasSupervise(Base):
-    EXPORTABLE=["dataTrain","dataTest"]
+    EXPORTABLE=["dataTrain","dataTest","speedML","_prep"]
     D=Datas
-    def __init__(self,dataTrain:Datas=None,dataTest:Datas=None,ID=None):
+
+    def __init__(self,dataTrain:Datas=None,dataTest:Datas=None,_prep=None,ID=None):
         super().__init__(ID)
         self.dataTrain=dataTrain
         self.dataTest=dataTest
+        self._prep=_prep
+        self.init()
+
+    def init(self,_prep=None):
+        _prep=self._prep
+        self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self))
 
     @classmethod
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):
         return cls(cls.D(X_train,y_train),
                               cls.D(X_test,y_test),ID)
+
     def get(self,deep=True,optsTrain={},optsTest={}):
         if deep:
             return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
@@ -890,6 +964,16 @@ class DatasSupervise(Base):
                             securerRepr(self.dataTest,ind+2))
 
 
+    @property
+    def prep(self):
+        if self._prep is None:
+            self.init()
+        if self._prep is None:
+            raise Exception("prep is not set")
+        return self._prep
+
+    def getEDA(self): 
+        return self.prep.eda2()
 
 factoryCls.register_class(DatasSupervise)
 class Models(Base):

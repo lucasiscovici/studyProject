@@ -52,7 +52,8 @@ class DatasClassif(Datas,DatasClassif_ClassBalance):
         self.cat=cat
         self.init()
 
-    def init(self):
+    def init(self,*args,**xargs):
+
         if self.y is not None:
             if isNumpyArr(self.y):
                 if np.ndim(self.y)>1:
@@ -85,7 +86,7 @@ class DatasClassif(Datas,DatasClassif_ClassBalance):
             cat=namesEscape(self.cat)
             if cat != self.cat:
                 self.y=self.y.cat.rename_categories(dict(zip(self.cat,cat)))
-
+        super().init(*args,**xargs)
 
 factoryCls.register_class(DatasClassif)
 

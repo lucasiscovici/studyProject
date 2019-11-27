@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 addButonSave="""
 <script>
 /*
@@ -420,14 +420,15 @@ def addSaveButtonMpld3():
 import mpld3_study
 from IPython.display import display, HTML
 from mpld3_study import display
-def add_hover_label_to_rect(ax):
+import numpy as np
+def add_hover_label_to_rect(ax,roundVal=2):
     m=[get_datas_plt(i) for i in ax]
     #print(m)
     dd=[]
     for j in m:
         for bars in j:
             for bar in bars:
-                tooltip = mpld3_study.plugins.LineLabelTooltip(bar, label=str(bar.get_height()))
+                tooltip = mpld3_study.plugins.LineLabelTooltip(bar, label=str(np.round(bar.get_height(),roundVal)))
                 dd.append(tooltip)
     return dd
 

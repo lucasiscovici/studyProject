@@ -27,7 +27,7 @@ def createFunctionFromString(string):
     ll={}
     eval(com,gl,ll)
     fn=com.co_names[0]
-    ggg=gl[fn]
+    ggg=ll[fn]
     ggg.__codeString__=string
     return ggg
 def indexOfMinForValueInArray(val,arr):
@@ -75,12 +75,24 @@ def get_args(func):
     },alone=[k for k, v in signature.parameters.items()
         if v.default is inspect.Parameter.empty],signature=signature)
 
-def check_names(l):
-    return [isNotPossible(lambda:int(i)) for i in l]
-def namesEscape(l):
+def check_names(l,fn=int):
+    return [isNotPossible(lambda:fn(i)) for i in l]
+
+def namesEscape(l,fn=int):
     from . import isArr
     l=l if isArr(l) else [l]
-    return [l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l))]
+    return [l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l,fn=fn))]
+
+def unNamesEscape(l,fn=int):
+    from . import isArr
+    import collections.abc
+    e=isinstance(l,collections.abc.Iterable) and not isinstance(l,str)
+    l=l if e else [l]
+    # print(type(l))
+    l= l.values if isinstance(l,pd.Series) or isinstance(l,pd.DataFrame) else l
+    rep= [l[i_] if i else fn(l[i_][1:-1]) for i_,i in enumerate(check_names(l,lambda a:fn(a[1:-1])))]
+    return rep if e else rep[0]
+
 def listl(*args):
     return args
 def numpyToCatPdSeries(l,argsCat={},argsSeries={}):
@@ -264,15 +276,32 @@ def onWarnings(d="default"):
     setWarnings('default')
 
 class changeTmpObj:
-    def __init__(self,obj,attr):
+    def __init__(self,obj,attr,affect=False,returnAttr=False):
         self.obj=obj
         self.attr=attr
-        self.v=getattr(self.obj,self.attr).clone()
+        self.returnAttr=returnAttr
+        self.v_=getattr(self.obj,self.attr)
+        try:
+            # print("la")
+            self.v=copy.deepcopy(getattr(self.obj,self.attr))
+        except:
+            if hasattr(getattr(self.obj,self.attr),"clone"):
+                # print("ii")
+                self.v=getattr(self.obj,self.attr).clone()
+            else:
+                # print("uddu")
+                self.v=copy.copy(getattr(self.obj,self.attr))
+        self.affect=affect
     def __enter__(self):
-        return self.obj
+        return self.obj if not self.returnAttr else self.v
     def __exit__(self, type, value, traceback):
-        setattr(self.obj,self.attr,self.v)
-
+        if self.affect:
+            self.obj[self.attr]=self.v_
+        else:
+            try:
+                setattr(self.obj,self.attr,self.v_)
+            except:
+                self.obj[self.attr]=self.v_
 class changeTmpVar:
     def __init__(self,obj,attr):
         self.obj=obj
