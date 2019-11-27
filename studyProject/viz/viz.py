@@ -12,8 +12,9 @@ class Viz:
         self.obj=obj
 
     #fnCount (normalize:Boolean)
-    def plot_bar_count(self,fnCount,title="Répartition des labels",percent=False,
+    def plot_bar_count(self,fnCount,fnCountPlot=None,title="Répartition des labels",percent=False,
                                 allsize=16,
+                                ind="y",
                                 titlesizeplus=2,
                                 roundVal=2,
                                 maxBars=20,
@@ -22,6 +23,7 @@ class Viz:
                                 addLabelsBrut=True,
                                 returnData=False,
                                 asImg=False,
+                                cbName=None,
                                 showFig=True,
                                 outside=True,
                                 xTitle=None,
@@ -29,8 +31,9 @@ class Viz:
                                 filename="class_balance",
                                 addLabels_kwargs=dict(),
                                 fn_kwargs=dict(),
+                                fn_plot=pex.bar,
                                 plot_kwargs=dict()):
-
+        fnCountPlot= fnCount if fnCountPlot is None else fnCountPlot
         _addLabels_kwargs=dict(textposition="auto",textfont=dict(color="white",size=allsize))
         if outside:
             _addLabels_kwargs=dict(textposition="outside",textfont=dict(color="black",size=allsize))
@@ -50,7 +53,11 @@ class Viz:
         data=StudyClass()
         plot_kwargs=merge(_plot_kwargs,plot_kwargs,add=F)
         cb=fnCount(**fn_kwargs)[:maxBars]
-        fig=pex.bar(cb.to_frame(),y=cb.name,**plot_kwargs).update_layout(title=title,xaxis_title=nam,
+        cbX=fnCountPlot(**fn_kwargs)[:maxBars]
+        # print(cb.to_frame())
+        plot_kwargs[ind]=cbX.name if cbName is None else  cbName
+        # print(cbX)
+        fig=pex.bar(cbX,**plot_kwargs).update_layout(title=title,xaxis_title=nam,
                          yaxis_title=namy,**dio).update_config(toImageButtonOptions=dict(filename=filename))
         setattr(data,"bar_count_percent" if percent else "bar_count",cb)
 
