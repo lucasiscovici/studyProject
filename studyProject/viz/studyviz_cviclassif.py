@@ -64,7 +64,7 @@ class Study_CVIClassif_Viz(Study_CrossValidItem_Viz):
         for i_,(k,v) in enumerate(models.items())}
         nbCols=min(len(confMatCls),nbCols)
         images_per_row=nbCols
-        images_per_row = min(len(confMatCls), images_per_row)
+        # images_per_row = min(len(confMatCls), images_per_row)
         n_rows = (len(confMatCls) - 1) // images_per_row + 1
 
         rowsCol=(len(confMatCls) if colFixed is not None else n_rows,colFixed if colFixed is not None else nbCols)
