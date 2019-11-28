@@ -118,7 +118,7 @@ class Base(object):
     # viz=
 
 
-    def init(self,*args,**args):
+    def init(self,*args,**xargs):
         pass
     #include all function even if in dad
     @staticmethod
