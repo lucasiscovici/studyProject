@@ -960,7 +960,7 @@ class Datas(Base):
     def __getattr__(self,a):
 
         try:
-            return super().__getattr__(a)
+            return super().__getattribute__(a)
         except Exception as e:
             if hasattr(self.get(),a):
                 return getattr(self.get(),a)
