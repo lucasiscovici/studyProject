@@ -277,7 +277,7 @@ class StudyProject(Base):
             self._studies=stu
             self._cv=cvv
         if returnOK:
-            return StudyClass(obj=self,fin=lambda obj=obj,stu=stu,cvv=cvv: reloadS(obj,stu,cvv))
+            return StudyClass(obj=self,fin=lambda obj=self,stu=stu,cvv=cvv: reloadS(obj,stu,cvv))
         else:
             self.__class__.Save(self,ID,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
             self._studies=stu
