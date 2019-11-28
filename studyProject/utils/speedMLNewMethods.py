@@ -127,11 +127,15 @@ def saveLast(func):
 #   def with_logging(*args, **kwargs):
 #       return saveLast_(self,func,*args,**kwargs)
 #   return with_logging
-class Speedml2:
+class Speedml2(Speedml):
+    def __init__(self,train, test, target, uid=None):
+        super().__init__(train,test,target,uid)
+        # self.init(train,test,target)
+class Speedml3:
 
     def __init__(self,train, test, target, uid=None):
         # super().__init__(train,test,target,uid)
-        self._Speedml=Speedml(train,test,target)
+        self._Speedml=Speedml2(train,test,target)
         self.init(train,test,target)
         self._snapshots = {}
         self._initial_Train=train.copy()
@@ -205,7 +209,7 @@ def create_speedML(self):
     Train=self.dataTrain.get()
     Test=self.dataTest.get()
     target=self.dataTrain.y.name
-    return Speedml2(Train,Test,target)
+    return Speedml3(Train,Test,target)
 
 def eda2(self):
     rep=self.eda()
