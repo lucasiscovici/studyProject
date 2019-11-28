@@ -354,8 +354,10 @@ class StudyProject(Base):
         objClss=self.save(returnOK=True)
         if not self._cvOpti:
             objClss.obj._cv={}
-        rep=self.__class__.Export(objClss.obj,save=save,*args,**xargs)
-        objClss.fin()
+        try:
+            rep=self.__class__.Export(objClss.obj,save=save,*args,**xargs)
+        finally:
+            objClss.fin()
         return rep
 
     @staticmethod

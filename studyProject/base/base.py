@@ -868,7 +868,7 @@ class edaCls:
         return self._edas.change_sections(sections)
 
     def __repr__(self):
-        return "eda, attribute available :"+", ".join(self.SECTIONS)
+        return "eda, attribute available : "+", ".join(self.SECTIONS)
 
 class Datas(Base):
     EXPORTABLE=["X","y","_eda","_prep"]
@@ -951,6 +951,18 @@ class Datas(Base):
     def getEDA_Clues(self):
         d=self.papa.getEDA()
         return d
+
+    def __dir__(self):
+        return super().__dir__()+dir(self.get())
+
+    def __getattr__(self,a):
+
+        try:
+            return super().__getattr__(a)
+        except Exception as e:
+            if hasattr(self.get(),a):
+                return getattr(self.get(),a)
+            raise e
 
     # def export(self,save=True,dirAdded=[],*args,**xargs):
     #     rep=super().export(save,dirAdded,*args,**xargs)
@@ -1047,7 +1059,8 @@ class DatasSupervise(Base):
             raise Exception("prep is not set")
         return self._prep
 
-    def getEDA(self): 
+    @property
+    def eda(self): 
         return self.prep.eda2()
 
 factoryCls.register_class(DatasSupervise)
