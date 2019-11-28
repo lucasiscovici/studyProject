@@ -953,7 +953,9 @@ class Datas(Base):
         return d
 
     def __dir__(self):
-        return super().__dir__()+dir(self.get())
+        d1=super().__dir__()
+        d=dir(self.get())
+        return [i for i in d1 if not i.startswith("__")]+[i for i in d if not i.startswith("__")]+[i for i in d1 if i.startswith("__")]+[i for i in d if  i.startswith("__")]
 
     def __getattr__(self,a):
 
