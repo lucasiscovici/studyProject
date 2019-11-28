@@ -232,13 +232,13 @@ class Base(object):
             # #print(l.__dict__)
             # l.ID=ID
             #print(l.__dict__)
-            if preservePAPA and hasattr(self,"papa") and self.papa is not None
+            if preservePAPA and hasattr(self,"papa") and self.papa is not None:
                 l.papa=self.papa
             return l
         else:
             me=copy.deepcopy(self)
             me.ID=ID
-            if preservePAPA and hasattr(self,"papa") and self.papa is not None
+            if preservePAPA and hasattr(self,"papa") and self.papa is not None:
                 me.papa=self.papa
             return me
 
