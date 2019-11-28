@@ -242,8 +242,8 @@ class StudyProject(Base):
         sl=StudyProject.clone(self,deep=False)
         # sl=StudyProject.clone(self,deep=True)
         ff={}
-        for k,v_ in sl._studies.items():
-            v=v_
+        for k,v_ in self._studies.items():
+            v=v_.clone(self)
             # print(isinstance(v_,implements(IProject)))
             if isinstance(v_,implements(IProject)):
                 # v__=v.project
@@ -267,12 +267,17 @@ class StudyProject(Base):
             ff[k]=vizGet(v)
 
         # print(ff)
-        sl._studies=ff
+        stu=self._studies
+        cvv=self._cv
+        self._studies=ff
         # copye=StudyProject.clone(sl,deep=True)
         # copye._studies=ff
         # sl=copye
+        def reloadS(self,stu,cvv):
+            self._studies=stu
+            self._cv=cvv
         if returnOK:
-            return sl
+            return StudyClass(obj=self,fin=lambda obj=obj,stu=stu,cvv=cvv: reloadS(obj,stu,cvv))
         else:
             self.__class__.Save(sl,ID,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
             # SaveLoad.save(sl,filo,**xargs)
@@ -344,10 +349,12 @@ class StudyProject(Base):
         return rep
 
     def export(self,save=True,*args,**xargs):
-        obj=self.save(returnOK=True)
+        objClss=self.save(returnOK=True)
         if not self._cvOpti:
-            obj._cv={}
-        return self.__class__.Export(obj,save=save,*args,**xargs)
+            objClss.obj._cv={}
+        rep=self.__class__.Export(objClss.obj,save=save,*args,**xargs)
+        objClss.fin()
+        return rep
 
     @staticmethod
     def import_give_me_cv(proj,cvID,clsStudy=None,maxou=50):

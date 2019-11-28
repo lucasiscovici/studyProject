@@ -323,14 +323,15 @@ def fnReturn(a):
 class ShowWarningsTmp:
 
     def __init__(self):
-        self.o=warnings.catch_warnings()
+        self.o=None
     def __enter__(self):
+        self.o=warnings.catch_warnings()
         u=self.o.__enter__()
         onWarnings()
         return u
     def __exit__(self, type, value, traceback):
         op=self.o.__exit__(type,value,traceback)
-        self.o=warnings.catch_warnings()
+        self.o=None
         return op
 class HideWarningsTmp:
     def __init__(self):
