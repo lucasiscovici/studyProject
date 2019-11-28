@@ -194,8 +194,8 @@ class Speedml2:
           self._lastlogsTest=self._lastlastlogsTest.copy()
     #_______________LOG_________________________
     def _log(self, string,type_="train",force=False):
-      et="" if type_=="train" else "Test"
-      lg=self._logs if type_=="train" else self._logsTest
+        et="" if type_=="train" else "Test"
+        lg=self._logs if type_=="train" else self._logsTest
         if string in lg and not force:
           raise Exception(f"""
                 _log{et}: {string} already in logs, if you want to force, add force=True""")
