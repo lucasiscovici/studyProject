@@ -243,7 +243,7 @@ class StudyProject(Base):
         # sl=StudyProject.clone(self,deep=True)
         ff={}
         for k,v_ in self._studies.items():
-            v=v_.clone(self)
+            v=v_.clone()
             # print(isinstance(v_,implements(IProject)))
             if isinstance(v_,implements(IProject)):
                 # v__=v.project
