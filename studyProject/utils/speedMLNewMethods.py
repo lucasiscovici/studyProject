@@ -36,13 +36,13 @@ def has_method(o, name):
     return name in dir(o)
 
 def saveLast_(self,func,*args,**kwargs):
-  self._lastTrain=self.train.copy()
-  self._lastTest=self.test.copy()
-  self._lastlogs=self._logs.copy()
+  self._lastTrain=copy(self.train)
+  self._lastTest=copy(self.test)
+  self._lastlogs=copy(self._logs)
 
-  self._lastlastTrain=self._lastTrain.copy()
-  self._lastlastTest=self._lastTest.copy()
-  self._lastlastlogs=self._lastlogs.copy()
+  self._lastlastTrain=copy(self._lastTrain)
+  self._lastlastTest=copy(self._lastTest)
+  self._lastlastlogs=copy(self._lastlogs)
 
   force=kwargs.pop("force",None)
 
@@ -56,13 +56,13 @@ def saveLast_(self,func,*args,**kwargs):
 
 def saveLast2_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
-  realSelf._lastTrain=realSelf.train.copy()
-  realSelf._lastTest=realSelf.test.copy()
-  realSelf._lastlogs=realSelf._logs.copy()
+  realSelf._lastTrain=copy(realSelf.train)
+  realSelf._lastTest=copy(realSelf.test)
+  realSelf._lastlogs=copy(realSelf._logs)
 
-  realSelf._lastlastTrain=realSelf._lastTrain.copy()
-  realSelf._lastlastTest=realSelf._lastTest.copy()
-  realSelf._lastlastlogs=realSelf._lastlogs.copy()
+  realSelf._lastlastTrain=copy(realSelf._lastTrain)
+  realSelf._lastlastTest=copy(realSelf._lastTest)
+  realSelf._lastlastlogs=copy(realSelf._lastlogs)
 
   force=kwargs.pop("force",None)
 
@@ -84,16 +84,16 @@ def saveLast3_(self,func,*args,**kwargs):
   type_=kwargs.pop("type_")
   # typeX_=kwargs.pop("typeX_",None)
   if "train" in type_:
-    realSelf._lastlastTrain=realSelf._lastTrain.copy()
-    realSelf._lastTrain=realSelf.train.copy()
-    realSelf._lastlastlogs=realSelf._lastlogs.copy()
-    realSelf._lastlogs=realSelf._logs.copy()
+    realSelf._lastlastTrain=copy(realSelf._lastTrain)
+    realSelf._lastTrain=copy(realSelf.train)
+    realSelf._lastlastlogs=copy(realSelf._lastlogs)
+    realSelf._lastlogs=copy(realSelf._logs)
 
   if "test" in type_:
-    realSelf._lastlastTest=realSelf._lastTest.copy()
-    realSelf._lastTest=realSelf.test.copy()
-    realSelf._lastlastlogsTest=realSelf._lastlogsTest.copy()    
-    realSelf._lastlogsTest=realSelf._logsTest.copy()
+    realSelf._lastlastTest=copy(realSelf._lastTest)
+    realSelf._lastTest=copy(realSelf.test)
+    realSelf._lastlastlogsTest=copy(realSelf._lastlogsTest)    
+    realSelf._lastlogsTest=copy(realSelf._logsTest)
 
 
   force=kwargs.pop("force",None)
@@ -138,8 +138,8 @@ class Speedml3:
         self._Speedml=Speedml2(train,test,target)
         self.init(train,test,target)
         self._snapshots = {}
-        self._initial_Train=train.copy()
-        self._initial_Test=test.copy()
+        self._initial_Train=copy(train)
+        self._initial_Test=copy(test)
 
 
     def init(self,Train,Test,target,type_=["train","test"]):
@@ -164,10 +164,10 @@ class Speedml3:
     #_______________SNAP_____________________
     def snapshot(self, name):
         snapshot = {
-          "dataTrain": self.train.copy(),
-          "dataTest": self.test.copy(),
-          "logs": self._logs.copy(),
-          "logsTest": self._logsTest.copy()
+          "dataTrain": copy(self.train),
+          "dataTest": copy(self.test),
+          "logs": copy(self._logs),
+          "logsTest": copy(self._logsTest)
         }
         self._snapshots[name] = snapshot
 
@@ -186,16 +186,16 @@ class Speedml3:
 
     def back_one(self,type_=["train","test"]):
         if "train" in type_:
-          self.train=self._lastTrain.copy()
-          self._logs=self._lastlogs.copy()
-          self._lastTrain=self._lastlastTrain.copy()
-          self._lastlogs=self._lastlastlogs.copy()
+          self.train=copy(self._lastTrain)
+          self._logs=copy(self._lastlogs)
+          self._lastTrain=copy(self._lastlastTrain)
+          self._lastlogs=copy(self._lastlastlogs)
 
         if "test" in type_:
-          self.test=self._lastTest.copy()
-          self._logsTest=self._lastlogsTest.copy()
-          self._lastTest=self._lastlastTest.copy()
-          self._lastlogsTest=self._lastlastlogsTest.copy()
+          self.test=copy(self._lastTest)
+          self._logsTest=copy(self._lastlogsTest)
+          self._lastTest=copy(self._lastlastTest)
+          self._lastlogsTest=copy(self._lastlastlogsTest)
     #_______________LOG_________________________
     def _log(self, string,type_="train",force=False):
         et="" if type_=="train" else "Test"
