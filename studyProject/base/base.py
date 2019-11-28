@@ -996,7 +996,7 @@ class DoraX(Dora):
         a=a_
         if hasattr(self._prep,a) or (a.startswith("_") and not a.startswith("__")):
             # if hasattr(self._prep,"__wrapped__"):
-            print('d')
+            # print('d')
             return getattr(self._prep,a_)
         return super().__getattr__(a_)
 

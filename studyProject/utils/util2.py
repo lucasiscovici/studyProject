@@ -80,9 +80,14 @@ def check_names(l,fn=int):
 
 def namesEscape(l,fn=int):
     from . import isArr
-    l=l if isArr(l) else [l]
-    return [l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l,fn=fn))]
-
+    import collections.abc
+    e=isinstance(l,collections.abc.Iterable) and not isinstance(l,str)
+    #print(e)
+    l=l if e else [l]
+    l= l.values if isinstance(l,pd.Series) or isinstance(l,pd.DataFrame) else l
+    rep=[l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l,fn=fn))]
+    return rep if e else rep[0]
+    
 def unNamesEscape(l,fn=int):
     from . import isArr
     import collections.abc
