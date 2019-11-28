@@ -35,6 +35,10 @@ from functools import wraps
 def has_method(o, name):
     return name in dir(o)
 
+def copy(ld):
+  if ld is None:
+    return ld
+  return ld.copy()
 def saveLast_(self,func,*args,**kwargs):
   self._lastTrain=copy(self.train)
   self._lastTest=copy(self.test)
