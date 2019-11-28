@@ -245,14 +245,14 @@ def getNotVarInFn(sign):
 def saveLastSpeedML(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
-      type_=kwargs.pop("type_",["train"])
-      d=StudyClass(_data=getattr(self,type_),_output=getattr(self,"target"))
+      type_=kwargs.pop("type_",["train","test"])
+      # d=StudyClass(_data=getattr(self,type_),_output=getattr(self,"target"))
       # d._data=getattr(self,type_)
       # d._output==getattr(self,"target")
       kwargs["realFunc"]=realFunc
       kwargs["realSelf"]=self
       kwargs["type_"]=type_
-      return saveLast3_(d,func,*args,**kwargs)
+      return saveLast3_(self._Speedml,func,*args,**kwargs)
   return with_logging
 def addMethodsFromSpeedML():
     from speedml import Feature
@@ -263,7 +263,7 @@ def addMethodsFromSpeedML():
         a=get_args(func)
         u=getVarInFn(a.signature)
         uu=getNotVarInFn(a.signature)
-        o=uu+["type_=['train']"]
+        o=uu+["type_=['train','test']"]
         fnu=make_fun(i,o+u)
         setattr(Speedml2,i,saveLastSpeedML(fnu,func))
     for i in n:
