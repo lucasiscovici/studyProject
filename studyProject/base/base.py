@@ -894,7 +894,7 @@ class Datas(Base):
         _prep=self._prep
         # self._prep=_prep if _prep is not None else (None if self.X is None else prep(self))
 
-    def init(self):
+    def init2(self):
         self.initEda()
         self.initPrep()
 
@@ -1014,7 +1014,7 @@ class DatasSupervise(Base):
         self._prep=_prep
         # self.init()
 
-    def init(self,_prep=None):
+    def init2(self,_prep=None):
         _prep=self._prep
         self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self))
 
@@ -1039,7 +1039,7 @@ class DatasSupervise(Base):
     @property
     def prep(self):
         if self._prep is None:
-            self.init()
+            self.init2()
         if self._prep is None:
             raise Exception("prep is not set")
         return self._prep
