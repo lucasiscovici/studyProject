@@ -2,6 +2,8 @@ from speedml import Speedml
 from studyPipe import df, X
 import numpy as np
 import pandas as pd
+from . import get_args, StudyClass
+import inspect
 if not hasattr(Speedml,"__init__base"): Speedml.__init__base=Speedml.__init__
 def init2(self,train, test, target, uid=None):
     from speedml import Plot, Feature, Model, Xgb, Base
@@ -50,6 +52,31 @@ def saveLast_(self,func,*args,**kwargs):
   del argss["self"]
   argss=["{}={}".format(i,"\""+j+"\"" if isinstance(j,str) else j) for i,j in argss.items()]
   self._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force)
+  return rep
+
+def saveLast2_(self,func,*args,**kwargs):
+  realSelf=kwargs.pop("realSelf",self)
+  realSelf._lastTrain=realSelf.train.copy()
+  realSelf._lastTest=realSelf.test.copy()
+  realSelf._lastlogs=realSelf._logs.copy()
+
+  realSelf._lastlastTrain=realSelf._lastTrain.copy()
+  realSelf._lastlastTest=realSelf._lastTest.copy()
+  realSelf._lastlastlogs=realSelf._lastlogs.copy()
+
+  force=kwargs.pop("force",None)
+
+  type_=kwargs.pop("type_")
+  realFunc=kwargs.pop("realFunc",func)
+
+
+  rep=realFunc(self,*args, **kwargs)
+  setattr(realSelf,type_,getattr(self,"_data"))
+
+  argss= inspect.getcallargs(func,self, *args, **kwargs)
+  del argss["self"]
+  argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
+  realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force)
   return rep
 
 def saveLast(func):
@@ -114,6 +141,13 @@ class Speedml2(Speedml):
         self._lastTest=self._lastlastTest.copy()
         self._lastlogs=self._lastlastlogs.copy()
 
+    #_______________LOG_________________________
+    def _log(self, string,force=False):
+        if string in self._logs and not force:
+          raise Exception(f"""
+                _log: {string} already in logs, if you want to force, add force=True""")
+        self._logs.append(string)
+
 def create_speedML(self):
     Train=self.dataTrain.get()
     Test=self.dataTest.get()
@@ -126,7 +160,9 @@ def eda2(self):
     rep.Observations=rep.Observations.apply(lambda a:a.replace("feature.","prep.").replace("plot.","viz."))
     return rep
 Speedml2.eda2=eda2
-
+#______JUPYTER NOTEBOOK__SPECIAL_FUNC___
+def _ipython_display_(self, **kwargs):
+    print("Train : ",np.shape(self.train),"\nTest :",np.shape(self.test))
 
 def addMethodsFromSpeedML():
     from speedml import Feature
@@ -135,3 +171,52 @@ def addMethodsFromSpeedML():
     for i in n:
         setattr(Speedml2,i,saveLast(fd[i]))
 addMethodsFromSpeedML()
+
+def make_fun(name,parameters):
+    # print(parameters)
+    exec("def {}({}): pass".format(name,', '.join(parameters)))
+    return locals()[name]
+def getVarInFn(sign):
+    return ["*"+i.name if i.kind.name == "VAR_POSITIONAL" else "**"+i.name for i in list(sign.parameters.values()) if i.kind.name in ["VAR_KEYWORD","VAR_POSITIONAL"]]
+def correc(l):
+    # print(l,type(l))
+    if type(l)==type:
+        # print(l.__name__)
+        return l.__name__
+    return l
+
+def getNotVarInFn(sign):
+    return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else i.name for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD","VAR_POSITIONAL"]]
+
+def saveLastDora(func,realFunc):
+  @wraps(func)
+  def with_logging(self,*args, **kwargs):
+      type_=kwargs.pop("type_","train")
+      d=StudyClass(_data=getattr(self,type_),_output=getattr(self,"target"))
+      # d._data=getattr(self,type_)
+      # d._output==getattr(self,"target")
+      kwargs["realFunc"]=realFunc
+      kwargs["realSelf"]=self
+      kwargs["type_"]=type_
+      return saveLast2_(d,func,*args,**kwargs)
+  return with_logging
+
+def addMethodsFromDora():
+    from dora_study import Dora
+    fd=Dora.__dict__
+    n=[i  for i,j in Dora.__dict__.items() if not i.startswith("_") and i not in ["plot_feature","explore"] and type(j)!=classmethod and hasattr(j,"__wrapped__")] 
+    def job(g,i,wrapped=True):
+        func=g.__wrapped__ if wrapped else g
+        a=get_args(func)
+        u=getVarInFn(a.signature)
+        uu=getNotVarInFn(a.signature)
+        o=uu+["type_='train'"]
+        fnu=make_fun(i,o+u)
+        setattr(Speedml2,i,saveLastDora(fnu,func))
+    for i in n:
+        job(fd[i],i)
+    fd=Dora._CUSTOMS
+    # print(fd)
+    for i in fd:
+        job(fd[i],i,False)
+addMethodsFromDora()

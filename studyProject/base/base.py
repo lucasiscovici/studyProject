@@ -614,10 +614,13 @@ class Base(object):
     @classmethod 
     def import__(cls,ol,loaded,newIDS=False,normalNEW=True,forceInfer=False,dirs={},*args,**xargs):
         # if normalNEW:
+        ol.____IMPORT____=True
         rep=cls.import___(cls,ol,loaded,newIDS=newIDS,forceInfer=forceInfer,dirs=dirs,*args,**xargs)
         # rep=cls.import___(cls,cls(normal=False),loaded,newIDS=newIDS,forceInfer=forceInfer,*args,**xargs)
         if rep is not None and isinstance(rep,Base):
             rep.restoreDir(dirs)
+        if hasattr(rep,"____IMPORT____"):
+            delattr(rep,"____IMPORT____")
         return cls._import(rep)
 
     @classmethod 
@@ -784,7 +787,7 @@ class Base(object):
 
     def __getattribute__(self,a):
         rep=super().__getattribute__(a)
-        if a != "papa":
+        if a != "papa" and not isinstance(getattr(type(self), a, None), property):
             if isinstance(rep,Base):
                 object.__setattr__(rep, "papa", self)
                 # rep.papa=self
@@ -829,6 +832,40 @@ class Base(object):
     #         s.replace(self.namesY)
             # {False:"Pas5",True:"5"}
 import pandas_profiling_study as pdp
+class edaCls:
+    SECTIONS=["overview","variables","correlations","missing","sample"]
+    def __init__(self,edas):
+        self._edas=edas
+    
+    @property
+    def all(self):
+        return self.get()
+
+    @property
+    def overview(self):
+        return self.get(["overview"])
+
+    @property
+    def variables(self):
+        return self.get(["variables"])
+    
+    @property
+    def correlations(self):
+        return self.get(["correlations"])
+
+    @property
+    def missing(self):
+        return self.get(["missing"])
+    
+    @property
+    def sample(self):
+        return self.get(["sample"])
+    
+    def get(self,sections=["overview","variables","correlations","missing","sample"]):
+        return self._edas.change_sections(sections)
+
+    def __repr__(self):
+        return "eda, attribute available :"+", ".join(self.SECTIONS)
 
 class Datas(Base):
     EXPORTABLE=["X","y","_eda","_prep"]
@@ -840,19 +877,26 @@ class Datas(Base):
         self.y=y
         self._eda=_eda
         self._prep=_prep
-        self.init()
+        # self.init()
 
     def initEda(self):
-        eda=self._eda
-        self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(initial=True),sections=["overview","variables","correlations","missing","sample"]))
-
+        # print("initEDA",hasattr(self,"____IMPORT____"),self._eda,self.X)
+        if not hasattr(self,"____IMPORT____"):
+            eda=self._eda
+            if eda is None and self.X is not None:
+                with showWarningsTmp:
+                    warnings.warn("""
+                        creating EDA ProfileReport... (think to export the study(Project) !!)""")
+            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(initial=True),sections=["overview","variables","correlations","missing","sample"]))
+            if isinstance(self._eda ,pdp.ProfileReport):
+                self._eda=edaCls(self._eda)
     def initPrep(self):
         _prep=self._prep
-        self._prep=_prep if _prep is not None else (None if self.X is None else prep(self))
+        # self._prep=_prep if _prep is not None else (None if self.X is None else prep(self))
 
     def init(self):
         self.initEda()
-        self.initEda()
+        self.initPrep()
 
     def get(self,prep=True,withNamesY=False,concat=True,initial=False):
         if initial:
@@ -870,10 +914,18 @@ class Datas(Base):
 
     @property
     def prep(self):
-        if self._prep is None:
-            self.initPrep()
-        if self._prep is None:
-            raise Exception("prep not set")
+        # print("io",self.papa)
+        if self.papa is None:
+            if self._prep is None:
+                self._prep=Dora(self.get(initial=True),output=self.y.name) if dora is None else dora
+        else:
+            # print("io2",prepI(self))
+            self._prep=prepI(self)
+
+        # if self._prep is None:
+        #     self.initPrep()
+        # if self._prep is None:
+        #     raise Exception("prep not set")
         return self._prep
 
     @property
@@ -886,27 +938,27 @@ class Datas(Base):
 
     #TODO: plotly chart in pdp
     def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
-        if self.eda is None:
-            with showWarningsTmp:
-                warnings.warn("""
-                    creating ProfileReport...""")
-            self.eda=pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"])
-        return self.eda.change_sections(sections)
+        # if self.eda is None:
+        #     with showWarningsTmp:
+        #         warnings.warn("""
+        #             creating ProfileReport...""")
+        #     self.eda=pdp.ProfileReport(self.get(concat=concat),sections=["overview","variables","correlations","missing","sample"])
+        return self.eda.get()
 
     def getEDA_Clues(self):
         d=self.papa.getEDA()
         return d
 
-    def export(self,save=True,dirAdded=[],*args,**xargs):
-        rep=super().export(save,dirAdded,*args,**xargs)
-        rep['_prep']= copy.deepcopy(self.prep.dora)
-        return rep
+    # def export(self,save=True,dirAdded=[],*args,**xargs):
+    #     rep=super().export(save,dirAdded,*args,**xargs)
+    #     rep['_prep']= copy.deepcopy(self.prep.dora.__dict__)
+    #     return rep
 
-    @classmethod 
-    def _import(cls,loaded):
-        rep = cls.__base__._import(loaded)
-        rep._prep = prep(rep,rep._prep)
-        return rep
+    # @classmethod 
+    # def _import(cls,loaded):
+    #     rep = cls.__base__._import(loaded)
+    #     # rep._prep = prep(rep,rep._prep)
+    #     return rep
 
 factoryCls.register_class(Datas)
 
@@ -915,24 +967,44 @@ from dora_study import Dora as Dora2
 class Dora(Dora2):
     def __init__(self, data = None, output = None):
         super().__init__(data,output)
-        # for i in ["plot_feature","explore"]:
-            # delattr(self,i)
+        #for i in ["plot_feature","explore"]:
+        #    delattr(self,i)
+class DoraX(Dora):
+    def __init__(self, data = None, output = None,prep=None):
+        super().__init__(data,output)
+        self._prep=prep
+    
+    def __getattr__(self,a_):
+        # a=super().__getattr__(a_)
+        a=a_
+        if hasattr(self._prep,a) or (a.startswith("_") and not a.startswith("__")):
+            # if hasattr(self._prep,"__wrapped__"):
+            print('d')
+            return getattr(self._prep,a_)
+        return super().__getattr__(a_)
 
 
-class prep:
+class prepI:
     def __init__(self,l:Datas,dora=None):
-        self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
+        # if l.papa is None:
+            # self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
+            # print("ici")
+        # else:
+            # print("ici2")
+        self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name,prep=l.papa.prep) if dora is None else dora
+
         #self.speedML = l.
     def __dir__(self):
-        return ["dora"]+dir(self.dora)
+        return ["dora"]+[i for i in dir(self.dora) if hasattr(getattr(self.dora,i),"__wrapped__")]
 
     def __getattr__(self,b):
-        if b=="dora" or (b.startswith('__') or b.endswith('__')):
+        # print("pb",b)
+        if b in ["dora","_instancecheck","_ipython_display_"] or (b.startswith('__') or b.endswith('__')):
             return object.__getattribute__(self,b)
         return getattr(self.dora,b)
 
 class DatasSupervise(Base):
-    EXPORTABLE=["dataTrain","dataTest","speedML","_prep"]
+    EXPORTABLE=["dataTrain","dataTest","_prep"]
     D=Datas
 
     def __init__(self,dataTrain:Datas=None,dataTest:Datas=None,_prep=None,ID=None):
@@ -940,7 +1012,7 @@ class DatasSupervise(Base):
         self.dataTrain=dataTrain
         self.dataTest=dataTest
         self._prep=_prep
-        self.init()
+        # self.init()
 
     def init(self,_prep=None):
         _prep=self._prep
@@ -949,11 +1021,11 @@ class DatasSupervise(Base):
     @classmethod
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):
         return cls(cls.D(X_train,y_train),
-                              cls.D(X_test,y_test),ID)
+                              cls.D(X_test,y_test),ID=ID)
 
     def get(self,deep=True,optsTrain={},optsTest={}):
         if deep:
-            return [*self.dataTrain.get(**optsTrain),*self.dataTest.get(**optsTest)]
+            return [*self.dataTrain.get(concat=not deep,**optsTrain),*self.dataTest.get(concat=not deep,**optsTest)]
         return [self.dataTrain,self.dataTest]
 
     def __repr__(self,ind=2):

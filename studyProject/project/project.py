@@ -504,7 +504,9 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         if id_ is not None and id_ not in self.project.data:
             raise KeyError("id_ not in global")
         if id_ is not None:
-            self._datas=self.project.data[id_]
+            # y=self.project.data[id_]
+            super().setDataTrainTest(*self.project.data[id_].get())
+            # self._datas=self.project.data[id_]
             self._idDataProject=id_
         else:
             classif = self.isClassif
