@@ -77,7 +77,7 @@ def saveLast2_(self,func,*args,**kwargs):
   del argss["self"]
   argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
   realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force)
-  return rep
+  return realSelf
 
 def saveLast(func):
   @wraps(func)
