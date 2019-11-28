@@ -958,14 +958,11 @@ class Datas(Base):
         return [i for i in d1 if not i.startswith("__")]+[i for i in d if not i.startswith("__")]+[i for i in d1 if i.startswith("__")]+[i for i in d if  i.startswith("__")]
 
     def __getattr__(self,a):
-
-        try:
-            return super().__getattribute__(a)
-        except Exception as e:
-            if hasattr(self.get(),a):
-                return getattr(self.get(),a)
-            raise e
-
+        if a in ["_instancecheck"]:
+            return object.__getattribute__(self,a)
+        if hasattr(self.get(),a):
+            return getattr(self.get(),a)
+        return super().__getattr__(a)
     # def export(self,save=True,dirAdded=[],*args,**xargs):
     #     rep=super().export(save,dirAdded,*args,**xargs)
     #     rep['_prep']= copy.deepcopy(self.prep.dora.__dict__)
