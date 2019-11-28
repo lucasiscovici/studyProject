@@ -281,7 +281,7 @@ def onWarnings(d="default"):
     setWarnings('default')
 
 class changeTmpObj:
-    def __init__(self,obj,attr,affect=False,returnAttr=False):
+    def __init__(self,obj,attr,affect=False,returnAttr=True,preservePAPA=True):
         self.obj=obj
         self.attr=attr
         self.returnAttr=returnAttr
@@ -290,7 +290,7 @@ class changeTmpObj:
             # print("la")
             if hasattr(getattr(self.obj,self.attr),"clone"):
                 # print("ii")
-                self.v=getattr(self.obj,self.attr).clone()
+                self.v=getattr(self.obj,self.attr).clone(preservePAPA=preservePAPA)
             else:
                 self.v=copy.deepcopy(getattr(self.obj,self.attr))
         except:

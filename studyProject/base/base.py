@@ -212,11 +212,11 @@ class Base(object):
         object.__setattr__(self, "attr", None)
         #self.papa=self
 
-    def clone(self,ID=None,newIDS=False,deep=True):
-        return self.__class__.Clone(self,ID,newIDS=newIDS,deep=deep)
+    def clone(self,ID=None,newIDS=False,deep=True,*args,**xargs):
+        return self.__class__.Clone(self,ID,newIDS=newIDS,deep=deep,*args,**xargs)
         
     @staticmethod
-    def Clone(self,ID=None,deep=True,newIDS=False,normalNEW=True):
+    def Clone(self,ID=None,deep=True,newIDS=False,normalNEW=True,preservePAPA=False):
         ID = ifelse(ID is not None,ID,self.ID)
         #print( name)
         if deep:
@@ -232,10 +232,14 @@ class Base(object):
             # #print(l.__dict__)
             # l.ID=ID
             #print(l.__dict__)
+            if preservePAPA and hasattr(self,"papa") and self.papa is not None
+                l.papa=self.papa
             return l
         else:
             me=copy.deepcopy(self)
             me.ID=ID
+            if preservePAPA and hasattr(self,"papa") and self.papa is not None
+                me.papa=self.papa
             return me
 
     @classmethod
@@ -1629,8 +1633,8 @@ class BaseSupervise(Base):
             securerRepr(self._metric,ind+2),
             securerRepr(BeautifulDico(self._cv),ind+1,ademas=2),self._nameCvCurr)
 
-    def clone(self,ID=None,newIDS=False,deep=True):
-        cl=super().clone(ID=ID,newIDS=newIDS,deep=deep)
+    def clone(self,ID=None,newIDS=False,deep=True,*args,**xargs):
+        cl=super().clone(ID=ID,newIDS=newIDS,deep=deep,*args,**xargs)
         cl._cv=studyDico(cl.cv,papa=self,addPapaIf=lambda a:isinstance(a,Base),attr="cv")
         return cl
 
