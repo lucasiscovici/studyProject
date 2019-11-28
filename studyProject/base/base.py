@@ -117,6 +117,9 @@ class Base(object):
     #         self.__dict__.update(state)
     # viz=
 
+
+    def init(self,*args,**args):
+        pass
     #include all function even if in dad
     @staticmethod
     def __viz_viz__(self,selfo):
