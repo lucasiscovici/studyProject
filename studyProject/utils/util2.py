@@ -87,7 +87,7 @@ def namesEscape(l,fn=int):
     l= l.values if isinstance(l,pd.Series) or isinstance(l,pd.DataFrame) else l
     rep=[l[i_] if i else "`"+str(l[i_])+"`" for i_,i in enumerate(check_names(l,fn=fn))]
     return rep if e else rep[0]
-    
+
 def unNamesEscape(l,fn=int):
     from . import isArr
     import collections.abc
@@ -288,14 +288,14 @@ class changeTmpObj:
         self.v_=getattr(self.obj,self.attr)
         try:
             # print("la")
-            self.v=copy.deepcopy(getattr(self.obj,self.attr))
-        except:
             if hasattr(getattr(self.obj,self.attr),"clone"):
                 # print("ii")
                 self.v=getattr(self.obj,self.attr).clone()
             else:
-                # print("uddu")
-                self.v=copy.copy(getattr(self.obj,self.attr))
+                self.v=copy.deepcopy(getattr(self.obj,self.attr))
+        except:
+            # print("uddu")
+            self.v=copy.copy(getattr(self.obj,self.attr))
         self.affect=affect
     def __enter__(self):
         return self.obj if not self.returnAttr else self.v
