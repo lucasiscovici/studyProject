@@ -269,7 +269,7 @@ def addMethodsFromSpeedML():
         uu=getNotVarInFn(a.signature)
         o=uu+["type_=['train','test']"]
         fnu=make_fun(i,o+u)
-        setattr(Speedml2,i,saveLastSpeedML(fnu,func))
+        setattr(Speedml3,i,saveLastSpeedML(fnu,func))
     for i in n:
         job(fd[i],i)
     # for i in n:
@@ -301,7 +301,7 @@ def addMethodsFromDora():
         uu=getNotVarInFn(a.signature)
         o=uu+["type_='train'"]
         fnu=make_fun(i,o+u)
-        setattr(Speedml2,i,saveLastDora(fnu,func))
+        setattr(Speedml3,i,saveLastDora(fnu,func))
     for i in n:
         job(fd[i],i)
     fd=Dora._CUSTOMS
