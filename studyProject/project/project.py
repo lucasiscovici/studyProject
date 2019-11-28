@@ -239,7 +239,7 @@ class StudyProject(Base):
         # if not os.path.exists(repo):
         #     os.makedirs(repo)
         # filo=repo+delim+ID+ext
-        sl=StudyProject.clone(self,deep=False)
+        # sl=StudyProject.clone(self,deep=False)
         # sl=StudyProject.clone(self,deep=True)
         ff={}
         for k,v_ in self._studies.items():
@@ -279,7 +279,9 @@ class StudyProject(Base):
         if returnOK:
             return StudyClass(obj=self,fin=lambda obj=obj,stu=stu,cvv=cvv: reloadS(obj,stu,cvv))
         else:
-            self.__class__.Save(sl,ID,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
+            self.__class__.Save(self,ID,repertoire=repertoire,ext=ext,path=path,delim=delim,**xargs)
+            self._studies=stu
+            self._cv=cvv
             # SaveLoad.save(sl,filo,**xargs)
     
     
