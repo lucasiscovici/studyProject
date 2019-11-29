@@ -1059,7 +1059,7 @@ class DoraX:
 class prepI:
     def __init__(self,l:Datas,dora=None):
         oname=l.y.name if hasattr(l.y,'name') else None
-        if l.papa is None or (l.papa is not None and l.papa._prep is None):
+        if l.papa is None :#(l.papa is not None and l.papa._prep is None)
             self.dora=Dora(l.get(initial=True),output=oname) if dora is None else dora
         else:
             self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=oname,prep=l.papa.prep,attr="train" if l.attr=='dataTrain' else "test") if dora is None else dora
