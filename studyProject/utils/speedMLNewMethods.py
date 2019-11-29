@@ -28,7 +28,6 @@ def init2(self,train, test, target, uid=None):
     else:
         print('ERROR: SpeedML can only process .csv and .json file extensions.')
     #return spd
-Speedml.__init__=init2
 import inspect
 from functools import wraps
 
@@ -132,9 +131,11 @@ def saveLast(func):
 #       return saveLast_(self,func,*args,**kwargs)
 #   return with_logging
 class Speedml2(Speedml):
-    def __init__(self,train, test, target, uid=None):
-        super().__init__(train,test,target,uid)
+  pass
+    # def __init__(self,train, test, target, uid=None):
+        # super().__init__(train,test,target,uid)
         # self.init(train,test,target)
+Speedml2.__init__=init2
 class Speedml3:
 
     def __init__(self,train, test, target, uid=None):
@@ -220,7 +221,7 @@ def eda2(self):
     rep= (rep.T >> df.select(X.Shape,df.columns_from(1),df.everything())).T
     rep.Observations=rep.Observations.apply(lambda a:a.replace("feature.","prep.").replace("plot.","viz."))
     return rep
-Speedml2.eda2=eda2
+Speedml3.eda2=eda2
 #______JUPYTER NOTEBOOK__SPECIAL_FUNC___
 def _ipython_display_(self, **kwargs):
     print("Train : ",np.shape(self.train),"\nTest :",np.shape(self.test))
