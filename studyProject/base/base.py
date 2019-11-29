@@ -962,6 +962,7 @@ class Datas(Base):
         return [i for i in d1 if not i.startswith("__")]+[i for i in d if not i.startswith("__")]+[i for i in d1 if i.startswith("__")]+[i for i in d if  i.startswith("__")]
 
     def __getattr__(self,a):
+        print(a)
         if a in ["_instancecheck","papa","attr"]:
             return object.__getattribute__(self,a)
         if hasattr(self.get(),a):
