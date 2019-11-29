@@ -964,14 +964,11 @@ class Datas(Base):
 
     def __getattr__(self,a):
         # print(a)
-        try:
-            return super().__getattribute__(a)
-        except:
-            if a in ["_instancecheck","papa","attr"]:
-                return object.__getattribute__(self,a)
-            if hasattr(self.get(),a):
-                return getattr(self.get(),a)
-            return super().__getattr__(a)
+        if a in ["_instancecheck","papa","attr"]:
+            return object.__getattribute__(self,a)
+        if hasattr(self.get(),a):
+            return getattr(self.get(),a)
+        return super().__getattribute__(a)
     # def export(self,save=True,dirAdded=[],*args,**xargs):
     #     rep=super().export(save,dirAdded,*args,**xargs)
     #     rep['_prep']= copy.deepcopy(self.prep.dora.__dict__)
