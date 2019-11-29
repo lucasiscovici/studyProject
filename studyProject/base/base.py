@@ -1008,7 +1008,7 @@ def saveLastDoraX(func,selfo,attr):
     return with_logging
 class DoraX:
     def __init__(self, data = None, output = None,prep=None,attr=None):
-        super().__init__(data,output)
+        # super().__init__(data,output)
         self.data=data
         self.output=output
         self._prep=prep
