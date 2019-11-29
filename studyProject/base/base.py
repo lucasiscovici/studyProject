@@ -983,16 +983,67 @@ class Datas(Base):
 factoryCls.register_class(Datas)
 
 from dora_study import Dora as Dora2
-
+import types
+from functools import wraps
 class Dora(Dora2):
     def __init__(self, data = None, output = None):
         super().__init__(data,output)
         #for i in ["plot_feature","explore"]:
         #    delattr(self,i)
-class DoraX(Dora):
-    def __init__(self, data = None, output = None,prep=None):
+def saveLastDoraX(func,selfo,attr):
+    @wraps(func)
+    def with_logging(self,*args, **kwargs):
+        type_=attr
+        names= func.__name__
+        fun2=getattr(selfo,names)
+
+        # d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
+        # d._data=getattr(self,type_)
+        # d._output==getattr(self,"target")
+        # kwargs["realFunc"]=realFunc
+        # kwargs["realSelf"]=self
+        kwargs["type_"]=[type_]
+        return fun2(*args,**kwargs)
+    return with_logging
+class DoraX:
+    def __init__(self, data = None, output = None,prep=None,attr=None):
         super().__init__(data,output)
+        self.data=data
+        self.output=output
         self._prep=prep
+        self._attr_=attr
+
+        def use_snapshot(self, name):
+            return self._prep.use_snapshot(name,type_=[attr])
+
+        def back_initial_data(self):
+            return self._prep.back_initial_data(type_=[attr])
+
+        def back_one(self):
+            return self._prep.back_one(type_=[attr])
+            
+        self.use_snapshot=types.MethodType( use_snapshot, self )
+        self.back_initial_data=types.MethodType( back_initial_data, self )
+        self.back_one=types.MethodType( back_one, self )
+
+        from dora_study import Dora
+        fd=Dora.__dict__
+        n=[i  for i,j in Dora.__dict__.items() if not i.startswith("_") and i not in ["plot_feature","explore"] and type(j)!=classmethod and hasattr(j,"__wrapped__")] 
+        def job(g,i,wrapped=True):
+            func=g.__wrapped__ if wrapped else g
+            # a=get_args(func)
+            # u=getVarInFn(a.signature)
+            # uu=getNotVarInFn(a.signature)
+            # o=uu+[f"type_=['{attr}']"]
+            # fnu=make_fun(i,o+u)
+            setattr(self,i,types.MethodType(saveLastDoraX(func,self._prep,attr),self))
+        for i in n:
+            job(fd[i],i)
+        fd=Dora._CUSTOMS
+        # print(fd)
+        for i in fd:
+            job(fd[i],i,False)
+    
     
     def __getattr__(self,a_):
         # a=super().__getattr__(a_)
@@ -1004,12 +1055,14 @@ class DoraX(Dora):
         return super().__getattr__(a_)
 
 
+
 class prepI:
     def __init__(self,l:Datas,dora=None):
+        oname=l.y.name if hasattr(l.y,'name') else None
         if l.papa is None or (l.papa is not None and l.papa._prep is None):
-            self.dora=Dora(l.get(initial=True),output=l.y.name if hasattr(l.y,'name') else None) if dora is None else dora
+            self.dora=Dora(l.get(initial=True),output=oname) if dora is None else dora
         else:
-            self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name if hasattr(l.y,'name') else None,prep=l.papa.prep) if dora is None else dora
+            self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=oname,prep=l.papa.prep,attr="train" if l.attr=='dataTrain' else "test") if dora is None else dora
         self.attr=l.attr
         #self.speedML = l.
     def __dir__(self):

@@ -59,22 +59,26 @@ def saveLast_(self,func,*args,**kwargs):
 
 def saveLast2_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
-  realSelf._lastTrain=copy(realSelf.train)
-  realSelf._lastTest=copy(realSelf.test)
-  realSelf._lastlogs=copy(realSelf._logs)
+  type_=kwargs.pop("type_")
+  if "train" in type_:
+    realSelf._lastlastTrain=copy(realSelf._lastTrain)
+    realSelf._lastTrain=copy(realSelf.train)
+    realSelf._lastlastlogs=copy(realSelf._lastlogs)
+    realSelf._lastlogs=copy(realSelf._logs)
 
-  realSelf._lastlastTrain=copy(realSelf._lastTrain)
-  realSelf._lastlastTest=copy(realSelf._lastTest)
-  realSelf._lastlastlogs=copy(realSelf._lastlogs)
+  if "test" in type_:
+    realSelf._lastlastTest=copy(realSelf._lastTest)
+    realSelf._lastTest=copy(realSelf.test)
+    realSelf._lastlastlogsTest=copy(realSelf._lastlogsTest)    
+    realSelf._lastlogsTest=copy(realSelf._logsTest)
 
   force=kwargs.pop("force",None)
 
-  type_=kwargs.pop("type_")
   realFunc=kwargs.pop("realFunc",func)
 
 
   rep=realFunc(self,*args, **kwargs)
-  setattr(realSelf,type_,getattr(self,"_data"))
+  setattr(realSelf,type_[0],getattr(self,"_data"))
 
   argss= inspect.getcallargs(func,self, *args, **kwargs)
   del argss["self"]
@@ -170,6 +174,7 @@ class Speedml3:
           self._lastlogsTest=None
           self._lastlastlogsTest=None
           self.test=Test
+        self.target=target
 
 
     #_______________SNAP_____________________
@@ -295,14 +300,16 @@ addMethodsFromSpeedML()
 def saveLastDora(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
-      type_=kwargs.pop("type_","train")
-      d=StudyClass(_data=getattr(self,type_),_output=getattr(self,"target"))
-      # d._data=getattr(self,type_)
-      # d._output==getattr(self,"target")
-      kwargs["realFunc"]=realFunc
-      kwargs["realSelf"]=self
-      kwargs["type_"]=type_
-      return saveLast2_(d,func,*args,**kwargs)
+      type_=kwargs.pop("type_",["train","test"])
+
+      for i in type_:
+        d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
+        # d._data=getattr(self,type_)
+        # d._output==getattr(self,"target")
+        kwargs["realFunc"]=realFunc
+        kwargs["realSelf"]=self
+        kwargs["type_"]=[i]
+        return saveLast2_(d,func,*args,**kwargs)
   return with_logging
 
 def addMethodsFromDora():
@@ -314,7 +321,7 @@ def addMethodsFromDora():
         a=get_args(func)
         u=getVarInFn(a.signature)
         uu=getNotVarInFn(a.signature)
-        o=uu+["type_='train'"]
+        o=uu+["type_=['train','test']"]
         fnu=make_fun(i,o+u)
         setattr(Speedml3,i,saveLastDora(fnu,func))
     for i in n:
