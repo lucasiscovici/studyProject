@@ -1009,7 +1009,7 @@ class prepI:
         if l.papa is None or (l.papa is not None and l.papa._prep is None):
             self.dora=Dora(l.get(initial=True),output=l.y.name if hasattr(l.y,'name') else None) if dora is None else dora
         else:
-            self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name,prep=l.papa.prep) if dora is None else dora
+            self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name if hasattr(l.y,'name') else None,prep=l.papa.prep) if dora is None else dora
         self.attr=l.attr
         #self.speedML = l.
     def __dir__(self):
