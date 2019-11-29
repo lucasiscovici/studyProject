@@ -964,7 +964,7 @@ class Datas(Base):
 
     def __getattr__(self,a):
         # print(a)
-        if a in ["_instancecheck","papa","attr"]:
+        if a in ["_instancecheck","papa","attr"] or a.startswith('__'):
             return object.__getattribute__(self,a)
         if hasattr(self.get(),a):
             return getattr(self.get(),a)
