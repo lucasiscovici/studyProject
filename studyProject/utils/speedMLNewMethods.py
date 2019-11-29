@@ -114,11 +114,12 @@ def saveLast3_(self,func,*args,**kwargs):
   for i in type_:
     setattr(self,i,doo[i])
 
-  kwargs["type_"]=type_
-  argss= inspect.getcallargs(func,self, *args, **kwargs)
-  del argss["self"]
-  argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
-  realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=type_)
+  for j in type_:
+    kwargs["type_"]=[j]
+    argss= inspect.getcallargs(func,self, *args, **kwargs)
+    del argss["self"]
+    argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
+    realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=type_)
   return realSelf
 def saveLast(func):
   @wraps(func)
