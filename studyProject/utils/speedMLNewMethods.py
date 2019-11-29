@@ -76,7 +76,7 @@ def saveLast2_(self,func,*args,**kwargs):
 
   realFunc=kwargs.pop("realFunc",func)
 
-
+  print(realFunc,self,args,kwargs)
   rep=realFunc(self,*args, **kwargs)
   setattr(realSelf,type_[0],getattr(self,"_data"))
 

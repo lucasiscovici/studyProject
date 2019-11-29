@@ -1070,7 +1070,7 @@ class prepI:
         self.attr=l.attr
         #self.speedML = l.
     def __dir__(self):
-        return ["dora"]+[i for i in dir(self.dora) if hasattr(getattr(self.dora,i),"__wrapped__")]
+        return ["dora"]+[i for i in dir(self.dora) if hasattr(getattr(self.dora,i),"__wrapped__")]+[i for i in dir(self.dora) if not hasattr(getattr(self.dora,i),"__wrapped__")]
 
     def getData(self):
         if self.dora.__class__.__name__ == "Dora":
