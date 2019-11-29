@@ -997,7 +997,7 @@ def saveLastDoraX(func,selfo,attr):
         type_=attr
         names= func.__name__
         fun2=getattr(selfo,names)
-
+        print(self,args,kwargs)
         # d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
         # d._output==getattr(self,"target")
