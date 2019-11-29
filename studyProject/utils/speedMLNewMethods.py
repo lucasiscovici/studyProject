@@ -106,6 +106,7 @@ def saveLast3_(self,func,*args,**kwargs):
   # if typeX_ is not None
   doo={i:getattr(self,i) for i in type_}
 
+  print(self,args,kwargs)
   rep=realFunc(self,*args, **kwargs)
   for i in type_:
     setattr(realSelf,i,getattr(rep,i))
