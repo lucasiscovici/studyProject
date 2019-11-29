@@ -997,7 +997,7 @@ def saveLastDoraX(func,selfo,attr):
         type_=attr
         names= func.__name__
         fun2=getattr(selfo,names)
-        print(self,args,kwargs)
+        # print(self,args,kwargs)
         # d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
         # d._output==getattr(self,"target")
@@ -1026,9 +1026,9 @@ class DoraX:
         def back_one(self):
             return self._prep.back_one(type_=[attr])
             
-        self._addmethod("use_snapshot",types.MethodType( use_snapshot, self ))
-        self._addmethod("back_initial_data",types.MethodType( back_initial_data, self ))
-        self._addmethod("back_one",types.MethodType( back_one, self ))
+        self._addmethod("use_snapshot",use_snapshot, )
+        self._addmethod("back_initial_data",back_initial_data )
+        self._addmethod("back_one", back_one )
 
         from dora_study import Dora
         fd=Dora.__dict__
@@ -1040,7 +1040,7 @@ class DoraX:
             # uu=getNotVarInFn(a.signature)
             # o=uu+[f"type_=['{attr}']"]
             # fnu=make_fun(i,o+u)
-            self._addmethod(i,types.MethodType(saveLastDoraX(func,self._prep,attr),self))
+            self._addmethod(i,saveLastDoraX(func,self._prep,attr))
         for i in n:
             job(fd[i],i)
         fd=Dora._CUSTOMS
