@@ -908,7 +908,7 @@ class Datas(Base):
     def get(self,prep=True,withNamesY=False,concat=True,initial=False):
         if initial:
             return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
-        if self._prep is not None:
+        if self.papa._prep is not None or self._prep is not None:
             return self.prep.data
         return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
 

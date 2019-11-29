@@ -115,6 +115,8 @@ def saveLast3_(self,func,*args,**kwargs):
     setattr(self,i,doo[i])
 
   for j in type_:
+    if func.__name__=="outliers" and j=="test":
+      continue
     kwargs["type_"]=[j]
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
