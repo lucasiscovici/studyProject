@@ -106,7 +106,7 @@ def saveLast3_(self,func,*args,**kwargs):
   # if typeX_ is not None
   doo={i:getattr(self,i) for i in type_}
 
-  print(self,args,kwargs)
+  # print(self,args,kwargs)
   rep=realFunc(self,*args, **kwargs)
   for i in type_:
     setattr(realSelf,i,getattr(self,i))
@@ -114,7 +114,7 @@ def saveLast3_(self,func,*args,**kwargs):
   for i in type_:
     setattr(self,i,doo[i])
 
-  # kwargs["type_"]=type_
+  kwargs["type_"]=type_
   argss= inspect.getcallargs(func,self, *args, **kwargs)
   del argss["self"]
   argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
