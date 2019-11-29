@@ -109,10 +109,10 @@ def saveLast3_(self,func,*args,**kwargs):
   print(self,args,kwargs)
   rep=realFunc(self,*args, **kwargs)
   for i in type_:
-    setattr(realSelf,i,getattr(rep,i))
+    setattr(realSelf,i,getattr(self,i))
 
   for i in type_:
-    setattr(realSelf,i,getattr(self,doo[i]))
+    setattr(self,i,doo[i])
 
   # kwargs["type_"]=type_
   argss= inspect.getcallargs(func,self, *args, **kwargs)
