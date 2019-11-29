@@ -910,8 +910,8 @@ class Datas(Base):
             return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
         # if self.papa._prep is not None or self._prep is not None:
         # return self.prep.data
-        hj=[getattr(self.prep,"train" if self.attr=='dataTrain' else "test"),getattr(self.prep,"train" if self.attr=='dataTrain' else "test")]
-        return hj if not concat else pd.concat(hj,axis=1)
+        return self.prep.getData()
+        # return hj if not concat else pd.concat(hj,axis=1)
 
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
@@ -1010,11 +1010,16 @@ class prepI:
             self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
         else:
             self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name,prep=l.papa.prep) if dora is None else dora
-
+        self.attr=l.attr
         #self.speedML = l.
     def __dir__(self):
         return ["dora"]+[i for i in dir(self.dora) if hasattr(getattr(self.dora,i),"__wrapped__")]
 
+    def getData(self):
+        if self.dora.__class__ == "Dora":
+            return self.dora._data
+        return getattr(self.dora,"train" if self.attr=='dataTrain' else "test")
+   
     def __getattr__(self,b):
         # print("pb",b)
         if b in ["dora","_instancecheck","_ipython_display_"] or (b.startswith('__') or b.endswith('__')):
