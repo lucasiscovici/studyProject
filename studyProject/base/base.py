@@ -908,9 +908,10 @@ class Datas(Base):
     def get(self,prep=True,withNamesY=False,concat=True,initial=False):
         if initial:
             return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
-        if self.papa._prep is not None or self._prep is not None:
-            return self.prep.data
-        return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
+        # if self.papa._prep is not None or self._prep is not None:
+        # return self.prep.data
+        hj=[getattr(self.prep,"train" if self.attr=='dataTrain' else "test"),getattr(self.prep,"train" if self.attr=='dataTrain' else "test")]
+        return hj if not concat else pd.concat(hj,axis=1)
 
     def __repr__(self,ind=1):
         txt=super().__repr__(ind)
@@ -962,9 +963,9 @@ class Datas(Base):
         return [i for i in d1 if not i.startswith("__")]+[i for i in d if not i.startswith("__")]+[i for i in d1 if i.startswith("__")]+[i for i in d if  i.startswith("__")]
 
     def __getattr__(self,a):
-        print(a)
+        # print(a)
         try:
-            return super().__getattr__(a)
+            return super().__getattribute__(a)
         except:
             if a in ["_instancecheck","papa","attr"]:
                 return object.__getattribute__(self,a)
