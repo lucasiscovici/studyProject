@@ -1006,12 +1006,10 @@ class DoraX(Dora):
 
 class prepI:
     def __init__(self,l:Datas,dora=None):
-        # if l.papa is None:
-            # self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
-            # print("ici")
-        # else:
-            # print("ici2")
-        self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name,prep=l.papa.prep) if dora is None else dora
+        if l.papa is None or (l.papa is not None and l.papa._prep is None):
+            self.dora=Dora(l.get(initial=True),output=l.y.name) if dora is None else dora
+        else:
+            self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=l.y.name,prep=l.papa.prep) if dora is None else dora
 
         #self.speedML = l.
     def __dir__(self):
