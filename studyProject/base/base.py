@@ -1016,7 +1016,7 @@ class prepI:
         return ["dora"]+[i for i in dir(self.dora) if hasattr(getattr(self.dora,i),"__wrapped__")]
 
     def getData(self):
-        if self.dora.__class__ == "Dora":
+        if self.dora.__class__.__name__ == "Dora":
             return self.dora._data
         return getattr(self.dora,"train" if self.attr=='dataTrain' else "test")
    
