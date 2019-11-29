@@ -86,6 +86,8 @@ def saveLast3_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
   type_=kwargs.pop("type_")
   # typeX_=kwargs.pop("typeX_",None)
+
+
   if "train" in type_:
     realSelf._lastlastTrain=copy(realSelf._lastTrain)
     realSelf._lastTrain=copy(realSelf.train)
@@ -107,16 +109,16 @@ def saveLast3_(self,func,*args,**kwargs):
   doo={i:getattr(self,i) for i in type_}
 
   # print(self,args,kwargs)
-  rep=realFunc(self,*args, **kwargs)
+  try:
+    rep=realFunc(self, *args, **kwargs)
+  except Exception as e:
+    realSelf.back_one(type_=type_)
+    raise e
   for i in type_:
-    setattr(realSelf,i,getattr(self,i))
-
-  for i in type_:
-    setattr(self,i,doo[i])
-
-  for j in type_:
     if func.__name__=="outliers" and j=="test":
+      setattr(self, i, doo[i])
       continue
+    setattr(realSelf, i, getattr(self,i))
     kwargs["type_"]=[j]
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
