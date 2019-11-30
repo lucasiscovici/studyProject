@@ -118,15 +118,15 @@ def saveLast3_(self,func,*args,**kwargs):
   except Exception as e:
     realSelf.back_one(type_=type_)
     raise e
-  for i in type_:
+  for j in type_:
     if func.__name__=="outliers" and j=="test":
-      setattr(self, i, doo[i])
+      setattr(self, j, doo[j])
       continue
-    setattr(realSelf, i, getattr(self,i))
+    setattr(realSelf, j, getattr(self,j))
     kwargs["type_"]=[j]
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
-    argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
+    argss=["{}={}".format(k,correc("\""+w+"\"" if isinstance(w,str) else w)) for k,w in argss.items()]
     realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=j)
   return realSelf
 def saveLast(func):
