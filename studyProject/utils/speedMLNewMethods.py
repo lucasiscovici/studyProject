@@ -60,7 +60,7 @@ def saveLast_(self,func,*args,**kwargs):
 def saveLast2_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
   type_=kwargs.pop("type_")
-  print("saveLoad2",type_)
+  # print("saveLoad2",type_)
   if "train" in type_:
     realSelf._lastlastTrain=copy(realSelf._lastTrain)
     realSelf._lastTrain=copy(realSelf.train)
