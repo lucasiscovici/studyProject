@@ -929,7 +929,8 @@ class Datas(Base):
                 self._prep=Dora(self.get(initial=True),output=self.y.name)
         else:
             # print("io2",prepI(self))
-            self._prep=prepI(self)
+            if self._prep is None:
+                self._prep=prepI(self)
 
         # if self._prep is None:
         #     self.initPrep()
@@ -1031,9 +1032,9 @@ class DoraX:
         self._addmethod("back_initial_data",back_initial_data )
         self._addmethod("back_one", back_one )
         if attr =="train":
-            self._logs=self._prep._logs
+            self._addmethod("logs",lambda self:self._prep._logs)
         else:
-            self._logsTest=self._prep._logsTest
+            self._addmethod("_logsTest",lambda self:self._prep._logsTest)
 
         from dora_study import Dora
         fd=Dora.__dict__
