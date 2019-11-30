@@ -1004,6 +1004,7 @@ def saveLastDoraX(func,selfo,attr):
         # kwargs["realFunc"]=realFunc
         # kwargs["realSelf"]=self
         kwargs["type_"]=[type_]
+        print(self,args,kwargs)
         return fun2(*args,**kwargs)
     return with_logging
 class DoraX:

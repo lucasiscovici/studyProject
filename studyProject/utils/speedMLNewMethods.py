@@ -58,8 +58,10 @@ def saveLast_(self,func,*args,**kwargs):
   return rep
 
 def saveLast2_(self,func,*args,**kwargs):
+  print("sl2",self,func,args,kwargs)
   realSelf=kwargs.pop("realSelf",self)
   type_=kwargs.pop("type_")
+  print("sl22",type_)
   if "train" in type_:
     realSelf._lastlastTrain=copy(realSelf._lastTrain)
     realSelf._lastTrain=copy(realSelf.train)
@@ -214,6 +216,7 @@ class Speedml3:
           self._lastlogsTest=copy(self._lastlastlogsTest)
     #_______________LOG_________________________
     def _log(self, string,type_=["train"],force=False):
+        print("_log",self.string,type_)
         if isinstance(type_,list):
           for i in type_:
             self._log(string,i,force)
@@ -300,8 +303,9 @@ addMethodsFromSpeedML()
 def saveLastDora(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
+      print(self,args,kwargs)
       type_=kwargs.pop("type_",["train","test"])
-
+      print(type_)
       for i in type_:
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
@@ -309,6 +313,7 @@ def saveLastDora(func,realFunc):
         kwargs["realFunc"]=realFunc
         kwargs["realSelf"]=self
         kwargs["type_"]=[i]
+        print(d,kwargs)
         return saveLast2_(d,func,*args,**kwargs)
   return with_logging
 
