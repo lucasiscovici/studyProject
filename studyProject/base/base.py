@@ -1030,6 +1030,10 @@ class DoraX:
         self._addmethod("use_snapshot",use_snapshot, )
         self._addmethod("back_initial_data",back_initial_data )
         self._addmethod("back_one", back_one )
+        if attr =="train":
+            self._logs=property(lambda self:self._prep._logs)
+        else:
+            self._logsTest=property(lambda self:self._prep._logsTest)
 
         from dora_study import Dora
         fd=Dora.__dict__

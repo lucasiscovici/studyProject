@@ -119,7 +119,7 @@ class StudyProject(Base):
         self._curr=id_
         return self.get(od_)
         
-    def addOrGetStudy(self,id_,cls,recreate=False,clone=False,deep=True,vh=True,import_kwargs=dict(),imported=False):
+    def addOrGetStudy(self,id_,cls="classif",recreate=False,clone=False,deep=True,vh=True,import_kwargs=dict(),imported=False):
         def clonee(rrt):
             return getStaticMethodFromObj(rrt,"clone")(rrt,deep=deep)
         def recreatee():
@@ -133,6 +133,8 @@ class StudyProject(Base):
             ru=clonee(ru)
             self._studies[id_]=ru
             return self._studies[id_]
+        if isinstance(cls,str) and cls in ["classif","reg"]:
+            cls=factoryCls.get_class("StudyClassifProject" if cls == "classif" else "StudyRegProject")
         if recreate:
             res=recreatee()
         else:

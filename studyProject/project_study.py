@@ -51,6 +51,7 @@ class StudyClassifProject(BaseSuperviseClassifProject):
             project=project
         )
         self.init()
+factoryCls.register_class(StudyClassifProject)
     # def __new__(cls,
     #              ID=None,
     #              datas:DatasSuperviseClassif=None,
