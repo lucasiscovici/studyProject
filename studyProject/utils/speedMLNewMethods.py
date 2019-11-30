@@ -60,7 +60,7 @@ def saveLast_(self,func,*args,**kwargs):
 def saveLast2_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
   type_=kwargs.pop("type_")
-  print("saveLoad2",self,func,args,kwargs,realSelf,type_)
+  # print("saveLoad2",self,func,args,kwargs,realSelf,type_)
   if "train" in type_:
     realSelf._lastlastTrain=copy(realSelf._lastTrain)
     realSelf._lastTrain=copy(realSelf.train)
@@ -317,7 +317,7 @@ def saveLastDora(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
       type_=kwargs.pop("type_",["train","test"])
-
+      print(type_)
       for i in type_:
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
