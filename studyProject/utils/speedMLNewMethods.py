@@ -150,7 +150,7 @@ class Speedml3:
 
     def __init__(self,train, test, target, uid=None):
         # super().__init__(train,test,target,uid)
-        print("speedml3 create")
+        # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
         self.init(copy(train),copy(test),target)
         self._snapshots = {}
