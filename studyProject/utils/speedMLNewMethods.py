@@ -317,9 +317,9 @@ def saveLastDora(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
       type_=kwargs.pop("type_",["train","test"])
-      # print(t\ype_)
+      # print(type_)
       for i in type_:
-        print(i)
+        # print(i)
         copyE=kwargs.copy()
         copyArgs=list(args).copy()
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
@@ -328,7 +328,8 @@ def saveLastDora(func,realFunc):
         copyE["realFunc"]=realFunc
         copyE["realSelf"]=self
         copyE["type_"]=[i]
-        return saveLast2_(d,func,*copyArgs,**copyE)
+        saveLast2_(d,func,*copyArgs,**copyE)
+      return self
   return with_logging
 
 def addMethodsFromDora():
