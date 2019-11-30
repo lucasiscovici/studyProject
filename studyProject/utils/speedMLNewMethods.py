@@ -78,7 +78,7 @@ def saveLast2_(self,func,*args,**kwargs):
 
 
   rep=realFunc(self,*args, **kwargs)
-  setattr(realSelf,type_[0],getattr(self,"_data"))
+  setattr(realSelf,type_[0],copy(getattr(self,"_data")))
   kwargs["type_"]=type_
   argss= inspect.getcallargs(func,self, *args, **kwargs)
   del argss["self"]
@@ -120,9 +120,9 @@ def saveLast3_(self,func,*args,**kwargs):
     raise e
   for j in type_:
     if func.__name__=="outliers" and j=="test":
-      setattr(self, j, doo[j])
+      setattr(self, j, copy(doo[j]))
       continue
-    setattr(realSelf, j, getattr(self,j))
+    setattr(realSelf, j, copy(getattr(self,j)))
     kwargs["type_"]=[j]
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
@@ -150,8 +150,9 @@ class Speedml3:
 
     def __init__(self,train, test, target, uid=None):
         # super().__init__(train,test,target,uid)
-        self._Speedml=Speedml2(train,test,target)
-        self.init(train,test,target)
+        print("speedml3 create")
+        self._Speedml=Speedml2(copy(train),copy(test),target)
+        self.init(copy(train),copy(test),target)
         self._snapshots = {}
         self._initial_Train=copy(train)
         self._initial_Test=copy(test)
@@ -165,7 +166,7 @@ class Speedml3:
           self._logs = []
           self._lastlogs=None
           self._lastlastlogs=None
-          self.train=Train
+          self.train=copy(Train)
 
         if "test" in type_:
           self._lastTest=None
@@ -173,7 +174,7 @@ class Speedml3:
           self._logsTest = []
           self._lastlogsTest=None
           self._lastlastlogsTest=None
-          self.test=Test
+          self.test=copy(Test)
         self.target=target
 
 
@@ -212,6 +213,7 @@ class Speedml3:
           self._logsTest=copy(self._lastlogsTest)
           self._lastTest=copy(self._lastlastTest)
           self._lastlogsTest=copy(self._lastlastlogsTest)
+
     #_______________LOG_________________________
     def _log(self, string,type_=["train"],force=False):
         if isinstance(type_,list):
@@ -226,8 +228,8 @@ class Speedml3:
         lg.append(string)
 
 def create_speedML(self):
-    Train=self.dataTrain.get()
-    Test=self.dataTest.get()
+    Train=copy(self.dataTrain.get())
+    Test=copy(self.dataTest.get())
     target=self.dataTrain.y.name
     return Speedml3(Train,Test,target)
 

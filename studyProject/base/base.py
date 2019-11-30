@@ -928,6 +928,7 @@ class Datas(Base):
             if self._prep is None:
                 self._prep=Dora(self.get(initial=True),output=self.y.name)
         else:
+            print("Datas prep",self._prep)
             # print("io2",prepI(self))
             if self._prep is None:
                 self._prep=prepI(self)
@@ -1068,6 +1069,7 @@ class DoraX:
 
 class prepI:
     def __init__(self,l:Datas,dora=None):
+        print("prepI","create")
         oname=l.y.name if hasattr(l.y,'name') else None
         if l.papa is None :#(l.papa is not None and l.papa._prep is None)
             self.dora=Dora(l.get(initial=True),output=oname) if dora is None else dora
@@ -1102,6 +1104,8 @@ class DatasSupervise(Base):
 
     def init2(self,_prep=None):
         _prep=self._prep
+        if _prep is None and self.dataTrain is not None:
+            print("DataSupervisé init2","create")
         self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self))
 
     @classmethod
