@@ -317,8 +317,9 @@ def saveLastDora(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
       type_=kwargs.pop("type_",["train","test"])
-      print(type_)
+      # print(t\ype_)
       for i in type_:
+        print(i)
         copyE=kwargs.copy()
         copyArgs=list(args).copy()
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
