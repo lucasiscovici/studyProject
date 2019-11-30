@@ -227,6 +227,19 @@ class Speedml3:
                 _log{et}: {string} already in logs, if you want to force, add force=True""")
         lg.append(string)
 
+    def execLogs(self, lims=[None,None], type_=["train","test"]):
+      if not isinstance(lims,list):
+        raise Exception('lim must be list')
+
+      if "train" in type_:
+        for i in self._logs:
+          exec(i,dict(self=self))
+
+      if "test" in type_:
+        for i in self._logsTest:
+          exec(i,dict(self=self))
+
+
 def create_speedML(self):
     Train=copy(self.dataTrain.get())
     Test=copy(self.dataTest.get())
