@@ -320,7 +320,7 @@ def saveLastDora(func,realFunc):
       print(type_)
       for i in type_:
         copyE=kwargs.copy()
-        copyArgs=args.copy()
+        copyArgs=list(args).copy()
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
         # d._output==getattr(self,"target")
