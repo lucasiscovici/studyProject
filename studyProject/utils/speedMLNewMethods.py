@@ -60,7 +60,7 @@ def saveLast_(self,func,*args,**kwargs):
 def saveLast2_(self,func,*args,**kwargs):
   realSelf=kwargs.pop("realSelf",self)
   type_=kwargs.pop("type_")
-  # print("saveLoad2",self,func,args,kwargs,realSelf,type_)
+  print("saveLoad2",type_)
   if "train" in type_:
     realSelf._lastlastTrain=copy(realSelf._lastTrain)
     realSelf._lastTrain=copy(realSelf.train)
@@ -319,13 +319,15 @@ def saveLastDora(func,realFunc):
       type_=kwargs.pop("type_",["train","test"])
       print(type_)
       for i in type_:
+        copyE=kwargs.copy()
+        copyArgs=args.copy()
         d=StudyClass(_data=getattr(self,i),_output=getattr(self,"target"))
         # d._data=getattr(self,type_)
         # d._output==getattr(self,"target")
-        kwargs["realFunc"]=realFunc
-        kwargs["realSelf"]=self
-        kwargs["type_"]=[i]
-        return saveLast2_(d,func,*args,**kwargs)
+        copyE["realFunc"]=realFunc
+        copyE["realSelf"]=self
+        copyE["type_"]=[i]
+        return saveLast2_(d,func,*copyArgs,**copyE)
   return with_logging
 
 def addMethodsFromDora():
