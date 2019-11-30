@@ -216,7 +216,7 @@ class Speedml3:
           self._lastlogsTest=copy(self._lastlastlogsTest)
     #_______________LOG_________________________
     def _log(self, string,type_=["train"],force=False):
-        print("_log",self.string,type_)
+        print("_log",self,string,type_)
         if isinstance(type_,list):
           for i in type_:
             self._log(string,i,force)
