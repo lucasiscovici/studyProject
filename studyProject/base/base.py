@@ -1145,7 +1145,7 @@ class DatasSupervise(Base):
 
     @property
     def eda(self): 
-        return self.prep.eda2()
+        return StudyClass(hints=self.prep.eda2())
 
 
 factoryCls.register_class(DatasSupervise)

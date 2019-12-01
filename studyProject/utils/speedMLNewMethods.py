@@ -12,6 +12,9 @@ def init2(self,train, test, target, uid=None):
     Base.target = target
     Base.train=train
     Base.test=test
+    self.target=target
+    self.train=train
+    self.test=test
     uid=None
 
     if not Base.train is None and not Base.test is None:
@@ -257,7 +260,7 @@ def create_speedML(self):
     return Speedml3(Train,Test,target)
 
 def eda2(self):
-    rep=self.eda()
+    rep=self._Speedml.eda()
     rep= (rep.T >> df.select(X.Shape,df.columns_from(1),df.everything())).T
     rep.Observations=rep.Observations.apply(lambda a:a.replace("feature.","prep.").replace("plot.","viz."))
     return rep
