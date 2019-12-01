@@ -203,6 +203,8 @@ class Speedml3:
           self._logsTest = self._snapshots[name]["logsTest"]
 
         if self.mode == "logs":
+          self.train=self._initial_Train
+          self.test=self._initial_Test
           self.execLogs()
         print("snapshot loaded")
     #________________back_____________________
