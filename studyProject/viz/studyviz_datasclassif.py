@@ -1,6 +1,6 @@
 from . import Viz
 from interface import implements
-from ..utils import merge,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, mpld3_utils, mpl_to_plotly
+from ..utils import merge, df ,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, mpld3_utils, mpl_to_plotly
 import pandas as pd
 import numpy as np
 import matplotlib.patches as mpatches
