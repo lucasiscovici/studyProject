@@ -145,7 +145,7 @@ class Speedml3:
     def mode(self):
       return self._mode
     
-    @setter.mode
+    @mode.setter
     def mode(self,mod):
       if mod not in ["df","logs"]:
           raise Exception("mode must be in df or logs")
