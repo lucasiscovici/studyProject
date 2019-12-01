@@ -40,6 +40,7 @@ def _get_and_checks(vars_,datas,stop=[None]):
     return (_get_and_check(i,datas,stop=stop) for i in vars_)
 
 def _get_dtype_and_data(var,datas):
+    from . import df
     varI=datas >> df.pull(var)
     d=varI.dtype
     return [varI,d]

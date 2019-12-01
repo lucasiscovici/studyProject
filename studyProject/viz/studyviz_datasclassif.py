@@ -1,11 +1,12 @@
 from . import Viz
 from interface import implements
-from ..utils import merge, df ,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, mpld3_utils, mpl_to_plotly
+from ..utils import merge,showWarningsTmp,  df, secureAddArgs, removeBadArgs , _get_and_checks,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, mpld3_utils, mpl_to_plotly, _get_dtype_and_data
 import pandas as pd
 import numpy as np
 import matplotlib.patches as mpatches
 from collections.abc import Iterable
 import types
+import plotly_study.express as pex
 
 class Study_DatasClassif_Viz(Viz):
     # @staticmethod
@@ -114,7 +115,8 @@ class Study_DatasClassif_Viz(Viz):
         datas=self.obj.get()
         target=self.obj.y.name
         targetI=self.obj.get() >> df.pull(target)
-        x,y,color,by=_get_and_checks([x,y,color,by],datas,[None,False])
+        xIType,yIType,colorIType, byIType = None,None,None,None
+        x,y,color,by=_get_and_checks([x,y,color,by],datas,[None,None,None,None,False])
         
         if (all([i is None for i in [x,y,color,by]])): #or all([i is None for i in [x,y]])) and addTargetAuto == False
             raise Exception("plot impossible")
@@ -361,7 +363,9 @@ class Study_DatasClassif_Viz(Viz):
                     return pex.histogram(datas,x=x,color=target,facet_col=by,**argsx)
             raise NotImplementedError(f"'{xIType}' -> not again available")
             
+
         if all([i is None for i in [x,y,by]]) and color is not None and addTargetAuto == True:
+            print(pd.api.types.is_categorical_dtype(colorIType))
             if pd.api.types.is_numeric_dtype(colorIType):
                 raise NotImplementedError(f"when only color and types '{colorIType}' -> not again available")
             elif pd.api.types.is_categorical_dtype(colorIType):
@@ -408,9 +412,10 @@ class Study_DatasClassif_Viz(Viz):
                         argsx=removeBadArgs(pex.bar,argsx)
                     return pex.histogram(datas,x=color,color=color,**argsx).update_layout(xaxis_title=color,yaxis_title="Count")
             
-        if pd.api.types.is_numeric_dtype(varIType):
-            types="histogram" if types is None else types
-            nbins = xargs.pop("bins",None)
+        raise NotImplementedError(f"when color:'{colorIType}' x:'{xIType}' y: '{yIType}' by: '{byIType}' addTargetAuto: '{addTargetAuto}'  -> not again available")
+        # if pd.api.types.is_numeric_dtype(varIType):
+        #     types="histogram" if types is None else types
+        #     nbins = xargs.pop("bins",None)
         
     def plotWithTarget(self,x=None,y=None,color=None,by=None,types=None,targetMode=None,*args,**xargs):
         return self.plot(x,y,color,by,True,types,targetMode=targetMode,*args,**xargs)
