@@ -6,6 +6,7 @@ from . import get_args, StudyClass
 import inspect
 from functools import wraps
 import warnings
+import copy
 def has_method(o, name):
     return name in dir(o)
 
@@ -172,18 +173,26 @@ class Speedml3:
 
     #_______________SNAP_____________________
     def snapshot(self, name):
+        snapshot = {
+            "logs": copy(self._logs),
+            "logsTest": copy(self._logsTest),
+
+            "logsLast": copy(self._lastlogs),
+            "logsTestLast": copy(self._lastlogsTest),
+
+            "logsLastLast": copy(self._lastlastlogs),
+            "logsTestLastLast": copy(self._lastlastlogsTest)
+
+          }
         if self.mode == "df":
-          snapshot = {
+          snapshot.update({
             "dataTrain": copy(self.train),
             "dataTest": copy(self.test),
-            "logs": copy(self._logs),
-            "logsTest": copy(self._logsTest)
-          }
-        elif self.mode == "logs":
-          snapshot = {
-            "logs": copy(self._logs),
-            "logsTest": copy(self._logsTest)
-          }
+            "dataTrainLast": copy(self._lastTrain),
+            "dataTrainLastLast": copy(self._lastlastTrain),
+            "dataTestLast": copy(self._lastTrain),
+            "dataTestLastLast": copy(self._lastlastTrain)  
+          })
         self._snapshots[name] = snapshot
 
     def use_snapshot(self, name, type_=["train","test"]):
@@ -196,17 +205,23 @@ class Speedml3:
           if self.mode == "df":
             self.train = self._snapshots[name]["dataTrain"]
           self._logs = self._snapshots[name]["logs"]
+          self._lastlogs = self._snapshots[name]["logsLast"]
+          self._lastlastlogs = self._snapshots[name]["logsLastLast"]
 
         if "test" in type_:
           if self.mode == "df":
             self.test = self._snapshots[name]["dataTest"]
           self._logsTest = self._snapshots[name]["logsTest"]
+          self._lastlogsTest = self._snapshots[name]["logsTestLast"]
+          self._lastlastlogsTest = self._snapshots[name]["logsTestLastLast"]
 
         if self.mode == "logs":
           self.train=self._initial_Train
           self.test=self._initial_Test
           self.execLogs()
+          self._execLogs([self._lastlogs,self._lastlastlogs],[self._lastlogsTest,self._lastlastlogsTest])
         print("snapshot loaded")
+
     #________________back_____________________
     def back_initial_data(self, type_=["train","test"]):
         self.init(self._initial_Train,self._initial_Test,self.target,type_=type_)
@@ -236,6 +251,24 @@ class Speedml3:
           raise Exception(f"""
                 _log{et}: {string} already in logs, if you want to force, add force=True""")
         lg.append(string)
+
+
+    @staticmethod
+    def _execLogs2(self, logs, name):
+      from copy import deepcopy
+      fself=deepcopy(self)
+      for i in logs:
+        exec(i,dict(self=fself))
+      return getattr(fself,name)
+
+    def _execLogs(self, logs, logsTest):
+      _lastlogs, _lastlastlogs = logs
+      _lastlogsTest, _lastlastlogsTest = logsTest
+
+      self._lastTrain=self.__class__._execLogs2(self, _lastlogs, "_lastlogs")
+      self._lastlastTrain=self.__class__._execLogs2(self, _lastlastlogs, "_lastlastlogs")
+      self._lastTest=self.__class__._execLogs2(self, _lastlogsTest, "_lastlogsTest")
+      self._lastlastTest=self.__class__._execLogs2(self, _lastlastlogsTest, "_lastlastlogsTest")
 
     def execLogs(self, lims=[None,None], type_=["train","test"]):
       if not isinstance(lims,list):
