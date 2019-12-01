@@ -875,7 +875,7 @@ class edaCls:
         return "eda, attribute available : "+", ".join(self.SECTIONS)
 
 class Datas(Base):
-    EXPORTABLE=["X","y","_eda","_prep"]
+    EXPORTABLE = [ "X" , "y" , "_eda" , "_prep" ]
     # y must be a series or a dataframe
 
     def __init__(self,X=None,y=None,_eda=None,_prep=None,ID=None):
@@ -972,16 +972,14 @@ class Datas(Base):
         if hasattr(self.get(),a):
             return getattr(self.get(),a)
         return super().__getattribute__(a)
-    # def export(self,save=True,dirAdded=[],*args,**xargs):
-    #     rep=super().export(save,dirAdded,*args,**xargs)
-    #     rep['_prep']= copy.deepcopy(self.prep.dora.__dict__)
-    #     return rep
 
-    # @classmethod 
-    # def _import(cls,loaded):
-    #     rep = cls.__base__._import(loaded)
-    #     # rep._prep = prep(rep,rep._prep)
-    #     return rep
+    @classmethod
+    def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[],dirAdded=[]):
+        #rep=cls.Export___(cls,vizGet(obj),papaExport=papaExport,save=save,dirAdded=dirAdded)
+        rep=cls.Export__(obj,False,saveArgs,version,papaExport,dirAdded)
+        if self.papa is not None:
+            rep["_prep"]=None
+
 
 factoryCls.register_class(Datas)
 
@@ -994,6 +992,7 @@ class Dora(Dora2):
         #for i in ["plot_feature","explore"]:
         #    delattr(self,i)
 def saveLastDoraX(func,selfo,attr):
+    
     @wraps(func)
     def with_logging(self,*args, **kwargs):
         type_=attr
@@ -1009,6 +1008,7 @@ def saveLastDoraX(func,selfo,attr):
         # print(self,args,kwargs)
         return fun2(*args,**kwargs)
     return with_logging
+
 class DoraX:
     def _addmethod(self, name,method): 
         self.__dict__[name] = types.MethodType( method, self )
@@ -1032,6 +1032,7 @@ class DoraX:
         self._addmethod("use_snapshot",use_snapshot, )
         self._addmethod("back_initial_data",back_initial_data )
         self._addmethod("back_one", back_one )
+
         if attr =="train":
             self._addmethod("logs",lambda self:self._prep._logs)
         else:
@@ -1068,7 +1069,7 @@ class DoraX:
 
 
 class prepI:
-    def __init__(self,l:Datas,dora=None):
+    def __init__(self, l:Datas, dora=None):
         # print("prepI","create")
         oname=l.y.name if hasattr(l.y,'name') else None
         if l.papa is None :#(l.papa is not None and l.papa._prep is None)
@@ -1090,6 +1091,11 @@ class prepI:
         if b in ["dora","_instancecheck","_ipython_display_"] or (b.startswith('__') or b.endswith('__')):
             return object.__getattribute__(self,b)
         return getattr(self.dora,b)
+
+
+    # def __getstate__(self):
+    #     u=self.__dict__
+    #     u['dora']=
 
 class DatasSupervise(Base):
     EXPORTABLE=["dataTrain","dataTest","_prep"]
@@ -1137,6 +1143,7 @@ class DatasSupervise(Base):
     @property
     def eda(self): 
         return self.prep.eda2()
+
 
 factoryCls.register_class(DatasSupervise)
 class Models(Base):
@@ -1321,7 +1328,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
 
     @classmethod 
     def _import(cls,loaded):
-        lo=super()._import(loaded)
+        lo=cls._import(loaded)
         if isinstance(lo.resultats,dict):
             lo.resultats=studyDico(lo.resultats,papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")
         return lo

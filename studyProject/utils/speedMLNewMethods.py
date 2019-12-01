@@ -240,6 +240,15 @@ class Speedml3:
         for i in self._logsTest:
           exec(i,dict(self=self))
 
+    #__________________IMPORT/EXPORT_________________
+    def __getstate__(self):
+      rep = self.__dict__
+      return rep
+
+    def __setstate__(self,d):
+      self.__dict__ = d
+      return 
+
 
 def create_speedML(self):
     Train=copy(self.dataTrain.get())
