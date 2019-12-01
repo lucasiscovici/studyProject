@@ -38,6 +38,7 @@ setup(
         'plotly-study @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly_study',
         'cvopt-study @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt_study',
         'mpld3_study @ git+git://github.com/lucasiscovici/mpld3_study#egg=mpld3_study',
+        'speedml_study @ git+git://github.com/lucasiscovici/speedml_study#egg=speedml_study',
         'dora_study @ git+git://github.com/lucasiscovici/Dora_study#egg=dora_study',
         'studyPipe @ git+git://github.com/lucasiscovici/studyPipe#egg=studyPipe',
         'snakeviz-study @ git+git://github.com/lucasiscovici/snakeviz2#egg=snakeviz_study',

@@ -4,34 +4,6 @@ import numpy as np
 import pandas as pd
 from . import get_args, StudyClass
 import inspect
-if not hasattr(Speedml,"__init__base"): Speedml.__init__base=Speedml.__init__
-def init2(self,train, test, target, uid=None):
-    from speedml import Plot, Feature, Model, Xgb, Base
-    spd=self
-    spd._setup_environment()
-    Base.target = target
-    Base.train=train
-    Base.test=test
-    self.target=target
-    self.train=train
-    self.test=test
-    uid=None
-
-    if not Base.train is None and not Base.test is None:
-#         if uid:
-#             Base.uid = Base.test.pop(uid)
-#             Base.train = Base.train.drop([uid], axis=1)
-        spd.plot = Plot()
-        spd.feature = Feature()
-        spd.xgb = Xgb()
-        spd.model = Model()
-
-        spd.np = np
-        spd.pd = pd
-    else:
-        print('ERROR: SpeedML can only process .csv and .json file extensions.')
-    #return spd
-import inspect
 from functools import wraps
 
 def has_method(o, name):
@@ -41,6 +13,7 @@ def copy(ld):
   if ld is None:
     return ld
   return ld.copy()
+
 def saveLast_(self,func,*args,**kwargs):
   self._lastTrain=copy(self.train)
   self._lastTest=copy(self.test)
@@ -154,7 +127,7 @@ class Speedml2(Speedml):
     # def __init__(self,train, test, target, uid=None):
         # super().__init__(train,test,target,uid)
         # self.init(train,test,target)
-Speedml2.__init__=init2
+# Speedml2.__init__=init2
 class Speedml3:
 
     def __init__(self,train, test, target, uid=None):
