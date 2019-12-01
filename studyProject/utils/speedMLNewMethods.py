@@ -5,7 +5,7 @@ import pandas as pd
 from . import get_args, StudyClass
 import inspect
 from functools import wraps
-
+import warnings
 def has_method(o, name):
     return name in dir(o)
 
@@ -187,6 +187,11 @@ class Speedml3:
         self._snapshots[name] = snapshot
 
     def use_snapshot(self, name, type_=["train","test"]):
+        if name not in self._snapshots:
+          warnings.warn("""
+            name not in snapshots
+            """)
+          return
         if "train" in type_:
           if self.mode == "df":
             self.train = self._snapshots[name]["dataTrain"]
@@ -199,7 +204,7 @@ class Speedml3:
 
         if self.mode == "logs":
           self.execLogs()
-
+        print("snapshot loaded")
     #________________back_____________________
     def back_initial_data(self, type_=["train","test"]):
         self.init(self._initial_Train,self._initial_Test,self.target,type_=type_)
