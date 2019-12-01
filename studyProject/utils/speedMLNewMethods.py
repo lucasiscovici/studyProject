@@ -145,7 +145,12 @@ def saveLast(func):
 #       return saveLast_(self,func,*args,**kwargs)
 #   return with_logging
 class Speedml2(Speedml):
-  pass
+  def eda2(self):
+      rep=self.eda()
+      rep= (rep.T >> df.select(X.Shape,df.columns_from(1),df.everything())).T
+      rep.Observations=rep.Observations.apply(lambda a:a.replace("feature.","prep.").replace("plot.","viz."))
+      return rep
+# Speedml2.eda2=eda2
     # def __init__(self,train, test, target, uid=None):
         # super().__init__(train,test,target,uid)
         # self.init(train,test,target)
@@ -259,12 +264,6 @@ def create_speedML(self):
     target=self.dataTrain.y.name
     return Speedml3(Train,Test,target)
 
-def eda2(self):
-    rep=self._Speedml.eda()
-    rep= (rep.T >> df.select(X.Shape,df.columns_from(1),df.everything())).T
-    rep.Observations=rep.Observations.apply(lambda a:a.replace("feature.","prep.").replace("plot.","viz."))
-    return rep
-Speedml3.eda2=eda2
 #______JUPYTER NOTEBOOK__SPECIAL_FUNC___
 def _ipython_display_(self, **kwargs):
     print("Train : ",np.shape(self.train),"\nTest :",np.shape(self.test))
