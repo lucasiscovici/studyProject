@@ -135,7 +135,7 @@ class Speedml3:
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
-        self.init(copy(train),copy(test),target)
+        self.init(copy(train),copy(test),target, uid)
         self._snapshots = {}
         self._initial_Train=copy(train)
         self._initial_Test=copy(test)
@@ -163,8 +163,8 @@ class Speedml3:
       if mod not in ["df","logs"]:
           raise Exception("mode must be in df or logs")
       self._mode=mod
-    def init(self,Train,Test,target,type_=["train","test"]):
-
+    def init(self,Train,Test,target, uid=None,type_=["train","test"]):
+        self.uid=uid
         if "train" in type_:
           self._lastTrain=None
           self._lastlastTrain=None
