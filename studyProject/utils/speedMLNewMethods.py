@@ -73,9 +73,9 @@ def saveLast2_(self,func,*args,**kwargs):
     realSelf._lastlastlogsTest=copy(realSelf._lastlogsTest)    
     realSelf._lastlogsTest=copy(realSelf._logsTest)
 
-  force=kwargs.pop("force",None)
+  force=kwargs.pop("force", None)
 
-  realFunc=kwargs.pop("realFunc",func)
+  realFunc=kwargs.pop("realFunc", func)
 
 
   rep=realFunc(self,*args, **kwargs)

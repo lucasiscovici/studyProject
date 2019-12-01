@@ -894,7 +894,7 @@ class Datas(Base):
                 with showWarningsTmp:
                     warnings.warn("""
                         creating EDA ProfileReport... (think to export the study(Project) !!)""")
-            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(initial=True),sections=["overview","variables","correlations","missing","sample"]))
+            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","correlations","missing","sample"]))
             if isinstance(self._eda ,pdp.ProfileReport):
                 self._eda=edaCls(self._eda)
     def initPrep(self):
