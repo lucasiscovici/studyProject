@@ -1,4 +1,4 @@
-from speedml import Speedml
+from speedml_study import Speedml
 from studyPipe import df, X
 import numpy as np
 import pandas as pd
