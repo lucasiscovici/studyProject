@@ -232,9 +232,9 @@ class Speedml3:
           self.train=self._initial_Train
           self.test=self._initial_Test
           d=Speedml3.Clone(self)
-          d._logs=self._logs
-          d._logsTest=self._logsTest
-          d.execLogs()
+          # d._logs=self._logs
+          # d._logsTest=self._logsTest
+          d.execLogs(self._logs,self._logsTest)
           self.train = d.train
           self.test=d.test
 
@@ -306,16 +306,16 @@ class Speedml3:
       # self._lastTest=self.__class__._execLogs2(self, _lastlogsTest, "_lastlogsTest")
       # self._lastlastTest=self.__class__._execLogs2(self, _lastlastlogsTest, "_lastlastlogsTest")
 
-    def execLogs(self, lims=[None,None], type_=["train","test"]):
+    def execLogs(self,_logs =[],_logsTest=[], lims=[None,None], type_=["train","test"]):
       if not isinstance(lims,list):
         raise Exception('lim must be list')
 
       if "train" in type_:
-        for i in self._logs:
+        for i in _logs:
           exec(i,dict(self=self))
 
       if "test" in type_:
-        for i in self._logsTest:
+        for i in _logsTest:
           exec(i,dict(self=self))
 
     #__________________IMPORT/EXPORT_________________
