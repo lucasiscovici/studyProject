@@ -973,12 +973,15 @@ class Datas(Base):
             return getattr(self.get(),a)
         return super().__getattribute__(a)
 
-    @classmethod
-    def Export__(cls,obj,save=True,saveArgs={},version=None,papaExport=[],dirAdded=[]):
-        #rep=cls.Export___(cls,vizGet(obj),papaExport=papaExport,save=save,dirAdded=dirAdded)
-        rep=cls.Export__(obj,False,saveArgs,version,papaExport,dirAdded)
+    # @classmethod
+    def export(self,save=True,dirAdded=[],*args,**xargs):
         if self.papa is not None:
-            rep["_prep"]=None
+            typ=rep._prep
+            rep._prep=None
+        rep=self.__class__.Export(self,save,version=__version__,dirAdded=dirAdded,*args,**xargs)
+        if self.papa is not None:
+            rep._prep=typ
+        return rep
 
 
 factoryCls.register_class(Datas)
