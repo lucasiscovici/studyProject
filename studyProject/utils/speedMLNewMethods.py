@@ -267,10 +267,13 @@ class Speedml3:
 
     @staticmethod
     def _execLogs2(self, logs, name):
-      fself=Speedml3.Clone(self)
-      for i in logs:
-        exec(i,dict(self=fself))
-      return getattr(fself,name)
+      if logs is not None: 
+        fself=Speedml3.Clone(self)
+        for i in logs:
+          exec(i,dict(self=fself))
+        return getattr(fself,name)
+      else:
+        return logs
 
     def _execLogs(self, logs, logsTest):
       _lastlogs, _lastlastlogs = logs
