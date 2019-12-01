@@ -130,7 +130,7 @@ class Speedml2(Speedml):
 # Speedml2.__init__=init2
 class Speedml3:
 
-    def __init__(self,train, test, target, uid=None):
+    def __init__(self,train, test, target, uid=None, mode="df"):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
@@ -138,8 +138,14 @@ class Speedml3:
         self._snapshots = {}
         self._initial_Train=copy(train)
         self._initial_Test=copy(test)
+        self.mode=mode
 
 
+    @mode.setter
+    def mode(self,mod):
+      if mod not in ["df","logs"]:
+          raise Exception("mode must be in df or logs")
+      self._mode=mod
     def init(self,Train,Test,target,type_=["train","test"]):
 
         if "train" in type_:
@@ -162,22 +168,33 @@ class Speedml3:
 
     #_______________SNAP_____________________
     def snapshot(self, name):
-        snapshot = {
-          "dataTrain": copy(self.train),
-          "dataTest": copy(self.test),
-          "logs": copy(self._logs),
-          "logsTest": copy(self._logsTest)
-        }
+        if self.mode == "df":
+          snapshot = {
+            "dataTrain": copy(self.train),
+            "dataTest": copy(self.test),
+            "logs": copy(self._logs),
+            "logsTest": copy(self._logsTest)
+          }
+        elif self.mode == "logs":
+          snapshot = {
+            "logs": copy(self._logs),
+            "logsTest": copy(self._logsTest)
+          }
         self._snapshots[name] = snapshot
 
     def use_snapshot(self, name, type_=["train","test"]):
         if "train" in type_:
-          self.train = self._snapshots[name]["dataTrain"]
+          if self.mode == "df":
+            self.train = self._snapshots[name]["dataTrain"]
           self._logs = self._snapshots[name]["logs"]
 
         if "test" in type_:
-          self.test = self._snapshots[name]["dataTest"]
+          if self.mode == "df":
+            self.test = self._snapshots[name]["dataTest"]
           self._logsTest = self._snapshots[name]["logsTest"]
+
+        if self.mode == "logs":
+          self.execLogs()
 
     #________________back_____________________
     def back_initial_data(self, type_=["train","test"]):

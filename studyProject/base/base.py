@@ -1039,7 +1039,7 @@ class DoraX:
         if attr =="train":
             self._addmethod("logs",lambda self:self._prep._logs)
         else:
-            self._addmethod("_logsTest",lambda self:self._prep._logsTest)
+            self._addmethod("logs",lambda self:self._prep._logsTest)
 
         from dora_study import Dora
         fd=Dora.__dict__
