@@ -164,7 +164,7 @@ class Speedml3:
       if mod not in ["df","logs"]:
           raise Exception("mode must be in df or logs")
       self._mode=mod
-      
+
     def init(self,Train,Test,target, uid=None,type_=["train","test"]):
         self.uid=uid
         if "train" in type_:
@@ -185,6 +185,8 @@ class Speedml3:
         self.target=target
 
 
+    def haveSnapshot(self, name):
+       return name in self._snapshots
     #_______________SNAP_____________________
     def snapshot(self, name):
         snapshot = {
