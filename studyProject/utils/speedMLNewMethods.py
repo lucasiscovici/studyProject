@@ -279,7 +279,7 @@ def saveLastSpeedML(func,realFunc):
       return saveLast3_(self._Speedml,func,*args,**kwargs)
   return with_logging
 def addMethodsFromSpeedML():
-    from speedml import Feature
+    from speedml_study import Feature
     fd=Feature.__dict__
     n=[i for i in list(fd.keys()) if not i.startswith("_")] 
     def job(g,i,wrapped=False):
