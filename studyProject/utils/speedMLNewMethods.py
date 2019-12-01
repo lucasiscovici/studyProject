@@ -208,6 +208,28 @@ class Speedml3:
           })
         self._snapshots[name] = snapshot
 
+    def use_or_get_snapshot(self, name, force=False):
+        if name not in self._snapshots:
+            warnings.warn(f"""
+              {name} not in snapshots
+              """)
+            self.snapshot(name)
+            warnings.warn(f"""
+              snapshot took with name: {name} 
+              """)
+        else:
+            warnings.warn(f"""
+                snapshot with name : {name} exist
+                """)
+            if force:
+                self.use_snapshot(name)
+                warnings.warn(f"""
+                  use snapshot with name: {name}
+                """)
+            else:
+                warnings.warn(f"""
+                  force=False so snapshot with name: {name} is not use again
+                """)
     def use_snapshot(self, name, type_=["train","test"]):
         if name not in self._snapshots:
           warnings.warn("""
