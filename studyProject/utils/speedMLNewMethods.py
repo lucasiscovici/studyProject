@@ -131,7 +131,7 @@ class Speedml2(Speedml):
 # Speedml2.__init__=init2
 class Speedml3:
 
-    def __init__(self,train, test, target, uid=None, mode="df"):
+    def __init__(self, train, test, target, uid=None, mode="df"):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
@@ -140,6 +140,18 @@ class Speedml3:
         self._initial_Train=copy(train)
         self._initial_Test=copy(test)
         self.mode=mode
+
+
+    # def _resetTo(train,test):
+    #   target=self.target
+    #   self._initial_Train=copy(train)
+    #   self._initial_Test=copy(test)
+    #   self._Speedml=Speedml2(copy(train),copy(test),target)
+    #   self.init(copy(train),copy(test),target)
+
+    @staticmethod
+    def Clone(self):
+      return Speedml3( self.train, self.test, self.target, self.uid, self.mode)
 
 
     @property
@@ -255,8 +267,7 @@ class Speedml3:
 
     @staticmethod
     def _execLogs2(self, logs, name):
-      from copy import deepcopy
-      fself=deepcopy(self)
+      fself=Speedml3.Clone(self)
       for i in logs:
         exec(i,dict(self=fself))
       return getattr(fself,name)
