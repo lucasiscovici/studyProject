@@ -164,6 +164,7 @@ class Speedml3:
       if mod not in ["df","logs"]:
           raise Exception("mode must be in df or logs")
       self._mode=mod
+      
     def init(self,Train,Test,target, uid=None,type_=["train","test"]):
         self.uid=uid
         if "train" in type_:

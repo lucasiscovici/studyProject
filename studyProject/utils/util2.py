@@ -20,7 +20,80 @@ F=False
 from .struct import isinstanceBase, isinstance
 import sys, os
 
+import warnings
+def setattrAndReturnSelf(obj,k,v):
+  setattr(obj,k,v)
+  return obj
 
+
+def check_in_datas(col,datas):
+    if col not in datas.columns:
+        raise Exception(f"'{col}' not in datas")
+
+def _get_and_check(var,datas,stop=[None]):
+    if var not in stop:
+        var=_get_name(var)
+        check_in_datas(var,datas)
+    return var
+    #return var is not None
+def _get_and_checks(vars_,datas,stop=[None]):
+    return (_get_and_check(i,datas,stop=stop) for i in vars_)
+
+def _get_dtype_and_data(var,datas):
+    varI=datas >> df.pull(var)
+    d=varI.dtype
+    return [varI,d]
+
+import types
+def addMethodToObj(obj,name,met):
+    return setattrAndReturnSelf(obj,name,types.MethodType(met, obj))
+
+
+def _get_name(x):
+    col=None
+    if isinstance(x,pd.DataFrame):
+        col=x.columns[0] if len(x.columns) >0 else None
+        if len(x.columns)>1:
+            col=x.columns[0]
+            with showWarningsTmp:
+                warnings.warn("""
+                x is pd.DataFrame but there are more than 1 columns, -> take first one '{}'""".format(col))
+    elif isinstance(x,pd.Series):
+        col=x.name
+    elif isinstance(x,str):
+        col=x
+    
+    if col is None:
+        raise Exception("'{}' not supported ('{}')".format(col,type(col)))
+    return col
+def varInFn(fn):
+    return {i.kind.name:i.name for i in list(get_args(fn).signature.parameters.values()) if i.kind.name in ["VAR_KEYWORD","VAR_POSITIONAL"]}
+def secureAddArgs(fn,args_,rm="self"):
+    args=list(args_.keys())
+    t=get_args(fn).names
+    if rm in t: t.remove(rm)
+    varss=varInFn(fn)
+    if len(varss)>0:
+        if "VAR_KEYWORD" not in varss:
+            if "VAR_POSITIONAL" in varss:
+                t.remove(varss["VAR_POSITIONAL"])
+            return np.isin(args,t).all()
+        return True
+    return np.isin(args,t).all()
+def removeBadArgs(fn,args_,rm="self"):
+    args=list(args_.keys())
+    t=get_args(fn).names
+    if rm in t: t.remove(rm)
+    varss=varInFn(fn)
+    if len(varss)>0:
+        if "VAR_KEYWORD" not in varss:
+            if "VAR_POSITIONAL" in varss:
+                t.remove(varss["VAR_POSITIONAL"])
+                ok=np.isin(args,t)
+            return {k:v for i_,(k,v) in enumerate(args_.items()) if  ok[i_]}
+        return args_
+    ok=np.isin(args,t)
+    return {k:v for i_,(k,v) in enumerate(args_.items()) if  ok[i_]}
 def createFunctionFromString(string):
     com=compile(string,"<string>","exec")
     gl={}
@@ -38,9 +111,7 @@ def indexOfMinForValueInArray(val,arr):
         curr=arr[i]
     return i
 
-def setattrAndReturnSelf(obj,k,v):
-  setattr(obj,k,v)
-  return obj
+
 # Disable
 def blockPrint():
     olq=sys.stdout
