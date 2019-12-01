@@ -88,7 +88,7 @@ def embedPrep(func):
   return with_logging
 
 def addMethodsFromSpeedMLPlot():
-    from speedml import Plot
+    from speedml_study import Plot
     fd=Plot.__dict__
     n=[i for i in list(fd.keys()) if not i.startswith("_")] 
     for i in n:
