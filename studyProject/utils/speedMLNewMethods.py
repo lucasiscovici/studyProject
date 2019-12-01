@@ -151,7 +151,8 @@ class Speedml3:
 
     @staticmethod
     def Clone(self):
-      return Speedml3( self.train, self.test, self.target, self.uid, self.mode)
+      return Speedml3(self.train self.test,self.target,self.uid, self.mode)
+      # Speedml3( self.train, self.test, self.target, self.uid, self.mode)
 
 
     @property
@@ -187,23 +188,23 @@ class Speedml3:
     def snapshot(self, name):
         snapshot = {
             "logs": copy(self._logs),
-            "logsTest": copy(self._logsTest),
+            "logsTest": copy(self._logsTest)#,
 
-            "logsLast": copy(self._lastlogs),
-            "logsTestLast": copy(self._lastlogsTest),
+            # "logsLast": copy(self._lastlogs),
+            # "logsTestLast": copy(self._lastlogsTest),
 
-            "logsLastLast": copy(self._lastlastlogs),
-            "logsTestLastLast": copy(self._lastlastlogsTest)
+            # "logsLastLast": copy(self._lastlastlogs),
+            # "logsTestLastLast": copy(self._lastlastlogsTest)
 
           }
         if self.mode == "df":
           snapshot.update({
             "dataTrain": copy(self.train),
-            "dataTest": copy(self.test),
-            "dataTrainLast": copy(self._lastTrain),
-            "dataTrainLastLast": copy(self._lastlastTrain),
-            "dataTestLast": copy(self._lastTrain),
-            "dataTestLastLast": copy(self._lastlastTrain)  
+            "dataTest": copy(self.test)#,
+            # "dataTrainLast": copy(self._lastTrain),
+            # "dataTrainLastLast": copy(self._lastlastTrain),
+            # "dataTestLast": copy(self._lastTrain),
+            # "dataTestLastLast": copy(self._lastlastTrain)  
           })
         self._snapshots[name] = snapshot
 
@@ -217,21 +218,42 @@ class Speedml3:
           if self.mode == "df":
             self.train = self._snapshots[name]["dataTrain"]
           self._logs = self._snapshots[name]["logs"]
-          self._lastlogs = self._snapshots[name]["logsLast"]
-          self._lastlastlogs = self._snapshots[name]["logsLastLast"]
+          # self._lastlogs = self._snapshots[name]["logsLast"]
+          # self._lastlastlogs = self._snapshots[name]["logsLastLast"]
 
         if "test" in type_:
           if self.mode == "df":
             self.test = self._snapshots[name]["dataTest"]
           self._logsTest = self._snapshots[name]["logsTest"]
-          self._lastlogsTest = self._snapshots[name]["logsTestLast"]
-          self._lastlastlogsTest = self._snapshots[name]["logsTestLastLast"]
+          # self._lastlogsTest = self._snapshots[name]["logsTestLast"]
+          # self._lastlastlogsTest = self._snapshots[name]["logsTestLastLast"]
 
         if self.mode == "logs":
           self.train=self._initial_Train
           self.test=self._initial_Test
-          self.execLogs()
-          self._execLogs([self._lastlogs,self._lastlastlogs],[self._lastlogsTest,self._lastlastlogsTest])
+          d=Speedml3.Clone(self)
+          d._logs=self._logs
+          d._logsTest=self._logsTest
+          d.execLogs()
+          self.train = d.train
+          self.test=d.test
+
+          self._lastTrain=d._lastTrain
+          self._lastTest=d._lastTest
+          self._lastlastTrain=d._lastlastTrain
+          self._lastlastTest =d._lastlastTest
+
+          self._lastlogs = d._lastlogs
+          self._lastlogsTest =d._lastlogsTest
+
+          self._lastlastlogs = d._lastlastlogs
+          self._lastlastlogsTest = d._lastlastlogsTest
+
+
+          # self.__class__._execLogs2(d, self._logs, "")
+          # self.execLogs()
+          # self._execLogs([self._lastlogs,self._lastlastlogs],[self._lastlogsTest,self._lastlastlogsTest])
+        
         print("snapshot loaded")
 
     #________________back_____________________
@@ -275,14 +297,14 @@ class Speedml3:
       else:
         return logs
 
-    def _execLogs(self, logs, logsTest):
-      _lastlogs, _lastlastlogs = logs
-      _lastlogsTest, _lastlastlogsTest = logsTest
+    # def _execLogs(self, logs, logsTest):
+      # _lastlogs, _lastlastlogs = logs
+      # _lastlogsTest, _lastlastlogsTest = logsTest
 
-      self._lastTrain=self.__class__._execLogs2(self, _lastlogs, "_lastlogs")
-      self._lastlastTrain=self.__class__._execLogs2(self, _lastlastlogs, "_lastlastlogs")
-      self._lastTest=self.__class__._execLogs2(self, _lastlogsTest, "_lastlogsTest")
-      self._lastlastTest=self.__class__._execLogs2(self, _lastlastlogsTest, "_lastlastlogsTest")
+      # self._lastTrain=self.__class__._execLogs2(self, _lastlogs, "_lastlogs")
+      # self._lastlastTrain=self.__class__._execLogs2(self, _lastlastlogs, "_lastlastlogs")
+      # self._lastTest=self.__class__._execLogs2(self, _lastlogsTest, "_lastlogsTest")
+      # self._lastlastTest=self.__class__._execLogs2(self, _lastlastlogsTest, "_lastlastlogsTest")
 
     def execLogs(self, lims=[None,None], type_=["train","test"]):
       if not isinstance(lims,list):
