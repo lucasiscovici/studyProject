@@ -1136,16 +1136,16 @@ class DatasSupervise(Base):
 
 
     @property
+    def eda(self): 
+        return StudyClass(hints=self.prep.eda2())
+
+    @property
     def prep(self):
         if self._prep is None:
             self.init2()
         if self._prep is None:
             raise Exception("prep is not set")
         return self._prep
-
-    @property
-    def eda(self): 
-        return StudyClass(hints=self.prep.eda2())
 
 
 factoryCls.register_class(DatasSupervise)
