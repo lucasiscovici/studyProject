@@ -448,6 +448,7 @@ def correc(l):
         return l.__name__
     return l
 
+
 def getNotVarInFn(sign):
     return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else i.name for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD"]]
 
