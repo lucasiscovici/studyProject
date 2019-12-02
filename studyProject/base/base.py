@@ -1095,8 +1095,10 @@ class DoraX:
 
     def __getattr__(self,a_):
         # a=super().__getattr__(a_)
+        if a in ["_attr_","_prep","_addmethod"]:
+            return super().__getattribute__(a)
         a=a_
-        if hasattr(self._prep,a) or (a.startswith("_") and not a.startswith("__")) and a not in ["_attr_","_prep"]:
+        if hasattr(self._prep,a) or (a.startswith("_") and not a.startswith("__")):
             # if hasattr(self._prep,"__wrapped__"):
             # print('d')
             return getattr(self._prep,a_)
