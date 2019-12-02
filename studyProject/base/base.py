@@ -812,7 +812,9 @@ class Base(object):
         if key.startswith('__') and key.endswith('__'):
             return super().__getattr__(key)
         if has_method(self,"_"+a): return getattr(self,"_"+a,None)
-        else: raise AttributeError(a)
+        else: 
+            object.__getattribute__(self,a)
+            # raise AttributeError(a)
 # factoryCls.register_class(Base)
 
 # class NamesY(Base):
@@ -1009,7 +1011,8 @@ def saveLastDoraX(func,selfo,attr):
         # kwargs["realSelf"]=self
         kwargs["type_"]=[type_]
         # print(self,args,kwargs)
-        return fun2(*args,**kwargs)
+        rep=fun2(*args,**kwargs)
+        return self
     return with_logging
 
 
@@ -1185,7 +1188,7 @@ class DatasSupervise(Base):
 
     @property
     def eda(self): 
-        return StudyClass(hints=self.prep.eda2())
+        return StudyClass(hints=self.prep._Speedml.eda2())
 
     @property
     def prep(self):
@@ -1194,6 +1197,19 @@ class DatasSupervise(Base):
         if self._prep is None:
             raise Exception("prep is not set")
         return self._prep
+
+    def export(self,save=True,dirAdded=[],*args,**xargs):
+        ex=super().export(save,dirAdded,*args,**xargs)
+        if not save:
+            import dill
+            ex["_prep"]=dill.dumps(ex["_prep"])
+
+    @classmethod 
+    def _import(cls,loaded):
+        if isinstance(loaded._prep,bytes):
+            loaded._prep=dill.loads(loaded._prep)
+        return loaded
+
 
 
 factoryCls.register_class(DatasSupervise)
