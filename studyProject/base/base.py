@@ -1074,6 +1074,24 @@ class DoraX:
         for i in n:
             job(fd[i],i,False)
     
+    def addCustomFunction(self,func,fn=None,type_="Dora",added=False):
+        def job(g,i,wrapped=True):
+            func=g.__wrapped__ if wrapped else g
+            # a=get_args(func)
+            # u=getVarInFn(a.signature)
+            # uu=getNotVarInFn(a.signature)
+            # o=uu+[f"type_=['{attr}']"]
+            # fnu=make_fun(i,o+u)
+            self._addmethod(i,saveLastDoraX(func,self._prep,attr))
+        if type_ == "Dora":
+            fn=func.__name__ if fn is None else fn
+            if not added:
+                from dora_study import Dora
+                Dora.addCustomFunction(func)
+                func=Dora._CUSTOMS[fn]
+            job(func,fn,False)
+
+
     def __getattr__(self,a_):
         # a=super().__getattr__(a_)
         a=a_
@@ -1114,6 +1132,13 @@ class prepI:
     #     u=self.__dict__
     #     u['dora']=
 
+def giveMeReload_(self):  
+    def reload_(funci,fn,type_="Dora"):
+        if type_=="Dora":
+            self.dataTrain.prep.addCustomFunction(funci,fn,type_=type_,added=True)
+            self.dataTest.prep.addCustomFunction(funci,fn,type_=type_,added=True)
+    return reload_
+
 class DatasSupervise(Base):
     EXPORTABLE=["dataTrain","dataTest","_prep"]
     D=Datas
@@ -1129,7 +1154,7 @@ class DatasSupervise(Base):
         _prep=self._prep
         # if _prep is None and self.dataTrain is not None:
         #     print("DataSupervisé init2","create")
-        self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self))
+        self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self,giveMeReload_(self)))
 
     @classmethod
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):

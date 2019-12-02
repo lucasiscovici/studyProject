@@ -140,7 +140,7 @@ class Speedml2(Speedml):
 # Speedml2.__init__=init2
 class Speedml3:
 
-    def __init__(self, train, test, target, uid=None, mode="df"):
+    def __init__(self, train, test, target, uid=None, mode="df",reload_=None):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
@@ -149,6 +149,7 @@ class Speedml3:
         self._initial_Train=copy(train)
         self._initial_Test=copy(test)
         self.mode=mode
+        self.reload_=reload_
 
 
     # def _resetTo(train,test):
@@ -332,6 +333,19 @@ class Speedml3:
       else:
         return logs
 
+    def addCustomFunction(self,func, fn=None, type_="Dora"):
+      if type_=="Dora":
+        from dora_study import Dora
+        Dora.addCustomFunction(func)
+        fn=func.__name__ if fn is None else fn
+        funci=Dora._CUSTOMS[fn]
+        addMethodsFromDoraName(funci,fn,False)
+        if self.reload_ is not None:
+          self.reload_(funci,fn,type_)
+      else:
+        raise NotImplemented(f"{type_} not implented")
+
+
     # def _execLogs(self, logs, logsTest):
       # _lastlogs, _lastlastlogs = logs
       # _lastlogsTest, _lastlastlogsTest = logsTest
@@ -363,11 +377,11 @@ class Speedml3:
       return 
 
 
-def create_speedML(self):
+def create_speedML(self,reload_=None):
     Train=copy(self.dataTrain.get())
     Test=copy(self.dataTest.get())
     target=self.dataTrain.y.name
-    return Speedml3(Train,Test,target)
+    return Speedml3(Train,Test,target,reload_=reload_)
 
 #______JUPYTER NOTEBOOK__SPECIAL_FUNC___
 def _ipython_display_(self, **kwargs):
@@ -448,11 +462,8 @@ def saveLastDora(func,realFunc):
       return self
   return with_logging
 
-def addMethodsFromDora():
-    from dora_study import Dora
-    fd=Dora.__dict__
-    n=[i  for i,j in Dora.__dict__.items() if not i.startswith("_") and i not in ["plot_feature","explore"] and type(j)!=classmethod and hasattr(j,"__wrapped__")] 
-    def job(g,i,wrapped=True):
+def addMethodsFromDoraName(func,name,wrapped=True):
+  def job(g,i,wrapped=True):
         func=g.__wrapped__ if wrapped else g
         a=get_args(func)
         u=getVarInFn(a.signature)
@@ -460,10 +471,14 @@ def addMethodsFromDora():
         o=uu+["type_=['train','test']"]
         fnu=make_fun(i,o+u)
         setattr(Speedml3,i,saveLastDora(fnu,func))
+  job(func,name,wrapped)
+def addMethodsFromDora():
+    from dora_study import Dora
+    fd=Dora.__dict__
+    n=[i  for i,j in Dora.__dict__.items() if not i.startswith("_") and i not in ["plot_feature","explore"] and type(j)!=classmethod and hasattr(j,"__wrapped__")] 
     for i in n:
-        job(fd[i],i)
+        addMethodsFromDoraName(fd[i],i)
     fd=Dora._CUSTOMS
-    # print(fd)
     for i in fd:
-        job(fd[i],i,False)
+        addMethodsFromDoraName(fd[i],i,False)
 addMethodsFromDora()
