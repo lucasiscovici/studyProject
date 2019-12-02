@@ -57,6 +57,7 @@ def saveLast2_(self,func,*args,**kwargs):
   try:
     rep=realFunc(self,*args, **kwargs)
     setattr(realSelf,type_[0],copy(getattr(self,"_data")))
+    setattr(realSelf._Speedml,type_[0],copy(getattr(self,"_data")))
     kwargs["type_"]=type_
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
@@ -104,6 +105,8 @@ def saveLast3_(self,func,*args,**kwargs):
         setattr(self, j, copy(doo[j]))
         continue
       setattr(realSelf, j, copy(getattr(self,j)))
+      setattr(realSelf._Speedml, j, copy(getattr(self,j)))
+      self._Speedml
       kwargs["type_"]=[j]
       argss= inspect.getcallargs(func,self, *args, **kwargs)
       del argss["self"]
