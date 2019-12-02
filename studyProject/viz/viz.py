@@ -57,6 +57,8 @@ class Viz:
         # print(cb.to_frame())
         plot_kwargs[ind]=cbX.name if cbName is None else  cbName
         # print(cbX)
+        # if "color" in plot_kwargs:
+        #     cbX
         fig=pex.bar(cbX,**plot_kwargs).update_layout(title=title,xaxis_title=nam,
                          yaxis_title=namy,**dio).update_config(toImageButtonOptions=dict(filename=filename))
         setattr(data,"bar_count_percent" if percent else "bar_count",cb)

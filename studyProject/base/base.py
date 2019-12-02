@@ -1106,7 +1106,7 @@ class DoraX:
             # if hasattr(self._prep,"__wrapped__"):
             # print('d')
             return getattr(self._prep,a_)
-        return super().__getattr__(a_)
+        return super().__getattribute__(a_)
 
 
 

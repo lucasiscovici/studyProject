@@ -1,6 +1,6 @@
 from . import Viz
 from interface import implements
-from ..utils import merge,showWarningsTmp,  df, secureAddArgs, removeBadArgs , _get_and_checks,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, display_html, mpld3_utils, mpl_to_plotly, _get_dtype_and_data
+from ..utils import merge,showWarningsTmp,  df, secureAddArgs, removeBadArgs , _get_and_checks,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, display_html, mpld3_utils, mpl_to_plotly, _get_dtype_and_data, display_mpld3
 import pandas as pd
 import numpy as np
 import matplotlib.patches as mpatches
@@ -90,7 +90,7 @@ class Study_DatasClassif_Viz(Viz):
         
 
 
-    def plot_pointplot(selfo,x,y=None,by=None, color=None,side="row",*args,**xargs):
+    def plot_pointplot(selfo,x,y=None,by=None, color=None,side="row",viz="plotly",*args,**xargs):
         self=selfo.obj
         row=_get_name(x)
         datas=self.get()
@@ -120,7 +120,11 @@ class Study_DatasClassif_Viz(Viz):
         FacetGrid = sns.FacetGrid(datas, size=4.5, aspect=1.6,*args,**xargs2,**xargs)
         FacetGrid.map(sns.pointplot, x, y, color, palette=None,  order=None, hue_order=None )
         FacetGrid.add_legend()
-        rep=mpl_to_plotly(d.fig).update_layout(title_text=f"PointPlot with x: {x}, y: {y}, by: {by}, color: {color}", margin=dict(t=75))
+        rep=FacetGrid
+        if viz == "plotly":
+            rep=mpl_to_plotly(FacetGrid.fig).update_layout(title_text=f"PointPlot with x: {x}, y: {y}, by: {by}, color: {color}", margin=dict(t=75))
+        elif viz == "mpld3":
+            rep=display_mpld3()
         return rep
 
 
@@ -167,7 +171,9 @@ class Study_DatasClassif_Viz(Viz):
             
         if by is not None:
             byI,byIType=_get_dtype_and_data(by,datas)
-        
+            
+
+
         if all([i is None for i in [y,color,by]]) and x is not None and addTargetAuto == False:
             if pd.api.types.is_numeric_dtype(xIType):
                 types=types if types is not None else "histogram"
@@ -178,7 +184,6 @@ class Study_DatasClassif_Viz(Viz):
                             warnings.warn(f"""
                             error in {xargs} not in pex.histogram""")
                         argsx=removeBadArgs(pex.histogram,argsx)
-                        
                     return pex.histogram(datas,x=x,**argsx)
                 if types in ["bar"]:
                     argsx=xargs
@@ -218,8 +223,65 @@ class Study_DatasClassif_Viz(Viz):
                             warnings.warn(f"""
                             error in {xargs} not in self.plot_bar_count""")
                         argsx=removeBadArgs(self.plot_bar_count,argsx)
+
                     return self.plot_bar_count(fnCount,lambda *args,**xargs:xI.value_counts().sort_index(level=catOrder).to_frame().rename_cols(["count"]).sort_index(level=catOrder).reset_index().rename_cols([x,"Count"]),ind="x",plot_kwargs=dict(y="Count",barmode="overlay",category_orders=dict(zip([x],[list(catOrder)]))),cbName=x,**argsx).update_layout(yaxis_title="Count",xaxis_title=x,title=f"Count by '{x}'")
-            raise NotImplementedError(f"types '{types}' not again available")
+
+        if all([i is None for i in [y,color,by]]) and x is not None and addTargetAuto == True or (all([i is None for i in [y,by]]) and x is not None and color is not None and addTargetAuto==False) :
+            # print("icici")
+            color=target if color is None  else color
+            colorI=targetI if colorI is None else colorI
+            if pd.api.types.is_numeric_dtype(xIType):
+                types=types if types is not None else "histogram"
+                if types in ["hist","histogram"]:
+                    argsx=xargs
+                    if not secureAddArgs(pex.histogram,xargs):
+                        with showWarningsTmp:
+                            warnings.warn(f"""
+                            error in {xargs} not in pex.histogram""")
+                        argsx=removeBadArgs(pex.histogram,argsx)
+                    return pex.histogram(datas,x=x,color=color,**argsx)
+                if types in ["bar"]:
+                    argsx=xargs
+                    if not secureAddArgs(pex.bar,xargs):
+                        with showWarningsTmp:
+                            warnings.warn(f"""
+                            error in {xargs} not in pex.bar""")
+                        argsx=removeBadArgs(pex.bar,argsx)
+                    return pex.bar(datas,x=x,color=color,**argsxg)
+                if types in ["points","scatter"]:
+                    sortOk=xargs.pop("sort",False)
+                    x_=np.sort(xI) if sortOk else x
+                    sort_="sorted" if sortOk else ""
+                    title_=f"{types} plot  of '{x}' {sort_}"
+                    argsx=xargs
+                    if not secureAddArgs(pex.scatter,xargs):
+                        with showWarningsTmp:
+                            warnings.warn(f"""
+                            error in {xargs} not in pex.scatter""")
+                        argsx=removeBadArgs(pex.scatter,argsx)
+                    return pex.scatter(datas,x=x_,title=title_,color=color,**argsx).update_layout(yaxis_title="Range",xaxis_title=x)
+                raise NotImplementedError(f"types '{types}' not again available")
+            elif pd.api.types.is_categorical_dtype(xIType):
+                types=types if types is not None else "bar" 
+                if types in ["hist","histogram","bar"]:
+                    catOrder=xI.cat.categories
+                    #print(catOrder)
+                    #print(xI.value_counts())
+                    def fnCount(*args,**xargs):
+                        rep=xI.value_counts(*args,**xargs).sort_index(level=catOrder)
+                        #rep=rep.to_frame().rename_cols(["Count"])
+                        return rep
+                    #fnCount=lambda *args,**xargs: xI.value_counts(*args,**xargs).sort_index(level=catOrder).as_frame()
+                    argsx=xargs
+                    if not secureAddArgs(self.plot_bar_count,xargs):
+                        import warnings
+                        with showWarningsTmp:
+                            warnings.warn(f"""
+                            error in {xargs} not in self.plot_bar_count""")
+                        argsx=removeBadArgs(self.plot_bar_count,argsx)
+                    return pex.histogram(datas,x=x,color=color,barmode="group")
+                    # return self.plot_bar_count(fnCount,lambda *args,**xargs:xI.value_counts().sort_index(level=catOrder).to_frame().rename_cols(["count"]).sort_index(level=catOrder).reset_index().rename_cols([x,"Count"]),ind="x",plot_kwargs=dict(y="Count",barmode="overlay",category_orders=dict(zip([x],[list(catOrder)]))),cbName=x,**argsx).update_layout(yaxis_title="Count",xaxis_title=x,title=f"Count by '{x}'")    
+        raise NotImplementedError(f"types '{types}' not again available")
         
         if all([i is None for i in [x,color,by]]) and y is not None and addTargetAuto == False:
             if pd.api.types.is_numeric_dtype(yIType):
