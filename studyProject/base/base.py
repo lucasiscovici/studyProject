@@ -1075,6 +1075,7 @@ class DoraX:
             job(fd[i],i,False)
     
     def addCustomFunction(self,func,fn=None,type_="Dora",added=False):
+        attr=self._attr_
         def job(g,i,wrapped=True):
             func=g.__wrapped__ if wrapped else g
             # a=get_args(func)
