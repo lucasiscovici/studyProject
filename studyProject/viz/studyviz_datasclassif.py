@@ -281,7 +281,7 @@ class Study_DatasClassif_Viz(Viz):
                         argsx=removeBadArgs(self.plot_bar_count,argsx)
                     return pex.histogram(datas,x=x,color=color,barmode="group")
                     # return self.plot_bar_count(fnCount,lambda *args,**xargs:xI.value_counts().sort_index(level=catOrder).to_frame().rename_cols(["count"]).sort_index(level=catOrder).reset_index().rename_cols([x,"Count"]),ind="x",plot_kwargs=dict(y="Count",barmode="overlay",category_orders=dict(zip([x],[list(catOrder)]))),cbName=x,**argsx).update_layout(yaxis_title="Count",xaxis_title=x,title=f"Count by '{x}'")    
-        raise NotImplementedError(f"types '{types}' not again available")
+            raise NotImplementedError(f"types '{types}' not again available")
         
         if all([i is None for i in [x,color,by]]) and y is not None and addTargetAuto == False:
             if pd.api.types.is_numeric_dtype(yIType):
