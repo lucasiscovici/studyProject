@@ -90,7 +90,7 @@ class Study_DatasClassif_Viz(Viz):
         
 
 
-    def plot_pointplot(selfo,x,y=None,by=None):
+    def plot_pointplot(selfo,x,y=None,by=None, color=None,side="row"):
         self=selfo.obj
         row=_get_name(x)
         datas=self.get()
@@ -110,6 +110,16 @@ class Study_DatasClassif_Viz(Viz):
             if by not in datas.columns:
                 raise Exception(f"'{by}' not in datas")
         
+        if color is not None:
+            color=_get_name(color)
+            if color not in datas.columns:
+                raise Exception(f"'{color}' not in datas")
+        xargs=dict()
+        xargs[side]=by
+        FacetGrid = sns.FacetGrid(datas, size=4.5, aspect=1.6,**xargs)
+        FacetGrid.map(sns.pointplot, x, y, color, palette=None,  order=None, hue_order=None )
+        FacetGrid.add_legend()
+        return FacetGrid
 
 
     def plot(self,x=None,y=None,color=None,by=None,addTargetAuto=False,types=None,update_layout=None,roundVal=2,targetMode=None,*args,**xargs):
@@ -381,7 +391,7 @@ class Study_DatasClassif_Viz(Viz):
             
 
         if all([i is None for i in [x,y,by]]) and color is not None and addTargetAuto == True:
-            print(pd.api.types.is_categorical_dtype(colorIType))
+            # print(pd.api.types.is_categorical_dtype(colorIType))
             if pd.api.types.is_numeric_dtype(colorIType):
                 raise NotImplementedError(f"when only color and types '{colorIType}' -> not again available")
             elif pd.api.types.is_categorical_dtype(colorIType):
@@ -428,6 +438,19 @@ class Study_DatasClassif_Viz(Viz):
                         argsx=removeBadArgs(pex.bar,argsx)
                     return pex.histogram(datas,x=color,color=color,**argsx).update_layout(xaxis_title=color,yaxis_title="Count")
             
+
+        if all([i is None for i in [y]]) and all([i is not None for i in [color,x,by]])  and addTargetAuto == True:
+            if pd.api.types.is_categorical_dtype(colorIType) and pd.api.types.is_categorical_dtype(xIType) and pd.api.types.is_categorical_dtype(byIType) :
+                types=types if types is not None else "point"
+                if types in ["point","pointplot"]:
+                    argsx=xargs
+                    if not secureAddArgs(self.plot_pointplot,xargs):
+                        with showWarningsTmp:
+                            warnings.warn(f"""
+                            error in {xargs} not in self.plot_pointplot""")
+                        argsx=removeBadArgs(self.plot_pointplot,argsx)
+                    return self.plot_pointplot(x=x,y=target,color=color,by=by)
+                raise NotImplementedError(f"when only color and types '{colorIType}' -> not again available")
         raise NotImplementedError(f"when color:'{colorIType}' x:'{xIType}' y: '{yIType}' by: '{byIType}' addTargetAuto: '{addTargetAuto}'  -> not again available")
         # if pd.api.types.is_numeric_dtype(varIType):
         #     types="histogram" if types is None else types
