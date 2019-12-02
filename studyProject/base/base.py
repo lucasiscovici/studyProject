@@ -1083,6 +1083,7 @@ class DoraX:
             # uu=getNotVarInFn(a.signature)
             # o=uu+[f"type_=['{attr}']"]
             # fnu=make_fun(i,o+u)
+            print(self.__dict__)
             self._addmethod(i,saveLastDoraX(func,self._prep,attr))
         if type_ == "Dora":
             fn=func.__name__ if fn is None else fn
