@@ -138,6 +138,35 @@ class Speedml2(Speedml):
         # super().__init__(train,test,target,uid)
         # self.init(train,test,target)
 # Speedml2.__init__=init2
+
+import sys
+import inspect
+
+class My_Context_special(object):
+    def __init__(self,mode=0,prep=None,fnExit=None):
+        """
+        if mode = 0, proceed as normal
+        if mode = 1, do not execute block
+        """
+        self.mode=mode
+        self._prep=prep
+        self.fnExit=fnExit
+    def __enter__(self):
+        if self.mode==1:
+          sys.settrace(lambda *args, **keys: None)
+          frame = sys._getframe(1)
+          frame.f_trace = self.trace
+        else:
+          return self._prep
+    def trace(self, frame, event, arg):
+        #print(frame.f_lasti)
+        raise Exception
+    def __exit__(self, type, value, traceback):
+        #print('Exiting context ...')
+        if self.fnExit is not None:
+          self.fnExit()
+        return True
+
 class Speedml3:
 
     def __init__(self, train, test, target, uid=None, mode="df",reload_=None):
@@ -322,6 +351,12 @@ class Speedml3:
                 _log{et}: {string} already in logs, if you want to force, add force=True""")
         lg.append(string)
 
+
+
+    def prepSnapshot(self,name,reload=True):
+      if name in self._snapshots:
+        return My_Context_special(mode=1,fnExit= lambda: self.use_snapshot(name))
+      return My_Context_special(mode=0,prep=self,fnExit= lambda: self.snapshot(name))
 
     @staticmethod
     def _execLogs2(self, logs, name):
