@@ -385,6 +385,12 @@ class Speedml3:
         raise NotImplemented(f"{type_} not implented")
 
 
+    def data_n(self):
+        """
+        Updates train_n and test_n numeric datasets (used for model data creation) based on numeric datatypes from train and test datasets.
+        """
+        self.train_n = self.train.select_dtypes(include=[np.number])
+        self.test_n = self.test.select_dtypes(include=[np.number])
     # def _execLogs(self, logs, logsTest):
       # _lastlogs, _lastlastlogs = logs
       # _lastlogsTest, _lastlastlogsTest = logsTest

@@ -229,7 +229,7 @@ class Study_DatasClassif_Viz(Viz):
         if all([i is None for i in [y,color,by]]) and x is not None and addTargetAuto == True or (all([i is None for i in [y,by]]) and x is not None and color is not None and addTargetAuto==False) :
             # print("icici")
             color=target if color is None  else color
-            colorI=targetI if colorI is None else colorI
+            colorI=targetI if ("colorI" not in globals() or colorI is None) else colorI
             if pd.api.types.is_numeric_dtype(xIType):
                 types=types if types is not None else "histogram"
                 if types in ["hist","histogram"]:
