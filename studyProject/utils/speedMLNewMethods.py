@@ -446,11 +446,13 @@ def correc(l):
     if type(l)==type:
         # print(l.__name__)
         return l.__name__
+    if type(l) == str:
+      return "\""+l+"\""
     return l
 
 
 def getNotVarInFn(sign):
-    return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else i.name for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD"]]
+    return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else ("*"+i.name if i.kind.name == "VAR_POSITIONAL" else i.name ) for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD"]]
 
 
 # def addMethodsFromSpeedML2():
