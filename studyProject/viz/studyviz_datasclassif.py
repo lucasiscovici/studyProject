@@ -329,7 +329,7 @@ class Study_DatasClassif_Viz(Viz):
                                     warnings.warn(f"""
                                     error in {xargs} not in createHistMultiBins""")
                                 argsx=removeBadArgs(createHistMultiBins,argsx)
-                            title_=f"Histogram of '{x}' by '{by}' colored by '{by}'"
+                            title_=f"Histogram of '{x}' by '{by}' colored by '{color}'"
                             #print(title_)
                             return createHistMultiBins(datas,x,color,colorI,by,byI,nbins,title=title_,**argsx)
                         else:

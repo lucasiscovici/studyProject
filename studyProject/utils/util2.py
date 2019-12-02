@@ -353,7 +353,7 @@ def onWarnings(d="default"):
     setWarnings('default')
 
 class changeTmpObj:
-    def __init__(self,obj,attr,affect=False,returnAttr=True,preservePAPA=True):
+    def __init__(self,obj,attr,affect=False,returnAttr=True,preservePAPA=False):
         self.obj=obj
         self.attr=attr
         self.returnAttr=returnAttr
