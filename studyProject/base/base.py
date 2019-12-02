@@ -1200,13 +1200,13 @@ class DatasSupervise(Base):
 
     def export(self,save=True,dirAdded=[],*args,**xargs):
         ex=super().export(save,dirAdded,*args,**xargs)
-        if not save:
+        if not save and "_prep" in ex:
             import dill
             ex["_prep"]=dill.dumps(ex["_prep"])
 
     @classmethod 
     def _import(cls,loaded):
-        if isinstance(loaded._prep,bytes):
+        if hasattr(loaded,"_prep") and isinstance(loaded._prep,bytes):
             loaded._prep=dill.loads(loaded._prep)
         return loaded
 
