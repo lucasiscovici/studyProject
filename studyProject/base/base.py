@@ -1074,8 +1074,8 @@ class DoraX:
         for i in n:
             job(fd[i],i,False)
     
-    def addCustomFunction(self,func,fn=None,type_="Dora",added=False):
-        attr=self._attr_
+    def addCustomFunction(self,func,fn=None,type_="Dora",added=False, attr="train"):
+        attr=self._attr_ if hasattr(self,"_attr_") else attr
         def job(g,i,wrapped=True):
             func=g.__wrapped__ if wrapped else g
             # a=get_args(func)
@@ -1138,8 +1138,8 @@ class prepI:
 def giveMeReload_(self):  
     def reload_(funci,fn,type_="Dora"):
         if type_=="Dora":
-            self.dataTrain.prep.addCustomFunction(funci,fn,type_=type_,added=True)
-            self.dataTest.prep.addCustomFunction(funci,fn,type_=type_,added=True)
+            self.dataTrain.prep.addCustomFunction(funci,fn,type_=type_,added=True,attr="train")
+            self.dataTest.prep.addCustomFunction(funci,fn,type_=type_,added=True,attr="test")
     return reload_
 
 class DatasSupervise(Base):
