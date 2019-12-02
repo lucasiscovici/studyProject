@@ -1154,11 +1154,16 @@ class DatasSupervise(Base):
         self._prep=_prep
         # self.init()
 
+    def reload_(self,funci,fn,type_="Dora"):
+        if type_=="Dora":
+            self.dataTrain.prep.addCustomFunction(funci,fn,type_=type_,added=True,attr="train")
+            self.dataTest.prep.addCustomFunction(funci,fn,type_=type_,added=True,attr="test")
+
     def init2(self,_prep=None):
         _prep=self._prep
         # if _prep is None and self.dataTrain is not None:
         #     print("DataSupervisé init2","create")
-        self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self,giveMeReload_(self)))
+        self._prep=_prep if _prep is not None else ( _prep if self.dataTrain is None else create_speedML(self,self.reload_))
 
     @classmethod
     def from_XY_Train_Test(cls,X_train,y_train,X_test,y_test,*,ID=None):
