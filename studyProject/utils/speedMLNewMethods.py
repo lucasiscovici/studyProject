@@ -440,7 +440,7 @@ def make_fun(name,parameters):
     exec("def {}({}): pass".format(name,', '.join(parameters)))
     return locals()[name]
 def getVarInFn(sign):
-    return ["*"+i.name if i.kind.name == "VAR_POSITIONAL" else "**"+i.name for i in list(sign.parameters.values()) if i.kind.name in ["VAR_KEYWORD","VAR_POSITIONAL"]]
+    return ["*"+i.name if i.kind.name == "VAR_POSITIONAL" else "**"+i.name for i in list(sign.parameters.values()) if i.kind.name in ["VAR_KEYWORD"]]
 def correc(l):
     # print(l,type(l))
     if type(l)==type:
@@ -449,7 +449,7 @@ def correc(l):
     return l
 
 def getNotVarInFn(sign):
-    return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else i.name for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD","VAR_POSITIONAL"]]
+    return [f"{i.name}={correc(i.default)}" if i.default != inspect._empty else i.name for i in list(sign.parameters.values()) if i.kind.name not in ["VAR_KEYWORD"]]
 
 
 # def addMethodsFromSpeedML2():
