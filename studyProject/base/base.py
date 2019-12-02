@@ -1207,10 +1207,11 @@ class DatasSupervise(Base):
 
     @classmethod 
     def _import(cls,loaded):
-        if hasattr(loaded,"_prep") and isinstance(loaded._prep,bytes):
+        ex=super()._import(loaded)
+        if hasattr(ex,"_prep") and isinstance(ex._prep,bytes):
             import dill
-            loaded._prep=dill.loads(loaded._prep)
-        return loaded
+            ex._prep=dill.loads(ex._prep)
+        return ex
 
 
 
