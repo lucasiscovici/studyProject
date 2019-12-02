@@ -90,7 +90,7 @@ class Study_DatasClassif_Viz(Viz):
         
 
 
-    def plot_pointplot(selfo,x,y=None,by=None, color=None,side="row"):
+    def plot_pointplot(selfo,x,y=None,by=None, color=None,side="row",*args,**xargs):
         self=selfo.obj
         row=_get_name(x)
         datas=self.get()
@@ -114,12 +114,14 @@ class Study_DatasClassif_Viz(Viz):
             color=_get_name(color)
             if color not in datas.columns:
                 raise Exception(f"'{color}' not in datas")
-        xargs=dict()
-        xargs[side]=by
-        FacetGrid = sns.FacetGrid(datas, size=4.5, aspect=1.6,**xargs)
+
+        xargs2=dict()
+        xargs2[side]=by
+        FacetGrid = sns.FacetGrid(datas, size=4.5, aspect=1.6,*args,**xargs2,**xargs)
         FacetGrid.map(sns.pointplot, x, y, color, palette=None,  order=None, hue_order=None )
         FacetGrid.add_legend()
-        return FacetGrid
+        rep=mpl_to_plotly(d.fig).update_layout(title_text=f"PointPlot with x: {x}, y: {y}, by: {by}, color: {color}", margin=dict(t=75))
+        return rep
 
 
     def plot(self,x=None,y=None,color=None,by=None,addTargetAuto=False,types=None,update_layout=None,roundVal=2,targetMode=None,*args,**xargs):
@@ -449,7 +451,7 @@ class Study_DatasClassif_Viz(Viz):
                             warnings.warn(f"""
                             error in {xargs} not in self.plot_pointplot""")
                         argsx=removeBadArgs(self.plot_pointplot,argsx)
-                    return self.plot_pointplot(x=x,y=target,color=color,by=by)
+                    return self.plot_pointplot(x=x,y=target,color=color,by=by, **argsx)
                 raise NotImplementedError(f"when only color and types '{colorIType}' -> not again available")
         raise NotImplementedError(f"when color:'{colorIType}' x:'{xIType}' y: '{yIType}' by: '{byIType}' addTargetAuto: '{addTargetAuto}'  -> not again available")
         # if pd.api.types.is_numeric_dtype(varIType):
