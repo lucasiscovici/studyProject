@@ -355,8 +355,12 @@ class Speedml3:
 
     def prepSnapshot(self,name,reload=True):
       if name in self._snapshots:
-        return My_Context_special(mode=1,fnExit= lambda: self.use_snapshot(name))
-      return My_Context_special(mode=0,prep=self,fnExit= lambda: self.snapshot(name))
+        return My_Context_special(mode=1,fnExit= lambda: (self.use_snapshot(name),warnings.warn(f"""
+              use snapshot with name: {name}
+            """)))
+      return My_Context_special(mode=0,prep=self,fnExit= lambda: (self.snapshot(name),warnings.warn(f"""
+              snapshot took with name: {name}
+            """)))
 
     @staticmethod
     def _execLogs2(self, logs, name):
