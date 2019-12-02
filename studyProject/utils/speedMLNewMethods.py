@@ -54,14 +54,20 @@ def saveLast2_(self,func,*args,**kwargs):
 
   realFunc=kwargs.pop("realFunc", func)
 
-
-  rep=realFunc(self,*args, **kwargs)
-  setattr(realSelf,type_[0],copy(getattr(self,"_data")))
-  kwargs["type_"]=type_
-  argss= inspect.getcallargs(func,self, *args, **kwargs)
-  del argss["self"]
-  argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
-  realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=type_)
+  try:
+    rep=realFunc(self,*args, **kwargs)
+    setattr(realSelf,type_[0],copy(getattr(self,"_data")))
+    kwargs["type_"]=type_
+    argss= inspect.getcallargs(func,self, *args, **kwargs)
+    del argss["self"]
+    argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
+    realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=type_)
+  except Exception as e:
+    realSelf.back_one(type_=type_)
+    if hasattr(realSelf,"errors"):
+      if realSelf.errors == "ignore":
+        return realSelf
+    raise e
   return realSelf
 
 def saveLast3_(self,func,*args,**kwargs):
@@ -93,19 +99,22 @@ def saveLast3_(self,func,*args,**kwargs):
   # print(self,args,kwargs)
   try:
     rep=realFunc(self, *args, **kwargs)
+    for j in type_:
+      if func.__name__=="outliers" and j=="test":
+        setattr(self, j, copy(doo[j]))
+        continue
+      setattr(realSelf, j, copy(getattr(self,j)))
+      kwargs["type_"]=[j]
+      argss= inspect.getcallargs(func,self, *args, **kwargs)
+      del argss["self"]
+      argss=["{}={}".format(k,correc("\""+w+"\"" if isinstance(w,str) else w)) for k,w in argss.items()]
+      realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=j)
   except Exception as e:
     realSelf.back_one(type_=type_)
+    if hasattr(realSelf,"errors"):
+      if realSelf.errors == "ignore":
+        return realSelf
     raise e
-  for j in type_:
-    if func.__name__=="outliers" and j=="test":
-      setattr(self, j, copy(doo[j]))
-      continue
-    setattr(realSelf, j, copy(getattr(self,j)))
-    kwargs["type_"]=[j]
-    argss= inspect.getcallargs(func,self, *args, **kwargs)
-    del argss["self"]
-    argss=["{}={}".format(k,correc("\""+w+"\"" if isinstance(w,str) else w)) for k,w in argss.items()]
-    realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=j)
   return realSelf
 def saveLast(func):
   @wraps(func)

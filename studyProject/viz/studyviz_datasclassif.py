@@ -1,47 +1,16 @@
 from . import Viz
 from interface import implements
-from ..utils import merge,showWarningsTmp,  df, secureAddArgs, removeBadArgs , _get_and_checks,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, mpld3_utils, mpl_to_plotly, _get_dtype_and_data
+from ..utils import merge,showWarningsTmp,  df, secureAddArgs, removeBadArgs , _get_and_checks,  T,F, dicoAuto, zipl, _get_name, StudyClass, addMethodToObj, mpld3_study, display, display_html, mpld3_utils, mpl_to_plotly, _get_dtype_and_data
 import pandas as pd
 import numpy as np
 import matplotlib.patches as mpatches
 from collections.abc import Iterable
 import types
 import plotly_study.express as pex
-
-class Study_DatasClassif_Viz(Viz):
-    # @staticmethod
-    def plot_class_balance(self,title="Répartition des labels",percent=False,
-                            allsize=16,
-                            titlesizeplus=2,
-                            addLabels=True,
-                            addLabelsPercent=True,
-                            addLabelsBrut=True,
-                            returnData=False,
-                            asImg=False,
-                            showFig=True,
-                            outside=True,
-                            xTitle=None,
-                            yTitle=None,
-                            filename="class_balance",
-                            addLabels_kwargs=dict(),
-                            class_balance_kwargs=dict(),
-                            plot_kwargs=dict(),*args,**xargs):
-        vars_=locals().copy()
-        del vars_["self"]
-        vars_["fn_kwargs"]=vars_["class_balance_kwargs"]
-        del vars_["class_balance_kwargs"]
-        vars_["fnCount"]=self.obj.class_balance
-
-        yn=self.obj.y.name
-        vars_["xTitle"]= yn if xTitle is None else xTitle
-
-        del vars_["args"]
-        del vars_["xargs"]
-        return self.plot_bar_count(*args,**vars_,**xargs)
-        
-
-    def createHistMultiBins(self,x,color,colorI,by,byI,nbins,title=None,ncols=3,viz="mpld3"):
-        datas=self.obj
+import matplotlib.pyplot as plt
+import seaborn as sns
+def createHistMultiBins(self,x,color,colorI,by,byI,nbins,title=None,ncols=3,viz="mpld3"):
+        datas=self
         train_df=datas
         catBy=byI.cat.categories
         catColor=colorI.cat.categories
@@ -88,6 +57,38 @@ class Study_DatasClassif_Viz(Viz):
             return StudyClass(fig=fig,axes=axes,show=lambda *args,**xargs:plt.show())
         if viz == "plotly":
             return mpl_to_plotly(fig)
+class Study_DatasClassif_Viz(Viz):
+    # @staticmethod
+    def plot_class_balance(self,title="Répartition des labels",percent=False,
+                            allsize=16,
+                            titlesizeplus=2,
+                            addLabels=True,
+                            addLabelsPercent=True,
+                            addLabelsBrut=True,
+                            returnData=False,
+                            asImg=False,
+                            showFig=True,
+                            outside=True,
+                            xTitle=None,
+                            yTitle=None,
+                            filename="class_balance",
+                            addLabels_kwargs=dict(),
+                            class_balance_kwargs=dict(),
+                            plot_kwargs=dict(),*args,**xargs):
+        vars_=locals().copy()
+        del vars_["self"]
+        vars_["fn_kwargs"]=vars_["class_balance_kwargs"]
+        del vars_["class_balance_kwargs"]
+        vars_["fnCount"]=self.obj.class_balance
+
+        yn=self.obj.y.name
+        vars_["xTitle"]= yn if xTitle is None else xTitle
+
+        del vars_["args"]
+        del vars_["xargs"]
+        return self.plot_bar_count(*args,**vars_,**xargs)
+        
+
 
     def plot_pointplot(selfo,x,y=None,by=None):
         self=selfo.obj
@@ -351,6 +352,21 @@ class Study_DatasClassif_Viz(Viz):
                 types=types if types is not None else "hist"
                 if types in ["hist","histogram"]:
                     argsx=xargs
+                    nbins=argsx.pop("nbins",None)
+                    if nbins is not None:
+                        if isinstance(nbins,Iterable) and not isinstance(nbins,str) and len(nbins)>1:
+                            if not secureAddArgs(createHistMultiBins,xargs):
+                                with showWarningsTmp:
+                                    warnings.warn(f"""
+                                    error in {xargs} not in createHistMultiBins""")
+                                argsx=removeBadArgs(createHistMultiBins,argsx)
+                            color=target
+                            colorI=targetI
+                            title_=f"Histogram of '{x}' by '{by}' colored by '{color}'"
+                            #print(title_)
+                            return createHistMultiBins(datas,x,color,colorI,by,byI,nbins,title=title_,**argsx)
+                        else:
+                            argsx["nbins"]=nbins
                     if not secureAddArgs(pex.histogram,xargs):
                         with showWarningsTmp:
                             warnings.warn(f"""

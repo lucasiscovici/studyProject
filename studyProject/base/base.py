@@ -1012,6 +1012,7 @@ def saveLastDoraX(func,selfo,attr):
         return fun2(*args,**kwargs)
     return with_logging
 
+
 class DoraX:
     def _addmethod(self, name,method): 
         self.__dict__[name] = types.MethodType( method, self )
@@ -1058,7 +1059,20 @@ class DoraX:
         # print(fd)
         for i in fd:
             job(fd[i],i,False)
-    
+
+        from speedml_study import Feature
+        fd=Feature.__dict__
+        n=[i for i in list(fd.keys()) if not i.startswith("_")] 
+        def job(g,i,wrapped=True):
+            func=g.__wrapped__ if wrapped else g
+            # a=get_args(func)
+            # u=getVarInFn(a.signature)
+            # uu=getNotVarInFn(a.signature)
+            # o=uu+[f"type_=['{attr}']"]
+            # fnu=make_fun(i,o+u)
+            self._addmethod(i,saveLastDoraX(func,self._prep,attr))
+        for i in n:
+            job(fd[i],i,False)
     
     def __getattr__(self,a_):
         # a=super().__getattr__(a_)
