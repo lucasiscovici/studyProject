@@ -1203,10 +1203,12 @@ class DatasSupervise(Base):
         if not save and "_prep" in ex:
             import dill
             ex["_prep"]=dill.dumps(ex["_prep"])
+        return ex
 
     @classmethod 
     def _import(cls,loaded):
         if hasattr(loaded,"_prep") and isinstance(loaded._prep,bytes):
+            import dill
             loaded._prep=dill.loads(loaded._prep)
         return loaded
 
