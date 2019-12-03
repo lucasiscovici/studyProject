@@ -94,22 +94,25 @@ def saveLast3_(self,func,*args,**kwargs):
 
   realFunc=kwargs.pop("realFunc",func)
 
+  doo={i:getattr(self,i) for i in type_}
+
   selfo=self
   self=selfo.feature
   # if typeX_ is not None
-  doo={i:getattr(self,i) for i in type_}
+  for i in type_:
+    setattr(self, i, copy(getattr(selfo,i)))
+  
 
+  # self=selfo
   # print(self,args,kwargs)
   try:
     rep=realFunc(self, *args, **kwargs)
     for j in type_:
       if func.__name__=="outliers" and j=="test":
-        setattr(self, j, copy(doo[j]))
         setattr(selfo, j, copy(doo[j]))
         continue
       setattr(realSelf, j, copy(getattr(self,j)))
-      setattr(realSelf._Speedml, j, copy(getattr(self,j)))
-      setattr(realSelf._Speedml.feature, j, copy(getattr(self,j)))
+      setattr(selfo, j, copy(getattr(self,j)))
       # self._Speedml
       kwargs["type_"]=[j]
       argss= inspect.getcallargs(func,self, *args, **kwargs)
