@@ -421,7 +421,11 @@ import mpld3_study
 from IPython.display import display, HTML
 from mpld3_study import display
 import numpy as np
-def add_hover_label_to_rect(ax,roundVal=2):
+def add_hover_label_to_rect(ax=None,roundVal=2):
+    if ax is None:
+      ax=plt.gca()
+    if not isinstance(ax,list):
+      ax=[ax]
     m=[get_datas_plt(i) for i in ax]
     #print(m)
     dd=[]
@@ -459,7 +463,7 @@ def get_datas_plt(ax):
         
     return ii
 def connect_mpld3(plugins,fig=None,addDefaults=True):
-    fig=fig if fig is not None else plt.clf()
+    fig=fig if fig is not None else plt.gcf()
     if addDefaults:
         plugins=mpld3_study.plugins.get_plugins(fig)+plugins
     mpld3_study.plugins.clear(fig)
