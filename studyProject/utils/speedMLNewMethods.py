@@ -395,6 +395,8 @@ class Speedml3:
         raise NotImplemented(f"{type_} not implented")
 
 
+
+
     def data_n(self):
         """
         Updates train_n and test_n numeric datasets (used for model data creation) based on numeric datatypes from train and test datasets.
@@ -470,6 +472,14 @@ def getNotVarInFn(sign):
 #         setattr(Speedml2,"_"+i,fd[i])
 # addMethodsFromSpeedML2()
 
+#TODO: batch prep
+def batch(self, p):
+    resu=p
+    from studyPipe.studyPipe import Pipe__
+    if isinstance(p,Pipe__):
+      resu=Pipe__.unpipe(p)
+
+
 def saveLastSpeedML(func,realFunc):
   @wraps(func)
   def with_logging(self,*args, **kwargs):
@@ -482,6 +492,8 @@ def saveLastSpeedML(func,realFunc):
       kwargs["type_"]=type_
       return saveLast3_(self._Speedml,func,*args,**kwargs)
   return with_logging
+
+
 def addMethodsFromSpeedML():
     from speedml_study import Feature
     fd=Feature.__dict__

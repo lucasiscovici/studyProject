@@ -462,9 +462,12 @@ def get_datas_plt(ax):
         ii.append(o)
         
     return ii
-def connect_mpld3(plugins,fig=None,addDefaults=True):
+def connect_mpld3(plugins,fig=None,addDefaults=True, display= True):
+    from . import display_mpld3
     fig=fig if fig is not None else plt.gcf()
     if addDefaults:
         plugins=mpld3_study.plugins.get_plugins(fig)+plugins
     mpld3_study.plugins.clear(fig)
     mpld3_study.plugins.connect(fig,*plugins)
+    if display:
+      display_mpld3()
