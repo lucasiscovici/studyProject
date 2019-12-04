@@ -178,7 +178,7 @@ class My_Context_special(object):
         return True
 
 class Speedml3:
-    _CUSTOMS=[]
+    _CUSTOMS={}
     def __init__(self, train, test, target, uid=None, mode="df",reload_=None):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
