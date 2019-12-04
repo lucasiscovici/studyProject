@@ -1211,15 +1211,16 @@ class DatasSupervise(Base):
         if hasattr(ex,"_prep") and isinstance(ex._prep,bytes):
             import dill
             ex._prep=dill.loads(ex._prep)
-            # if ex._prep is not None:
-            #     for k,v in ex._prep._CUSTOMS.items():
-            #         ex._prep.addCustomFunction(v,k)
+            if ex._prep is not None:
+                # print("iciDE   .BUG2")
+                for k,v in ex._prep._CUSTOMS.items():
+                    ex._prep.addCustomFunction(v,k)
         return ex
 
     def clone(self,*args,**kwargs):
         rep=super().clone(*args,**kwargs)
-        if rep._prep is not None: 
-            rep._prep = rep._prep.Clone()
+        # if rep._prep is not None: 
+        #     rep._prep = rep._prep.Clone()
         return rep
 
 
