@@ -1079,14 +1079,14 @@ class DoraX:
     
     def addCustomFunction(self,func,fn=None,type_="Dora",added=False, attr="train"):
         attr=self._attr_ if hasattr(self,"_attr_") else attr
-        def job(g,i,wrapped=True):
+        def job(g,i,wrapped=True,self=self):
             func=g.__wrapped__ if wrapped else g
             # a=get_args(func)
             # u=getVarInFn(a.signature)
             # uu=getNotVarInFn(a.signature)
             # o=uu+[f"type_=['{attr}']"]
             # fnu=make_fun(i,o+u)
-            # print(self.__dict__)
+            print(self.__dict__)
             self._addmethod(i,saveLastDoraX(func,self._prep,attr))
         if type_ == "Dora":
             fn=func.__name__ if fn is None else fn
@@ -1094,7 +1094,7 @@ class DoraX:
                 from dora_study import Dora
                 Dora.addCustomFunction(func)
                 func=Dora._CUSTOMS[fn]
-            job(func,fn,False)
+            job(func,fn,False,self)
 
 
     def __getattr__(self,a_):
@@ -1202,7 +1202,7 @@ class DatasSupervise(Base):
         ex=super().export(save,dirAdded,*args,**xargs)
         if not save and "_prep" in ex:
             import dill
-            ex["_prep"]=dill.dumps(ex["_prep"])
+            ex["_prep"]=dill.dumps(ex["_prep"],recurse=True)
         return ex
 
     @classmethod 
@@ -1212,7 +1212,7 @@ class DatasSupervise(Base):
             import dill
             ex._prep=dill.loads(ex._prep)
             if ex._prep is not None:
-                # print("iciDE   .BUG2")
+                print("iciDE   .BUG2")
                 for k,v in ex._prep._CUSTOMS.items():
                     ex._prep.addCustomFunction(v,k)
         return ex
