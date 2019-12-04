@@ -1216,6 +1216,11 @@ class DatasSupervise(Base):
                     ex._prep.addCustomFunction(v,k)
         return ex
 
+    def clone(self,*args,**kwargs):
+        rep=super().clone(*args,**kwargs)
+        if rep._prep is not None: 
+            rep._prep = rep._prep.Clone()
+        return rep
 
 
 factoryCls.register_class(DatasSupervise)
