@@ -178,7 +178,7 @@ class My_Context_special(object):
         return True
 
 class Speedml3:
-
+    _CUSTOMS=[]
     def __init__(self, train, test, target, uid=None, mode="df",reload_=None):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
@@ -389,6 +389,7 @@ class Speedml3:
         fn=func.__name__ if fn is None else fn
         funci=Dora._CUSTOMS[fn]
         addMethodsFromDoraName(funci,fn,False)
+        self._CUSTOMS[fn]=func
         if self.reload_ is not None:
           self.reload_(funci,fn,type_)
       else:
