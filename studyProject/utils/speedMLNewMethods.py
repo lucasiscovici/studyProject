@@ -189,6 +189,8 @@ class Speedml3:
         self._initial_Test=copy(test)
         self.mode=mode
         self.reload_=reload_
+        for k,v in self._CUSTOMS.items():
+            self.addCustomFunction(v,k)
 
 
     # def _resetTo(train,test):
