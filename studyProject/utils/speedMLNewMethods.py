@@ -108,7 +108,7 @@ def saveLast3_(self,func,*args,**kwargs):
   self=selfo.feature
   # if typeX_ is not None
   for i in type_:
-    setattr(self, i, copy(getattr(selfo,i)))
+    setattr(self, i, copy(getattr(realSelf,i)))
   
 
   # self=selfo
@@ -376,8 +376,8 @@ class Speedml3:
 
 
 
-    def prepSnapshot(self,name,reload=True):
-      if name in self._snapshots:
+    def prepSnapshot(self,name,force=False,reload=True):
+      if name in self._snapshots and not force:
         return My_Context_special(mode=1,fnExit= lambda: (self.use_snapshot(name),warnings.warn(f"""
               use snapshot with name: {name}
             """)))
