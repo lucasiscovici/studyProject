@@ -50,10 +50,17 @@ PICKLE_VERSION=to_version(pickle.format_version)
 import sys
 SYS_VERSION=to_version(sys.version.split(' ')[0])
 
+
+def get_ipython_():
+  try:
+    return get_ipython().user_global_ns
+  except:
+    return globals()
+
 def extractFunFromString(func,name=None):
     name=func.__name__ if name is None else name
     gg={}
-    exec(func.__sourceP__,gg,gg)
+    exec(func.__sourceP__,get_ipython_(),gg)
     return gg[name]
 
 class BaseSupFactory:
