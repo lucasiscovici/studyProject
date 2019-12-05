@@ -21,6 +21,15 @@ from .struct import isinstanceBase, isinstance
 import sys, os
 
 import warnings
+
+def importLucas(pkg="",attr=[]):
+    if not isinstance(attr,list):
+        attr=[list]
+    d=__import__(pkg)
+    for i in attr:
+        d=getattr(d,i)
+    return d
+
 def setattrAndReturnSelf(obj,k,v):
   setattr(obj,k,v)
   return obj
