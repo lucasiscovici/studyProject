@@ -428,7 +428,9 @@ class Speedml3:
 
     #__________________IMPORT/EXPORT_________________
     def __getstate__(self):
-      rep = self.__dict__
+      er=self.__dict__.copy()
+      er.pop("reload_")
+      rep = er
       return rep
 
     def __setstate__(self,d):

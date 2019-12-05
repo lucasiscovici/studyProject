@@ -1211,8 +1211,11 @@ class DatasSupervise(Base):
         if hasattr(ex,"_prep") and isinstance(ex._prep,bytes):
             import dill
             ex._prep=dill.loads(ex._prep)
+            print(ex._prep)
+            print("ici")
             if ex._prep is not None:
-                print("iciDE   .BUG2")
+                ex._prep.reload_=ex.reload_
+                # print("iciDE   .BUG2")
                 for k,v in ex._prep._CUSTOMS.items():
                     ex._prep.addCustomFunction(v,k)
         return ex
