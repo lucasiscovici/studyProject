@@ -125,7 +125,7 @@ def saveLast3_(self,func,*args,**kwargs):
       kwargs["type_"]=[j]
       argss= inspect.getcallargs(func,self, *args, **kwargs)
       del argss["self"]
-      argss=["{}={}".format(k,correc("\""+w+"\"" if isinstance(w,str) else w)) for k,w in argss.items()]
+      argss=["{}={}".format(k,correc(w)) for k,w in argss.items()]
       realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=j)
   except Exception as e:
     realSelf.back_one(type_=type_)
