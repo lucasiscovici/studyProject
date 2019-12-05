@@ -39,6 +39,9 @@ def to_version(d):
     df=d.split(".")
     if df[0]=="0":
         del df[0]
+    if len(df) <3:
+        for i in range(3-len(df)):
+            df.append("0")
     return Version("v"+(".".join(df)))
 import dill
 DILL_VERSION=to_version(dill.__version__)
@@ -363,6 +366,7 @@ class Base(object):
                 Base.__listFilesAndTar(dirTmp,patho,filos)
             finally:
                 os.remove(patho)
+            return [filos,filo,dirAdded,patho,self]
     
     def save(self,
              repertoire=None,
