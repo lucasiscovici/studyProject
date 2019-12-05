@@ -1086,7 +1086,7 @@ class DoraX:
             # uu=getNotVarInFn(a.signature)
             # o=uu+[f"type_=['{attr}']"]
             # fnu=make_fun(i,o+u)
-            print(self.__dict__)
+            # print(self.__dict__)
             self._addmethod(i,saveLastDoraX(func,self._prep,attr))
         if type_ == "Dora":
             fn=func.__name__ if fn is None else fn
@@ -1208,23 +1208,23 @@ class DatasSupervise(Base):
     @classmethod 
     def _import(cls,loaded):
         ex=super()._import(loaded)
-        if hasattr(ex,"_prep") and isinstance(ex._prep,bytes):
-            import dill
-            ex._prep=dill.loads(ex._prep)
-            print(ex._prep)
-            print("ici")
-            if ex._prep is not None:
+        # print("lala")
+        if hasattr(ex,"_prep"):
+            if isinstance(ex._prep,bytes):
+                import dill
+                ex._prep=dill.loads(ex._prep)
+            if ex._prep is not None and ex.dataTrain is not None:
                 ex._prep.reload_=ex.reload_
                 # print("iciDE   .BUG2")
                 for k,v in ex._prep._CUSTOMS.items():
                     ex._prep.addCustomFunction(v,k)
         return ex
 
-    def clone(self,*args,**kwargs):
-        rep=super().clone(*args,**kwargs)
-        # if rep._prep is not None: 
-        #     rep._prep = rep._prep.Clone()
-        return rep
+    # def clone(self,*args,**kwargs):
+    #     rep=super().clone(*args,**kwargs)
+    #     # if rep._prep is not None: 
+    #     #     rep._prep = rep._prep.Clone()
+    #     return rep
 
 
 factoryCls.register_class(DatasSupervise)

@@ -460,7 +460,7 @@ def correc(l):
         # print(l.__name__)
         return l.__name__
     if type(l) == str:
-      return "\""+l+"\""
+      return "\'"+l+"\'"
     return l
 
 
