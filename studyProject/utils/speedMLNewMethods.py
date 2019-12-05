@@ -179,7 +179,7 @@ class My_Context_special(object):
 
 class Speedml3:
     # _CUSTOMS={}
-    def __init__(self, train, test, target, uid=None, mode="df",reload_=None):
+    def __init__(self, train, test, target, uid=None, mode="logs",reload_=None):
         # super().__init__(train,test,target,uid)
         # print("speedml3 create")
         self._Speedml=Speedml2(copy(train),copy(test),target)
@@ -388,8 +388,10 @@ class Speedml3:
         from dora_study import Dora
         import dill
         from inspect import getsource
+        print(getsource(func))
         try:
-          func.__sourceP__=getsource(func)
+          if not hasattr(func,"__sourceP__"):
+            func.__sourceP__=getsource(func)
         except:
           func.__sourceP__=dill.dumps(func)
         Dora.addCustomFunction(func)
