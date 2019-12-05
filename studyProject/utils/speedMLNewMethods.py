@@ -388,7 +388,7 @@ class Speedml3:
         from dora_study import Dora
         import dill
         from inspect import getsource
-        print(getsource(func))
+        # print(getsource(func))
         try:
           if not hasattr(func,"__sourceP__"):
             func.__sourceP__=getsource(func)
