@@ -69,7 +69,7 @@ def saveLast2_(self,func,*args,**kwargs):
     kwargs["type_"]=type_
     argss= inspect.getcallargs(func,self, *args, **kwargs)
     del argss["self"]
-    argss=["{}={}".format(i,correc("\""+j+"\"" if isinstance(j,str) else j)) for i,j in argss.items()]
+    argss=["{}={}".format(i,correc(j)) for i,j in argss.items()]
     realSelf._log( "self.{}({})".format( func.__name__, ", ".join(argss) ) ,force=force,type_=type_)
   except Exception as e:
     realSelf.back_one(type_=type_)
@@ -479,7 +479,7 @@ def correc(l):
     if type(l)==type:
         # print(l.__name__)
         return l.__name__
-    if type(l) == str:
+    elif type(l) == str:
       return "\'"+l+"\'"
     return l
 
