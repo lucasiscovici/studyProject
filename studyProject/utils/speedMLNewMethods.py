@@ -10,6 +10,12 @@ import copy
 def has_method(o, name):
     return name in dir(o)
 
+
+def get_ipython_():
+  try:
+    return get_ipython()
+  except:
+    return globals()
 def copy(ld):
   if ld is None:
     return ld
@@ -55,7 +61,7 @@ def saveLast2_(self,func,*args,**kwargs):
   realFunc=kwargs.pop("realFunc", func)
 
   try:
-    rep=realFunc(self,*args, **kwargs)
+    rep=exec("realFunc(self,*args, **kwargs)",get_ipython_(),locals())
     setattr(realSelf,type_[0],copy(getattr(self,"_data")))
     setattr(realSelf._Speedml,type_[0],copy(getattr(self,"_data")))
     kwargs["type_"]=type_
@@ -106,7 +112,7 @@ def saveLast3_(self,func,*args,**kwargs):
   # self=selfo
   # print(self,args,kwargs)
   try:
-    rep=realFunc(self, *args, **kwargs)
+    rep=exec("realFunc(self, *args, **kwargs)",get_ipython_(),locals())
     for j in type_:
       if func.__name__=="outliers" and j=="test":
         setattr(selfo, j, copy(doo[j]))
