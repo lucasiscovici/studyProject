@@ -201,9 +201,13 @@ class Speedml3:
 
     @staticmethod
     def Clone(self):
-      return Speedml3(self.train ,self.test,self.target,self.uid, self.mode)
+      rep= Speedml3(self.train ,self.test,self.target,self.uid, self.mode)
+      rep._CUSTOMS=self._CUSTOMS
+      return rep
       # Speedml3( self.train, self.test, self.target, self.uid, self.mode)
 
+    def clone(self):
+      return self.__class__.Clone(self)
 
     @property
     def mode(self):

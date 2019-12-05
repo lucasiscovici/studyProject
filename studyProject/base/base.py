@@ -34,6 +34,18 @@ except:
     class TypeVar:
         def __init__(self,*args,**xargs):pass
 import sys
+import dill
+DILL_VERSION=dill.__version__
+import pickle
+PICKLE_VERSION=pickle.format_version
+import sys
+SYS_VERSION=sys.version.split(' ')[0]
+
+def extractFunFromString(func,name=None):
+    name=func.__name__ if name is None else name
+    gg={}
+    exec(func.__sourceP__,gg,gg)
+    return gg[func]
 
 class BaseSupFactory:
 
@@ -628,6 +640,8 @@ class Base(object):
             rep.restoreDir(dirs)
         if hasattr(rep,"____IMPORT____"):
             delattr(rep,"____IMPORT____")
+        if "ver" in xargs:
+            rep.__version__=xargs["ver"]
         return cls._import(rep)
 
     @classmethod 
@@ -649,16 +663,20 @@ class Base(object):
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
         # print("dirs",dirs)
+        ver=None
         if "__version__" in loaded:
-            if loaded["__version__"] != __version__:
-                warnings.warn(
-                    "Trying to unpickle {0} from version {1} when "
-                    "using version {2}. This might lead to breaking code or "
-                    "invalid results. Use at your own risk.".format(
-                        cls.__name__, loaded["__version__"], __version__),
-                    UserWarning)
+            if isinstance(loaded["__version__"],str):
+                if loaded["__version__"] != __version__:
+                    warnings.warn(
+                        "Trying to unpickle {0} from version {1} when "
+                        "using version {2}. This might lead to breaking code or "
+                        "invalid results. Use at your own risk.".format(
+                            cls.__name__, loaded["__version__"], __version__),
+                        UserWarning)
+            elif isinstance(loaded["__version__"],dict):
+                ver=loaded["__version__"]
         ol=cls()
-        ol=cls.import__( ol, loaded, forceInfer=forceInfer,dirs=dirs )
+        ol=cls.import__( ol, loaded, forceInfer=forceInfer,dirs=dirs, ver=ver )
 
         # if cls.__name__ == Base.__name__: 
         #     pass
@@ -774,7 +792,11 @@ class Base(object):
             dirAdded=set(dirAdded)
 
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
-            return cls.Save(rep,dirAdded=dirAdded,**opts)
+            rep= cls.Save(rep,dirAdded=dirAdded,**opts)
+            rep["__version__"]=dict(dill=DILL_VERSION,
+                                    pickle=PICKLE_VERSION,
+                                    sys=SYS_VERSION)
+            return rep
         return rep
     @classmethod
     def Export(cls,obj,save=True,version=None,saveArgs={},papaExport=[],dirAdded=[]):
@@ -1216,7 +1238,16 @@ class DatasSupervise(Base):
             if ex._prep is not None and ex.dataTrain is not None:
                 ex._prep.reload_=ex.reload_
                 # print("iciDE   .BUG2")
+                ver=ex["__version__"] if hasattr(ex,"__version__") else None
+                verI=dict(dill=DILL_VERSION,
+                                    pickle=PICKLE_VERSION,
+                                    sys=SYS_VERSION)
+                if ver is not None:
+                    ok=list(ver.values()) == list(verI.values())
+                if not ok:
+                    ex._prep._CUSTOMS={name:extractFunFromString(func,name) for name,func in ex._prep._CUSTOMS.items()}
                 for k,v in ex._prep._CUSTOMS.items():
+
                     ex._prep.addCustomFunction(v,k)
         return ex
 
