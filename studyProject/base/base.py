@@ -798,11 +798,11 @@ class Base(object):
             dirAdded=set(dirAdded)
 
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
-            rep= cls.Save(rep,dirAdded=dirAdded,**opts)
             if rep is not None:
                 rep["__version__"]=dict(dill=DILL_VERSION,
                                     pickle=PICKLE_VERSION,
                                     sys=SYS_VERSION)
+            rep= cls.Save(rep,dirAdded=dirAdded,**opts)
             return rep
         return rep
     @classmethod
