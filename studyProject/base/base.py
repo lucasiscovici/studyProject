@@ -1190,6 +1190,10 @@ class DatasSupervise(Base):
         self._prep=_prep
         # self.init()
 
+    def getTmp(self):
+        from ..utils import changeTmpObj
+        return changeTmpObj(self.papa,self.attr)
+
     def reload_(self,funci,fn,type_="Dora"):
         if type_=="Dora":
             self.dataTrain.prep.addCustomFunction(funci,fn,type_=type_,added=True,attr="train")
@@ -1249,7 +1253,7 @@ class DatasSupervise(Base):
             if ex._prep is not None and ex.dataTrain is not None:
                 ex._prep.reload_=ex.reload_
                 # print("iciDE   .BUG2")
-                ver=ex["__version__"] if hasattr(ex,"__version__") else None
+                ver=ex.__version__ if hasattr(ex,"__version__") else None
                 verI=dict(dill=DILL_VERSION,
                                     pickle=PICKLE_VERSION,
                                     sys=SYS_VERSION)
