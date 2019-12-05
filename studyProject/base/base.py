@@ -793,7 +793,8 @@ class Base(object):
 
             opts=merge_dicts(dict(ID=obj.ID,suffix=cls.EXPORTABLE_SUFFIX),saveArgs)
             rep= cls.Save(rep,dirAdded=dirAdded,**opts)
-            rep["__version__"]=dict(dill=DILL_VERSION,
+            if rep is not None:
+                rep["__version__"]=dict(dill=DILL_VERSION,
                                     pickle=PICKLE_VERSION,
                                     sys=SYS_VERSION)
             return rep
@@ -1242,6 +1243,7 @@ class DatasSupervise(Base):
                 verI=dict(dill=DILL_VERSION,
                                     pickle=PICKLE_VERSION,
                                     sys=SYS_VERSION)
+                ok=True
                 if ver is not None:
                     ok=list(ver.values()) == list(verI.values())
                 if not ok:
