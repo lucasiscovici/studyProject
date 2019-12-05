@@ -13,7 +13,7 @@ def has_method(o, name):
 
 def get_ipython_():
   try:
-    return get_ipython()
+    return get_ipython().user_global_ns
   except:
     return globals()
 def copy(ld):
