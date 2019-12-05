@@ -54,7 +54,7 @@ def extractFunFromString(func,name=None):
     name=func.__name__ if name is None else name
     gg={}
     exec(func.__sourceP__,gg,gg)
-    return gg[func]
+    return gg[name]
 
 class BaseSupFactory:
 
