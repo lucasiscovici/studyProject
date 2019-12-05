@@ -61,8 +61,8 @@ def saveLast2_(self,func,*args,**kwargs):
   realFunc=kwargs.pop("realFunc", func)
 
   try:
-    print(get_ipython_())
-    print(locals())
+    # print(get_ipython_())
+    # print(locals())
     rep=exec("realFunc(self,*args, **kwargs)",get_ipython_(),locals())
     setattr(realSelf,type_[0],copy(getattr(self,"_data")))
     setattr(realSelf._Speedml,type_[0],copy(getattr(self,"_data")))
