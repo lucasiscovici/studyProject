@@ -386,6 +386,12 @@ class Speedml3:
     def addCustomFunction(self,func, fn=None, type_="Dora"):
       if type_=="Dora":
         from dora_study import Dora
+        import dill
+        from inspect import getsource
+        try:
+          func.__sourceP__=getsource(func)
+        except:
+          func.__sourceP__=dill.dumps(func)
         Dora.addCustomFunction(func)
         fn=func.__name__ if fn is None else fn
         funci=Dora._CUSTOMS[fn]
