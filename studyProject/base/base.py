@@ -34,12 +34,18 @@ except:
     class TypeVar:
         def __init__(self,*args,**xargs):pass
 import sys
+def to_version(d):
+    from version_parser import Version
+    df=d.split(".")
+    if df[0]=="0":
+        del df[0]
+    return Version("v"+(".".join(df)))
 import dill
-DILL_VERSION=dill.__version__
+DILL_VERSION=to_version(dill.__version__)
 import pickle
-PICKLE_VERSION=pickle.format_version
+PICKLE_VERSION=to_version(pickle.format_version)
 import sys
-SYS_VERSION=sys.version.split(' ')[0]
+SYS_VERSION=to_version(sys.version.split(' ')[0])
 
 def extractFunFromString(func,name=None):
     name=func.__name__ if name is None else name
@@ -1245,7 +1251,7 @@ class DatasSupervise(Base):
                                     sys=SYS_VERSION)
                 ok=True
                 if ver is not None:
-                    ok=list(ver.values()) == list(verI.values())
+                    ok=list(ver.values()) <= list(verI.values())
                 if not ok:
                     ex._prep._CUSTOMS={name:extractFunFromString(func,name) for name,func in ex._prep._CUSTOMS.items()}
                 for k,v in ex._prep._CUSTOMS.items():
