@@ -917,15 +917,17 @@ class edaCls:
         return "eda, attribute available : "+", ".join(self.SECTIONS)
 
 class Datas(Base):
-    EXPORTABLE = [ "X" , "y" , "_eda" , "_prep" ]
+    EXPORTABLE = [ "X" , "y" , "_eda" , "_prep", "_solo", "_edaOpts" ]
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,_eda=None,_prep=None,ID=None):
+    def __init__(self,X=None,y=None,_eda=None,_prep=None, _solo = False, edaOpts = {},ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
         self._eda=_eda
         self._prep=_prep
+        self._solo = _solo
+        self._edaOpts=edaOpts
         # self.init()
 
     def initEda(self):
@@ -936,7 +938,7 @@ class Datas(Base):
                 with showWarningsTmp:
                     warnings.warn("""
                         creating EDA ProfileReport... (think to export the study(Project) !!)""")
-            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","correlations","missing","sample"]))
+            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","correlations","missing","sample"],**self._edaOpts))
             if isinstance(self._eda ,pdp.ProfileReport):
                 self._eda=edaCls(self._eda)
     def initPrep(self):
@@ -950,7 +952,7 @@ class Datas(Base):
     def get(self,prep=True,withNamesY=False,concat=True,initial=False):
         if initial:
             return [self.X,self.y] if not concat else pd.concat([self.X,self.y],axis=1)
-        if self.papa._prep is not None or self._prep is not None:
+        if (self.papa is not None and self.papa._prep is not None) or self._prep is not None:
             # return self.prep.data
             return self.prep.getData()
         hj=[self.X,self.y]
@@ -980,7 +982,11 @@ class Datas(Base):
         # if self._prep is None:
         #     raise Exception("prep not set")
         return self._prep
-
+  
+    @property
+    def solo(self):
+      return self._solo
+    
     @property
     def eda(self):
         if self._eda is None:
@@ -1154,7 +1160,7 @@ class prepI:
     def __init__(self, l:Datas, dora=None):
         # print("prepI","create")
         oname=l.y.name if hasattr(l.y,'name') else None
-        if l.papa is None :#(l.papa is not None and l.papa._prep is None)
+        if l.papa is None or l.solo :#(l.papa is not None and l.papa._prep is None)
             self.dora=Dora(l.get(initial=True),output=oname) if dora is None else dora
         else:
             self.dora=DoraX(getattr(l.papa.prep,"train" if l.attr=='dataTrain' else "test"),output=oname,prep=l.papa.prep,attr="train" if l.attr=='dataTrain' else "test") if dora is None else dora
