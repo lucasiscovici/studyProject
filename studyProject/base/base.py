@@ -978,8 +978,8 @@ class Datas(Base):
         #else:
             # print("Datas prep",self._prep)
             # print("io2",prepI(self))
-        #if self._prep is None:
-        self._prep=prepI(self)
+        if self._prep is None:
+            self._prep=prepI(self)
 
         # if self._prep is None:
         #     self.initPrep()
