@@ -47,8 +47,8 @@ class DatasClassif(Datas,DatasClassif_ClassBalance):
     EXPORTABLE_ARGS=dict(underscore=False)
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,cat=None,ID=None):
-        super().__init__(X,y,ID)
+    def __init__(self,X=None,y=None,cat=None,ID=None, *args,**xargs):
+        super().__init__(X,y,*args,**xargs,ID=ID)
         self.cat=cat
         self.init()
 
