@@ -1027,6 +1027,7 @@ class Datas(Base):
 
     # @classmethod
     def export(self,save=True,dirAdded=[],*args,**xargs):
+        typ=None
         if self._prep is not None:
             typ=self._prep
             self._prep=None
