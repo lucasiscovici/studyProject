@@ -882,7 +882,7 @@ class Base(object):
             # {False:"Pas5",True:"5"}
 import pandas_profiling_study as pdp
 class edaCls:
-    SECTIONS=["overview","variables","correlations","missing","sample"]
+    SECTIONS=["overview","variables","interactions","correlations","missing","sample"]
     def __init__(self,edas):
         self._edas=edas
     
@@ -899,6 +899,10 @@ class edaCls:
         return self.get(["variables"])
     
     @property
+    def interactions(self):
+        return self.get(["interactions"])
+      
+    @property
     def correlations(self):
         return self.get(["correlations"])
 
@@ -910,7 +914,7 @@ class edaCls:
     def sample(self):
         return self.get(["sample"])
     
-    def get(self,sections=["overview","variables","correlations","missing","sample"]):
+    def get(self,sections=["overview","variables","interactions","correlations","missing","sample"]):
         return self._edas.change_sections(sections)
 
     def __repr__(self):
@@ -938,7 +942,7 @@ class Datas(Base):
                 with showWarningsTmp:
                     warnings.warn("""
                         creating EDA ProfileReport... (think to export the study(Project) !!)""")
-            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","correlations","missing","sample"],**self._edaOpts))
+            self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","interactions","correlations","missing","sample"],**self._edaOpts))
             if isinstance(self._eda ,pdp.ProfileReport):
                 self._eda=edaCls(self._eda)
     def initPrep(self):
@@ -996,7 +1000,7 @@ class Datas(Base):
         return self._eda
 
     #TODO: plotly chart in pdp
-    def getEDA(self,concat=True, sections=["overview","variables","correlations","missing","sample"]):
+    def getEDA(self,concat=True, sections=["overview","variables","interactions","correlations","missing","sample"]):
         # if self.eda is None:
         #     with showWarningsTmp:
         #         warnings.warn("""
