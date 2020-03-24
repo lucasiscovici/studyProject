@@ -130,8 +130,8 @@ class Study_DatasClassif_Viz(Viz):
 
     def plot(self,x=None,y=None,color=None,by=None,addTargetAuto=False,types=None,update_layout=None,roundVal=2,targetMode=None,*args,**xargs):
         datas=self.obj.get()
-        target=self.obj.y.name
-        targetI=self.obj.get() >> df.pull(target)
+        target=self.obj.y.name if self.obj.y is not None else ""
+        targetI=self.obj.get() >> df.pull(target) if target is not None and target != "" else None
         xIType,yIType,colorIType, byIType = None,None,None,None
         x,y,color,by=_get_and_checks([x,y,color,by],datas,[None,None,None,None,False])
         
