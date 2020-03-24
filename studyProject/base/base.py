@@ -657,7 +657,7 @@ class Base(object):
             rep.restoreDir(dirs)
         if hasattr(rep,"____IMPORT____"):
             delattr(rep,"____IMPORT____")
-        if "ver" in xargs:
+        if "ver" in xargs and rep is not None:
             rep.__version__=xargs["ver"]
         return cls._import(rep)
 
