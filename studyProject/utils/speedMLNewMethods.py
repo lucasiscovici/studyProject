@@ -209,7 +209,7 @@ class Speedml3:
 
     @staticmethod
     def Clone(self):
-      rep= Speedml3(self.train ,self.test,self.target,self.uid, self.mode)
+      rep= Speedml3(self.train.copy() , self.test.copy() if self.test is not None else self.test,self.target, self.uid, self.mode)
       rep._CUSTOMS=self._CUSTOMS
       return rep
       # Speedml3( self.train, self.test, self.target, self.uid, self.mode)
