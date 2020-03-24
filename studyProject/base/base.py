@@ -974,7 +974,7 @@ class Datas(Base):
         # print("io",self.papa)
         if self.papa is None:
             if self._prep is None:
-                self._prep=Dora(self.get(initial=True),output=self.y.name)
+                self._prep=Dora(self.get(initial=True),output=self.y.name if self.y is not None else None)
         else:
             # print("Datas prep",self._prep)
             # print("io2",prepI(self))
