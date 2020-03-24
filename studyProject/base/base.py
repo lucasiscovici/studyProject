@@ -1027,11 +1027,11 @@ class Datas(Base):
 
     # @classmethod
     def export(self,save=True,dirAdded=[],*args,**xargs):
-        if self.papa is not None:
+        if self._prep is not None:
             typ=self._prep
             self._prep=None
         rep=self.__class__.Export(self,save,version=__version__,dirAdded=dirAdded,*args,**xargs)
-        if self.papa is not None:
+        if typ is not None:
             self._prep=typ
         return rep
 
