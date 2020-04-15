@@ -304,15 +304,15 @@ class Speedml3:
           return
         if "train" in type_:
           if self.mode == "df":
-            self.train = self._snapshots[name]["dataTrain"]
-          self._logs = self._snapshots[name]["logs"]
+            self.train = copy(self._snapshots[name]["dataTrain"])
+          self._logs = copy(self._snapshots[name]["logs"])
           # self._lastlogs = self._snapshots[name]["logsLast"]
           # self._lastlastlogs = self._snapshots[name]["logsLastLast"]
 
         if "test" in type_:
           if self.mode == "df":
-            self.test = self._snapshots[name]["dataTest"]
-          self._logsTest = self._snapshots[name]["logsTest"]
+            self.test = copy(self._snapshots[name]["dataTest"])
+          self._logsTest = copy(self._snapshots[name]["logsTest"])
           # self._lastlogsTest = self._snapshots[name]["logsTestLast"]
           # self._lastlastlogsTest = self._snapshots[name]["logsTestLastLast"]
 

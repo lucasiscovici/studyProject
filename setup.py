@@ -31,7 +31,7 @@ setup(
     keywords='framework python project machine learning data science',
     packages=find_packages(exclude=[]),
     install_requires=[
-        'scikit-learn==0.20.3',
+        'scikit-learn==0.22',
         'version_parser==1.0.0',
         'numpy==1.17.4',
         'python-interface==1.5.1',

@@ -242,7 +242,8 @@ class HyperTune(Base):
                 print("fitErr",e)
                 raise e
 
-        res=Tuned(ID)
+        self.obj=obj
+        res=Tuned(ID=ID)
         resultat=obj.cv_results_
         res.resultat=pd.DataFrame(resultat)
         res.obj=obj
