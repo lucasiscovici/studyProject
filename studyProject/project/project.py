@@ -368,7 +368,7 @@ class StudyProject(Base):
         me=dd[cvID]
         meb=me.based
         meresu=me.resu
-        # print("ddd",me,",",meb,",",meresu)
+        # print("ddd",dd,"me",me,",",meb,",",meresu,clsStudy)
         if meb is None:
             if clsStudy is not None and  ( clsStudy.__name__ != meresu.__class__.__name__):
                 resul=clsStudy.import__(clsStudy(),
@@ -397,6 +397,9 @@ class StudyProject(Base):
         for i in meresu:
             resul2[i]=resul.resultats[i]
         resul.resultats=studyDico(resul2)
+        resul.ID=cvID
+        if resul._based==cvID:
+            resul._based=None
         resul=resul._import(resul)
         return resul
 

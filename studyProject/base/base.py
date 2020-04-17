@@ -8,7 +8,8 @@ from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
 import copy
-import os
+import os, os.path
+import glob
 from tqdm import tqdm
 import shutil 
 import warnings
@@ -427,12 +428,12 @@ class Base(object):
                     ext=cls.DEFAULT_EXT+convertCamelToSnake(cls.__name__)
         dp=cls.DEFAULT_PATH if not noDefaults else "" 
         repo=delim.join([i for i in [path,dp,repertoire] if i != ""])
-        # print(ID)
+        # print("ID",ID)
         # print(ext)
         filo=delim.join([i for i in [repo,ID+ext] if i != ""]) #repo+delim+ID+ext
         # print(filo)
         filo=SaveLoad.load(filo,addExtension=addExtension,chut=chut,fake=True,**xargs)
-        # print(filo,os.path.isfile(filo))
+        # print(filo,os.path.isfile(filo),not os.path.isfile(filo))
         if not os.path.isfile(filo):
             if not chut:
                 warnings.warn("\n[Base load] {} n'exite pas ".format(filo))
@@ -455,9 +456,12 @@ class Base(object):
                     u=TMP_DIR()
                     uu=u.get()
                     hu.append(uu)
-                    # print(res+"/"+j)
                     j2=os.path.basename(j)
-                    shutil.move(res+"/"+j2+"/*", uu) 
+                    # print("j",j,"res",res,"uu",uu,"res",res+"/" +j2+"/*")
+                    for file in glob.glob(f'{res}/{j2}/*'):
+                        # print(file)
+                        shutil.copytree(file, uu+"/"+os.path.basename(file))
+                    # shutil.copy(res+"/"+j2+"/*", uu) 
                 # print(gg2)
                 gg4=dict(zip(gg2,hu))
                 # print(gg4)
@@ -466,6 +470,7 @@ class Base(object):
             resu=SaveLoad.load(filo,addExtension=False,chut=chut,**xargs)
             return (resu,gg4)
         except Exception as e:
+            raise e
             # raise e
             resu=None
         return resu
@@ -657,7 +662,8 @@ class Base(object):
             rep.restoreDir(dirs)
         if hasattr(rep,"____IMPORT____"):
             delattr(rep,"____IMPORT____")
-        if "ver" in xargs and rep is not None:
+        if "ver" in xargs and rep is not None and type(rep) is not dict:
+            # print(rep,type(rep),ol,cls,loaded)
             rep.__version__=xargs["ver"]
         return cls._import(rep)
 
@@ -674,12 +680,13 @@ class Base(object):
              loadArgs={},
              forceInfer=False,
             **xargs):
-        # print(loadArgs)
-        # print(xargs)
+        # print({**loadArgs})
+        # print(cls.Load)
+ 
         loaded,dirs=cls.Load(ID,repertoire,
                                     ext,
                                     path,delim,suffix=cls.EXPORTABLE_SUFFIX,**loadArgs,**xargs)
-        # print("dirs",dirs)
+        # print("dirs",di .s)
         ver=None
         if "__version__" in loaded:
             if isinstance(loaded["__version__"],str):
@@ -1475,6 +1482,8 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
 
     @classmethod 
     def _import(cls,loaded):
+        if cls._import.__func__==cls._import.__func__:
+            return loaded
         lo=cls._import(loaded)
         if isinstance(lo.resultats,dict):
             lo.resultats=studyDico(lo.resultats,papa=lo,addPapaIf=lambda a:isinstance(a,Base),attr="resultats")

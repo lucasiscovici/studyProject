@@ -11,6 +11,7 @@ import numbers
 from collections import defaultdict
 from sklearn.pipeline import Pipeline
 import pandas as pd
+import warnings
 import numpy as np
 # from evolutionary_search import EvolutionaryAlgorithmSearchCV
 from cvopt_study.model_selection import SimpleoptCV
@@ -45,7 +46,7 @@ def check_dimension(dimension,name):
                 for d in dimension]) and isinstance(dimension,list):
             return search_category(dimension)
         elif all([isinstance(dim, numbers.Integral) for dim in dimension]) and isinstance(dimension,tuple):
-            return search_numeric(dimension[0],dimension[1],"integer")
+            return search_numeric(dimension[0],dimension[1],"int")
         elif any([isinstance(dim, numbers.Real) for dim in dimension]) and isinstance(dimension,tuple):
             return search_numeric(dimension[0],dimension[1],"float")
         else:
@@ -84,7 +85,7 @@ class Tuned(Base):
         return [self.logdir]
 
     def restoreDir(self,logdir):
-        print(logdir,self.logdir)
+        # print(logdir,self.logdir)
         if len(logdir) >0 and self.logdir in logdir:
             self.logdir=logdir[self.logdir]
 factoryCls.register_class(Tuned)
@@ -112,11 +113,15 @@ class HyperTune(Base):
     TYPES_GRID=["grid"]
     TYPES_RANDOM=["random","randomopt","dummy"]
     TYPES_BAYES_GP=["bayes","bayesopt","bayes_gp","bayesopt_gp"]
-    TYPES_BAYES=TYPES_BAYES_GP
+    TYPES_BAYES_RF=["bayes_rf","bayesrf","bayes__random_forest"]
+    TYPES_BAYES_ET=["bayes_et","bayeset","bayes__extra_trees"]
+    TYPES_BAYES_GBRT=["bayes_gbrt","bayesgbrt","bayes__gradient_boosting"]
+    TYPES_BAYES=TYPES_BAYES_GP+TYPES_BAYES_RF+TYPES_BAYES_ET+TYPES_BAYES_GBRT
     TYPES_GA=["ga","gaopt","evo","genetic"]
     TYPES_HYPER=["hyper","hyperopt","tpe"]
     TYPES_SIMPLE=["simple"]
-    TYPES_=TYPES_RANDOM+TYPES_GRID+TYPES_BAYES+TYPES_GA+TYPES_HYPER+TYPES_SIMPLE
+    TYPES_HYPERBAND=["hyperbandopt","hyperband"]
+    TYPES_=TYPES_RANDOM+TYPES_GRID+TYPES_BAYES+TYPES_GA+TYPES_HYPER+TYPES_SIMPLE+TYPES_HYPERBAND
 
     def __init__(self, tuned:Dict[str,TunedL]=None,ID=None):
         super().__init__(ID=ID)
@@ -183,6 +188,12 @@ class HyperTune(Base):
         elif typeOfTune in HyperTune.TYPES_BAYES:
             bk="bayesopt"
             argus= dict(model_type="GP")
+            if typeOfTune in HyperTune.TYPES_BAYES_RF:
+                argus["model_type"]="RF"
+            elif typeOfTune in HyperTune.TYPES_BAYES_ET:
+                argus["model_type"]="ET"
+            elif typeOfTune in HyperTune.TYPES_BAYES_GBRT:
+                argus["model_type"]="GBRT"
 
         elif typeOfTune in HyperTune.TYPES_RANDOM:
             bk="randomopt"
@@ -192,17 +203,20 @@ class HyperTune(Base):
 
         elif typeOfTune in  HyperTune.TYPES_HYPER:
             bk="hyperopt"
+
         elif typeOfTune in HyperTune.TYPES_SIMPLE and "backend" not in opts:
             warnings.warn("""
                 when typeOfTune is simple-> backend must be set (default: random)
                 """)
             bk="randomopt"
 
-        elif typeOfTune in Base.TYPES_SIMPLE and "backend" in opts:
+        elif typeOfTune in HyperTune.TYPES_SIMPLE and "backend" in opts:
             warnings.warn("""
                 when typeOfTune is simple-> backend must be set (default: random)
                 """)
             bk=opts.pop("backend")
+        elif typeOfTune in HyperTune.TYPES_HYPERBAND:
+            bk="hyperbandopt"
 
         if not skip:
             argus= dict(backend=bk)

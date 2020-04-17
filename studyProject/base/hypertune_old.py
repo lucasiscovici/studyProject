@@ -21,8 +21,9 @@ class bestScoreCallback:
     def __init__(self,i=0):
         self.i=i
     def __call__(self,res):
-        score = cv.best_score_
-        print("[{}] best score: {}".format(self.i,score))
+        # score = res.best_score_
+        print(res)
+        # print("[{}] best score: {}".format(self.i,score))
         self.i+=1
 
 class CheckpointSaver2(object):
@@ -226,6 +227,7 @@ class HyperTune(Base):
             n_splits_=obj.n_splits_
             best_params_=obj.best_params_
 
+        self.obj=obj
         res=Tuned()
         res.resultat=pd.DataFrame(resultat)
         res.obj=obj
