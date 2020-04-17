@@ -1309,6 +1309,8 @@ class Models(Base):
         self.initModelsAndNames()
         
     def init(self,names=None,indNames=None,mappingNames=None):
+        # if names is not None and type(names) is not list :
+            # names=[names]
         self.namesModels=names
         self.indNamesModels=indNames
         self.mappingNamesModelsInd=mappingNames
@@ -1618,8 +1620,12 @@ class CrossValid(Base):
         decVal=[[getDecFn(i,X[k,:]) for i,k in zipl(resuI["estimator"],cvvVal) ] for resuI in resu2]
         decVal2=[concatenateDecFn(preduI,cvvValCon) for preduI in decVal]
 
+        # print(preduVal,preduuVal,scoreVal,preduTr,scoreTr,decVal,decVal2)
+        # print(namesMod)
+        # print(resu2)
         resul={}
         for i,name in enumerate(namesMod):
+            # print(i,name)
             resul[name]=self.cvrCls(CvResultatsPreds(CvOrigSorted(preduTr[i],preduuTr[i]),
                                                       CvOrigSorted(preduVal[i],preduuVal[i])),
                                      CvResultatsScores(scoreTr[i],scoreVal[i]),

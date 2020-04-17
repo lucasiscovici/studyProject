@@ -16,6 +16,8 @@ from ..utils import isinstanceBase, isinstance, studyDico,  namesEscape
 from typing import Dict
 from ..viz import sameErrorsViz
 
+from sklearn.dummy import DummyClassifier
+
 class DatasClassif_ClassBalance:
     def class_balance(self,normalize=True,name="Class Balance"):
         df=self.y.value_counts(normalize=normalize).set_name(name)
@@ -341,16 +343,17 @@ class BSClassif:
             r=studyDico({k:v.confusion_matrix(y_true,namesY,normalize) for k,v in cv_res.items()}) 
 
         return r
-    def addDummiesModels(self,verbose=1,names=None,*args,**xargs):
-        from sklearn.dummy import DummyClassifier
-        m=[DummyClassifier(),DummyClassifier(strategy="most_frequent"),DummyClassifier(strategy="uniform")]
-        n=["DummyStratified","DummyMostFreq","DummyUniform"] if names is None else names
+    def addDummiesModels(self,  dummiesModels=[DummyClassifier(),DummyClassifier(strategy="most_frequent"),DummyClassifier(strategy="uniform")],
+                                namesDummiesModels=["DummyStratified","DummyMostFreq","DummyUniform"],
+                                nameCV=None,
+                                verbose=1,
+                                *args,**xargs):
         if self._nameCvCurr is None:
-            self.setModels(m,
-                          names=n)
-            self.computeCV(verbose=verbose,*args,**xargs)
+            self.setModels(dummiesModels,
+                          names=namesDummiesModels)
+            self.computeCV(verbose=verbose,nameCV=nameCV,*args,**xargs)
         else:
-            self.addModelsToCurrCV(m,names=n,*args,**xargs)
+            self.addModelsToCurrCV(dummiesModels,names=namesDummiesModels,nameCV=nameCV,*args,**xargs)
 class BaseSuperviseClassif(StudyClassif_,BaseSupervise,BSClassif):
     # @abstractmethod
     EXPORTABLE=["datas","cv"]
