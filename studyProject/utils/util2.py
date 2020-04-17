@@ -360,7 +360,16 @@ def offWarnings():
     
 def onWarnings(d="default"):
     setWarnings('default')
-
+    
+import logging
+class _hideLog:
+    def __enter__(self):
+        self.curr=logging.getLogger().level
+        logging.getLogger().setLevel(logging.CRITICAL)
+        return self
+    def __exit__(self,*args,**xargs):
+        logging.getLogger().setLevel(self.curr)
+hideLog=_hideLog()
 class changeTmpObj:
     def __init__(self,obj,attr,affect=False,returnAttr=True,preservePAPA=False):
         self.obj=obj

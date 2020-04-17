@@ -407,7 +407,7 @@ class StudyProject(Base):
 
 
     @classmethod 
-    def _import(cls,loaded,clone=False):
+    def _import(cls, loaded, clone=False):
         sf={}
         sl=loaded
         # print(sl)
