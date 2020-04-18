@@ -35,6 +35,7 @@ setup(
         'version_parser>=1.0.0',
         'numpy>=1.17.4',
         'python-interface>=1.5.1',
+        "hiplot>=0.1.8.post3",
         'cufflinks-study @ git+git://github.com/lucasiscovici/cufflinks#egg=cufflinks_study',
         'plotly-study @ git+git://github.com/lucasiscovici/plotly_py#egg=plotly_study',
         'cvopt-study @ git+git://github.com/lucasiscovici/cvopt#egg=cvopt_study',

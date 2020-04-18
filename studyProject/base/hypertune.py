@@ -147,6 +147,7 @@ class HyperTune(Base):
         typeOfTune: "random" RandomizedSearchCV, "grid" GridSearchCV, "bayes" or "bayes_gp" BayesSearchCV ["Gaussian Process"], "bayes_rf" BayesSearchCV ["Random Forest"], "bayes_dummy" BayesSearchCV ["Dummy"], "bayes_et" BayesSearchCV ["Extra Trees"], "bayes_gbrt" BayesSearchCV ["gradient boosted trees"]
         """
         middbk=None
+        argus={}
         if logdir is None:
             logs=TMP_DIR()
             logdir = logs.get()
@@ -187,7 +188,7 @@ class HyperTune(Base):
 
         elif typeOfTune in HyperTune.TYPES_BAYES:
             bk="bayesopt"
-            argus= dict(model_type="GP")
+            argus["model_type"]="GP"
             if typeOfTune in HyperTune.TYPES_BAYES_RF:
                 argus["model_type"]="RF"
             elif typeOfTune in HyperTune.TYPES_BAYES_ET:
@@ -219,7 +220,7 @@ class HyperTune(Base):
             bk="hyperbandopt"
 
         if not skip:
-            argus= dict(backend=bk)
+            argus["backend"]=bk
             middbk=midd(bk) if ID is None else ID
             obj = SimpleoptCV(model, hyper_params, 
                          scoring=scoring,              # Objective of search
@@ -233,6 +234,7 @@ class HyperTune(Base):
                          **argus,
                          **opts                     # hyperopt,bayesopt, gaopt or randomopt.
                          )
+            self.obj=obj
             # print("ici")
             argsALL=dict(model=model,hyper_params_=hyper_params_,hyper_params= hyper_params, 
                          scoring=scoring,              # Objective of search

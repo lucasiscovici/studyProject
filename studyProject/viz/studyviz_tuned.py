@@ -55,6 +55,34 @@ def getLayoutsScene(l,offset,nb):
         yy.append(scn)
     return yy
 
+import hiplot as hip
+import pandas as pd
+
+
+class GridSearchPlotter:
+    """ Plots parallel plots for GridSearch validation results"""
+
+    def __init__(self, gridsearch):
+        self.gs = gridsearch
+
+    def plot(self):
+        """Constructs hiplot Experiment objects and displays it"""
+        if  hasattr(self.gs,"param_distributions"):
+            ff=self.gs.param_distributions
+        else:
+            ff=self.gs.param_grid
+        
+        params = ['param_' + key for key in ff.keys()]
+
+        data = pd.DataFrame(self.gs.cv_results_)[params + ['mean_test_score']]
+        data = data.to_dict(orient='records')
+
+        exp = hip.Experiment.from_iterable(data)
+
+        exp.display()
+
+        return exp
+
 def fromCombiToplot(fig,combi,nbCols=4):
     d=fig.data
     l=fig.layout
@@ -521,6 +549,12 @@ class Study_Tuned_Viz(Viz):
 
         oo2=go.Figure(data=od2,layout=oo2.layout)
         return oo2
+
+    def plot_hiplot(self):
+        obj=self.obj
+        resu=obj.resultat
+        return GridSearchPlotter(obj.obj).plot()
+
 
 # data=[go.Scatter3d(
 #                        marker=dict(color=yy.mean_test_score.values.tolist()),x=yy.param_max_depth,y=yy.param_max_features,

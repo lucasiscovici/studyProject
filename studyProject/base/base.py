@@ -3,7 +3,7 @@ from ..utils import studyDico, isStr, get_metric, ifelse, randomString, uniquify
                     newStringUniqueInDico, check_cv2, Obj, mapl, ifNotNone, has_method ,\
                     isInt, zipl, BeautifulDico,BeautifulList, getStaticMethodFromObj,\
                     takeInObjIfInArr, convertCamelToSnake, getAnnotationInit, securerRepr, merge_dicts,\
-                    namesEscape,listl, T, F, StudyClass, isPossible, get_default_args
+                    namesEscape,listl, T, F, StudyClass, isPossible, get_default_args, dicoAuto
 from sklearn.metrics import make_scorer, get_scorer
 from sklearn.model_selection import cross_validate
 import numpy as np
@@ -931,7 +931,14 @@ class Datas(Base):
     EXPORTABLE = [ "X" , "y" , "_eda" , "_prep", "_solo", "_edaOpts" ]
     # y must be a series or a dataframe
 
-    def __init__(self,X=None,y=None,_eda=None,_prep=None, _solo = False, edaOpts = {},ID=None):
+    def __init__(self,
+                X=None,
+                y=None,
+                _eda=None,
+                _prep=None,
+                _solo = False,
+                edaOpts = {},
+                ID=None):
         super().__init__(ID)
         self.X=X
         self.y=y
@@ -952,6 +959,7 @@ class Datas(Base):
             self._eda=eda if eda is not None else (None if self.X is None else pdp.ProfileReport(self.get(),sections=["overview","variables","interactions","correlations","missing","sample"],**self._edaOpts))
             if isinstance(self._eda ,pdp.ProfileReport):
                 self._eda=edaCls(self._eda)
+
     def initPrep(self):
         _prep=self._prep
         # self._prep=_prep if _prep is not None else (None if self.X is None else prep(self))
@@ -1496,7 +1504,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         return cls(ID=cvItem.ID,cv=cvItem.cv,resultats=cvItem.resultats,args=cvItem.args)
 
 #add std
-    def resultatsSummary(self,roundVal=3,withStd=True):
+    def resultatsSummary(self,roundVal=3,withStd=True,withStdCol=False):
         if not withStd:
             u=lambda i:(
                 {k:getattr(v.scores,i) for k,v in self.resultats.items()}
@@ -1508,15 +1516,26 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
                         | __.to_frame().T | __.rename(index={0:i})
             )
         else:
-            u=lambda i:(
-                {k:getattr(v.scores,i) for k,v in self.resultats.items()}
-                | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                                index=__.keys())).T \
-                    | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
-                    | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
-                    |_fun_.pd.concat(axis=1).T \
-                    | __.apply(lambda a:"{} ({})".format(a[0],a[1]),axis=0).to_frame().T | __.rename(index={0:i})
-            )
+            if not withStdCol:
+                u=lambda i:(
+                    {k:getattr(v.scores,i) for k,v in self.resultats.items()}
+                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
+                                                    index=__.keys())).T \
+                        | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
+                        | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                        |_fun_.pd.concat(axis=1).T \
+                        | __.apply(lambda a:"{} ({})".format(a[0],a[1]),axis=0).to_frame().T | __.rename(index={0:i})
+                )
+            else:
+                u=lambda i:(
+                    {k:getattr(v.scores,i) for k,v in self.resultats.items()}
+                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
+                                                    index=__.keys())).T \
+                        | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
+                        | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                        |_fun_.pd.concat(axis=1).T \
+                        | __.rename(index={0:i,1:i+"(std)"})
+                )
         return u("Tr").append(u("Val"))
 
     def table_resultatsSummary(self,roundVal=3,title="Résultats crossValidés d'accuracy",
@@ -1528,6 +1547,21 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
                            margin=dict(t=marginT),
                            width=width)
         return s2
+
+    def predict(self,X="X_test",y="y_test",with_mean_std=False):
+        X=self.papa.X_test if X == "X_test" else X
+        y=self.papa.y_test if y == "y_test" else y
+        rep=(
+            self.resultats.items() |_ftools_.
+                mapl( lambda a:dicoAuto.__getattr__(a[0])==a[1].cv_validate["estimator"] |_ftools_.
+                      mapl(__.score(X,y))
+                        )
+        ) |_ftools_.reduce(lambda a,b:{**a,**b})
+        if with_mean_std:
+            rep=rep | _ftools_.valmap(lambda a:[np.mean(a),np.std(a)])
+        return rep
+
+
 factoryCls.register_class(CrossValidItem)
 class CrossValid(Base):
     EXPORTABLE=["cv","parallel","random_state","shuffle","classifier","recreate","metric","models","nameCV","argu","namesMod"]
@@ -1881,6 +1915,7 @@ class BaseSupervise(Base):
 
     def setPipeline(self,pipeline):
         self._pipeline=pipeline
+
 
 
 def getDecFn(l,X):

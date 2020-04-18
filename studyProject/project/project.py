@@ -1,6 +1,6 @@
 from ..base import Base, DatasSupervise, BaseSupervise, factoryCls
 from ..base.base import CrossValidItem, CvSplit, CvResultats, str2Class, getAnnotationInit, get_args_typing
-from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict, StudyClass, studyDico, getClassName, F
+from ..utils import getStaticMethodFromObj, ifelse, BeautifulDico, SaveLoad, mapl,takeInObjIfInArr, StudyDict,showWarningsTmp, StudyClass, studyDico, getClassName, F
 import os
 from . import IProject
 from typing import *
@@ -142,10 +142,16 @@ class StudyProject(Base):
                 res= cls.Import(id_,**import_kwargs)
                 res = clonee(res) if clone else res
                 self.add(res)
+                print(f'"{id_}" imported and added in the project')
             else:
+                tt=id_ in self._studies
                 res=ifelse(id_ in self._studies,
                           lambda:self._studies[id_] if not clone else cloneStudy() ,
                           lambda:recreatee())()
+                if tt:
+                    print(f"'{id_}' found in project")
+                else:
+                    print(f"create '{id_}' in project")
         if isinstance(res,implements(IProject)):res.check() 
         self._curr=id_
         # if vh:
@@ -169,7 +175,9 @@ class StudyProject(Base):
         # repo=path+delim+repertoire
         # print(repo)
         if recreate:
-            return StudyProject(ID)
+            rep=StudyProject(ID)
+            print(f"Project '{ID}' created")
+            return rep
         # if imported:
 
         # repo = cls.get_repertoire(repertoire)
@@ -194,10 +202,14 @@ class StudyProject(Base):
         # print(filo)
         filo=SaveLoad.getPath(filo,addExtension=True,**save_load_get_path)
         if not os.path.isfile(filo):
-            return StudyProject(ID)
+            rep=StudyProject(ID)
+            print(f"Project '{ID}' created")
+            return rep
 
         if imported:
-            return cls.Import(filo,addExtension=False,chut=chut,noDefaults=True,path="",**import_kwargs)
+            rep=cls.Import(filo,addExtension=False,chut=chut,noDefaults=True,path="",**import_kwargs)
+            print(f"Project '{ID}' Imported")
+            return rep
         
         sl=SaveLoad.load(filo,addExtension=False,chut=chut,**save_load_load)
         # sl=cls.Load(filo,noDefaults=True,addExtension=False,path="",**xargs)
@@ -222,6 +234,7 @@ class StudyProject(Base):
                 v.check()
             sf[k]=v
         sl._studies=sf
+        print(f"Project '{ID}' Loaded")
         return sl
     
 
@@ -303,9 +316,12 @@ class StudyProject(Base):
     def fromStudyProject(self,studyG):
         return studyG.clone(studyG.name)
     
-    def saveDatasWithId(self,id_,X_train,y_train,X_test,y_test,namesY=None,classif=False):
+    def saveDatasWithId(self,id_,X_train,y_train,X_test,y_test,namesY=None,classif=True,force=False):
         D=str2Class("DatasSuperviseClassif") if classif else DatasSupervise
-
+        if id_ in self._data and not force:
+            with showWarningsTmp:
+                warnings.warn("{id_} already in data, if you want to reassign data, force=True")
+            return
         self._data[id_]=D.from_XY_Train_Test(*[X_train,y_train,X_test,y_test],ID=id_)
 
     def saveDataSupervise(self,dataSup):
@@ -465,7 +481,7 @@ from ..utils import securerRepr, mapl , isStr, randomString
 from typing import List, Dict
 from studyPipe.pipes import *
     
-class BaseSuperviseProject(BaseSupervise,implements(IProject)):
+class BaseSuperviseProject(BaseSupervise, implements(IProject)):
     EXPORTABLE=["project","idDataProject","proprocessDataFromProjectFn",
     "proprocessDataFromProjectFnOpts","isProcessedDataFromProject","cv"]
     EXPORTABLE_ARGS=dict(underscore=True)
@@ -650,6 +666,14 @@ class BaseSuperviseProject(BaseSupervise,implements(IProject)):
         # rep._based = None
         if not noAddCv:self._project.addCV(self._nameCvCurr,self.currCV)
 
+        return rep
+
+    def duplicateToProject(self,nameDuplicate, force=False):
+        if nameDuplicate in self._project.data and not recreate:
+            warnings.warn(f'study "{nameDuplicate}" already in project, set force=True to force')
+            return
+        rep=self._project.addOrGetStudy(nameDuplicate,self.clone,recreate=force)
+        print(f"\tDuplicated From {self.ID}")
         return rep
 
 # from ..study.studyClassif import CvResultatsClassif
