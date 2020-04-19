@@ -85,7 +85,7 @@ class StudyProject(Base):
         self._studies={} if studies is None else studies
         self._curr=curr
         self._data=data if data is not None else {} #BeautifulDico({"_ZERO":DatasSupervise.from_XY_Train_Test(None,None,None,None,None,ID="_ZERO")})
-        self._cv={}
+        self._cv={} #TODO: index by study nam
         self._cvOpti=cvOpti
         self._dataOpti=dataOpti
         # self._cvK=defaultdict(list);
