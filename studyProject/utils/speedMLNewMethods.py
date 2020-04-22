@@ -406,7 +406,9 @@ class Speedml3:
             func.__sourceP__=getsource(func)
         except:
           func.__sourceP__=dill.dumps(func)
-        Dora.addCustomFunction(func)
+        if fn is not None:
+          func.__name__=fn
+        Dora.addCustomFunction(func,fn)
         fn=func.__name__ if fn is None else fn
         funci=Dora._CUSTOMS[fn]
         addMethodsFromDoraName(funci,fn,False)
