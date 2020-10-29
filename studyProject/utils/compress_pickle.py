@@ -3,8 +3,7 @@ import os
 import sys
 import warnings
 import dill 
-from types import ClassType
-dill._dill._reverse_typemap['ClassType'] = ClassType
+dill._dill._reverse_typemap['ClassType'] = type
 
 
 
