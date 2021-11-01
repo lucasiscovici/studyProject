@@ -1508,33 +1508,33 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         if not withStd:
             u=lambda i:(
                 {k:getattr(v.scores,i) for k,v in self.resultats.items()}
-                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                                    index=__.keys())).T \
+                    | (pd.DataFrame |_funsInv_| dict(data=_p_.values(),
+                                                    index=_p_.keys())).T \
                         | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
-                        | __.mean(axis=0).round(roundVal)\
+                        | _p_.mean(axis=0).round(roundVal)\
                         #| _fun_.pd.concat(axis=1).T \
-                        | __.to_frame().T | __.rename(index={0:i})
+                        | _p_.to_frame().T | _p_.rename(index={0:i})
             )
         else:
             if not withStdCol:
                 u=lambda i:(
                     {k:getattr(v.scores,i) for k,v in self.resultats.items()}
-                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                                    index=__.keys())).T \
+                    | (pd.DataFrame |_funsInv_| dict(data=_p_.values(),
+                                                    index=_p_.keys())).T \
                         | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
-                        | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                        | (listl |_funsInv_| [_p_.mean(axis=0).round(roundVal),_p_.std(axis=0).round(roundVal)])
                         |_fun_.pd.concat(axis=1).T \
-                        | __.apply(lambda a:"{} ({})".format(a[0],a[1]),axis=0).to_frame().T | __.rename(index={0:i})
+                        | _p_.apply(lambda a:"{} ({})".format(a[0],a[1]),axis=0).to_frame().T | _p_.rename(index={0:i})
                 )
             else:
                 u=lambda i:(
                     {k:getattr(v.scores,i) for k,v in self.resultats.items()}
-                    | (pd.DataFrame |_funsInv_| dict(data=__.values(),
-                                                    index=__.keys())).T \
+                    | (pd.DataFrame |_funsInv_| dict(data=_p_.values(),
+                                                    index=_p_.keys())).T \
                         | (np.round |_funsInv_| dict(a=__,decimals=roundVal)) \
-                        | (listl |_funsInv_| [__.mean(axis=0).round(roundVal),__.std(axis=0).round(roundVal)])
+                        | (listl |_funsInv_| [_p_.mean(axis=0).round(roundVal),_p_.std(axis=0).round(roundVal)])
                         |_fun_.pd.concat(axis=1).T \
-                        | __.rename(index={0:i,1:i+"(std)"})
+                        | _p_.rename(index={0:i,1:i+"(std)"})
                 )
         return u("Tr").append(u("Val"))
 
@@ -1554,7 +1554,7 @@ class CrossValidItem(CvResultatsTrValOrigSorted):
         rep=(
             self.resultats.items() |_ftools_.
                 mapl( lambda a:dicoAuto.__getattr__(a[0])==a[1].cv_validate["estimator"] |_ftools_.
-                      mapl(__.score(X,y))
+                      mapl(_p_.score(X,y))
                         )
         ) |_ftools_.reduce(lambda a,b:{**a,**b})
         if with_mean_std:
